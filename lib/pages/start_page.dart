@@ -1,8 +1,11 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
-import 'package:lexigo/pages/widgets/word_card.dart';
-import 'package:lexigo/pages/learning_page.dart';
+
+// Project imports:
 import 'package:lexigo/datas/word.dart';
 import 'package:lexigo/datas/word_provider.dart';
+import 'package:lexigo/pages/learning_page.dart';
+import 'package:lexigo/pages/widgets/word_card.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
 class StartPage extends StatefulWidget {
@@ -35,7 +38,7 @@ class _StartPageState extends State<StartPage> {
                   final tag = 'word_${_currentWord!.originalWord}';
                   return Hero(
                     tag: tag,
-                    child: WordCard.fromWord(_currentWord!),
+                    child: WordCard(word: _currentWord!),
                   );
                 },
               ),

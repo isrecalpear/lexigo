@@ -1,13 +1,19 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:file_selector/file_selector.dart';
 import 'package:fsrs/fsrs.dart' as fsrs;
-import 'package:lexigo/utils/app_logger.dart';
-import 'package:lexigo/pages/word_management/word_view_page.dart';
-import 'package:lexigo/pages/word_management/word_add_page.dart';
-import 'package:lexigo/utils/permission_manager.dart';
+import 'package:sqlite3/sqlite3.dart' as sqlite;
+
+// Project imports:
 import 'package:lexigo/datas/orm/words.dart';
 import 'package:lexigo/datas/word.dart';
-import 'package:sqlite3/sqlite3.dart' as sqlite;
+import 'package:lexigo/pages/word_management/word_add_page.dart';
+import 'package:lexigo/pages/word_management/word_view_page.dart';
+import 'package:lexigo/utils/app_logger.dart';
+import 'package:lexigo/utils/permission_manager.dart';
+
 class WordManagement extends StatelessWidget {
   const WordManagement({super.key});
 

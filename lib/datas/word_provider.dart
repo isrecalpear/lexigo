@@ -1,6 +1,10 @@
+// Dart imports:
 import 'dart:math';
 
+// Package imports:
 import 'package:fsrs/fsrs.dart';
+
+// Project imports:
 import 'package:lexigo/datas/orm/words.dart';
 import 'package:lexigo/datas/word.dart';
 import 'package:lexigo/utils/app_logger.dart';

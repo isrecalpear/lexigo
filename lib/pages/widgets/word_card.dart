@@ -1,5 +1,9 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Project imports:
 import 'package:lexigo/datas/word.dart';
+import 'package:lexigo/pages/word_management/word_edit_page.dart';
 
 class WordCard extends StatelessWidget {
   const WordCard({

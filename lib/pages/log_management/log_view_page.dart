@@ -1,7 +1,14 @@
+// Dart imports:
 import 'dart:io';
+
+// Flutter imports:
 import 'package:flutter/material.dart';
-import 'package:lexigo/utils/app_logger.dart';
+
+// Package imports:
 import 'package:share_plus/share_plus.dart';
+
+// Project imports:
+import 'package:lexigo/utils/app_logger.dart';
 
 class LogViewPage extends StatefulWidget {
   const LogViewPage({super.key});

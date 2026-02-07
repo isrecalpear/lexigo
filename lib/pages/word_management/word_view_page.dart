@@ -1,5 +1,10 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Package imports:
 import 'package:fsrs/fsrs.dart' as fsrs;
+
+// Project imports:
 import 'package:lexigo/datas/orm/words.dart';
 import 'package:lexigo/datas/word.dart';
 import 'package:lexigo/pages/word_management/word_add_page.dart';

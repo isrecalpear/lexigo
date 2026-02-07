@@ -1,9 +1,14 @@
+// Dart imports:
+import 'dart:async';
 import 'dart:io';
 
+// Flutter imports:
 import 'package:flutter/material.dart';
-import 'package:dynamic_color/dynamic_color.dart';
-import 'dart:async';
 
+// Package imports:
+import 'package:dynamic_color/dynamic_color.dart';
+
+// Project imports:
 import 'pages/records.dart';
 import 'pages/settings_page.dart';
 import 'pages/start_page.dart';

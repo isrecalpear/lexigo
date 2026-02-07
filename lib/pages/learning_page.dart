@@ -1,7 +1,10 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
-import 'package:lexigo/pages/widgets/word_card.dart';
+
+// Project imports:
 import 'package:lexigo/datas/word.dart';
 import 'package:lexigo/datas/word_provider.dart';
+import 'package:lexigo/pages/widgets/word_card.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
 class LearningPage extends StatefulWidget {
@@ -61,7 +64,7 @@ class _LearningPageState extends State<LearningPage> {
                           height: 160,
                           child: Center(child: CircularProgressIndicator()),
                         )
-                      : WordCard.fromWord(_currentWord!),
+                      : WordCard(word:_currentWord!),
                 ),
                 const SizedBox(height: 12),
                 // 上方内容占据上方空间，按钮区域占据底部三分之一

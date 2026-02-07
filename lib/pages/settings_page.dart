@@ -1,4 +1,7 @@
+// Flutter imports:
 import 'package:flutter/material.dart';
+
+// Project imports:
 import 'package:lexigo/pages/log_management/log_management_page.dart';
 import 'package:lexigo/pages/word_management/word_management.dart';
 import 'package:lexigo/utils/app_logger.dart';

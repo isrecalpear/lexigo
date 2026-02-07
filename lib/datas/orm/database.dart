@@ -1,8 +1,12 @@
+// Dart imports:
 import 'dart:io';
 
-import 'package:lexigo/utils/app_logger.dart';
+// Package imports:
 import 'package:path_provider/path_provider.dart';
 import 'package:sqlite3/sqlite3.dart' as sqlite;
+
+// Project imports:
+import 'package:lexigo/utils/app_logger.dart';
 
 class Database {
   static sqlite.Database? _db;
