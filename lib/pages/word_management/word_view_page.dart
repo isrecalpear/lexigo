@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fsrs/fsrs.dart' as fsrs;
-import 'package:lexigo/datas/orms/words.dart';
+import 'package:lexigo/datas/orm/words.dart';
 import 'package:lexigo/datas/word.dart';
 import 'package:lexigo/pages/word_management/word_add_page.dart';
 import 'package:lexigo/pages/word_management/word_edit_page.dart';
