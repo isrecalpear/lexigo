@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:fsrs/fsrs.dart';
-import 'package:lexigo/datas/orms/words.dart';
+import 'package:lexigo/datas/orm/words.dart';
 import 'package:lexigo/datas/word.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
