@@ -8,15 +8,11 @@ import 'package:lexigo/pages/word_management/word_edit_page.dart';
 class WordCard extends StatelessWidget {
   const WordCard({
     super.key,
-    required this.originalWord,
-    required this.translation,
-    required this.originalExample,
-    required this.exampleTranslation,
+    required this.word,
+    this.onUpdated,
   });
-  final String originalWord;
-  final String translation;
-  final String originalExample;
-  final String exampleTranslation;
+  final Word word;
+  final ValueChanged<Word>? onUpdated;
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +35,7 @@ class WordCard extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      originalWord,
+                      word.originalWord,
                       style: Theme.of(context).textTheme.headlineLarge
                           ?.copyWith(
                             color: Theme.of(
@@ -52,12 +48,13 @@ class WordCard extends StatelessWidget {
                     PopupMenuButton<String>(
                       onSelected: (value) {
                         if (value == '纠错') {
-                          signAsWrong();
+                          signAsWrong(context);
                         } else if (value == '熟知') {
                           signAsKnown();
                         }
                       },
                       itemBuilder: (context) => [
+                        // TODO: Change to Enum
                         const PopupMenuItem(value: '纠错', child: Text('纠错')),
                         const PopupMenuItem(value: '熟知', child: Text('标记为熟知')),
                       ],
@@ -69,7 +66,7 @@ class WordCard extends StatelessWidget {
                   ],
                 ),
                 Text(
-                  translation,
+                  word.translation,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onPrimaryContainer,
                   ),
@@ -77,14 +74,14 @@ class WordCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  originalExample,
+                  word.originalExample,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onPrimaryContainer,
                   ),
                   textAlign: TextAlign.left,
                 ),
                 Text(
-                  exampleTranslation,
+                  word.exampleTranslation,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onPrimaryContainer,
                   ),
@@ -98,20 +95,21 @@ class WordCard extends StatelessWidget {
     );
   }
 
-  factory WordCard.fromWord(Word word) {
-    return WordCard(
-      originalWord: word.originalWord,
-      translation: word.translation,
-      originalExample: word.originalExample,
-      exampleTranslation: word.exampleTranslation,
-    );
-  }
-
   void signAsKnown() {
-    debugPrint('WordCard: 标记为熟知 for $originalWord');
+    debugPrint('WordCard: 标记为熟知 for ${word.originalWord}');
   }
 
-  void signAsWrong() {
-    debugPrint('WordCard: 纠错 for $originalWord');
+  Future<void> signAsWrong(BuildContext context) async {
+    final card = await word.card;
+    if (!context.mounted) return;
+    final updated = await Navigator.push<Word>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WordEditPage(word: word, card: card),
+      ),
+    );
+    if (updated != null) {
+      onUpdated?.call(updated);
+    }
   }
 }

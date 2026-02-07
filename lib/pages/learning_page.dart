@@ -64,7 +64,15 @@ class _LearningPageState extends State<LearningPage> {
                           height: 160,
                           child: Center(child: CircularProgressIndicator()),
                         )
-                      : WordCard(word:_currentWord!),
+                      : WordCard(
+                          word: _currentWord!,
+                          onUpdated: (updated) {
+                            setState(() {
+                              _currentWord = updated;
+                              _heroTag = 'word_${updated.originalWord}';
+                            });
+                          },
+                        ),
                 ),
                 const SizedBox(height: 12),
                 // 上方内容占据上方空间，按钮区域占据底部三分之一

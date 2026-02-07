@@ -100,7 +100,7 @@ class _WordEditPageState extends State<WordEditPage> {
 			ScaffoldMessenger.of(context).showSnackBar(
 				const SnackBar(content: Text('修改成功')),
 			);
-			Navigator.pop(context, true);
+			Navigator.pop<Word>(context, updated);
 		} catch (e, stackTrace) {
 			AppLogger.error('编辑单词失败', error: e, stackTrace: stackTrace);
 			if (!mounted) return;

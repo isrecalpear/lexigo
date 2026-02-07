@@ -38,7 +38,14 @@ class _StartPageState extends State<StartPage> {
                   final tag = 'word_${_currentWord!.originalWord}';
                   return Hero(
                     tag: tag,
-                    child: WordCard(word: _currentWord!),
+                    child: WordCard(
+                      word: _currentWord!,
+                      onUpdated: (updated) {
+                        setState(() {
+                          _currentWord = updated;
+                        });
+                      },
+                    ),
                   );
                 },
               ),
