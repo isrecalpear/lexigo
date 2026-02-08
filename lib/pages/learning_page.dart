@@ -1,14 +1,15 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
 
+// Package imports:
+import 'package:fsrs/fsrs.dart' as fsrs;
+
 // Project imports:
 import 'package:lexigo/datas/word.dart';
 import 'package:lexigo/datas/word_provider.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
 import 'package:lexigo/pages/widgets/word_card.dart';
 import 'package:lexigo/utils/app_logger.dart';
-
-import 'package:fsrs/fsrs.dart' as fsrs;
 
 class LearningPage extends StatefulWidget {
   const LearningPage({super.key, required this.word, required this.heroTag});
