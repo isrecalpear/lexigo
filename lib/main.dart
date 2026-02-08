@@ -4,11 +4,13 @@ import 'dart:io';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 // Package imports:
 import 'package:dynamic_color/dynamic_color.dart';
 
 // Project imports:
+import 'l10n/app_localizations.dart';
 import 'pages/records.dart';
 import 'pages/settings_page.dart';
 import 'pages/start_page.dart';
@@ -70,29 +72,66 @@ ThemeData buildTheme(ColorScheme? dynamicScheme, bool isDarkMode) {
   return ThemeData(colorScheme: colorScheme, useMaterial3: true);
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  Locale? _locale;
+
+  void _setLocale(Locale? locale) {
+    setState(() {
+      _locale = locale;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     if (Platform.isIOS) {
       AppLogger.warning('iOS平台暂不支持动态色彩，使用默认主题色彩');
-      ColorScheme colorScheme = ColorScheme.fromSeed(seedColor: Colors.pink.shade200);
+      ColorScheme colorScheme =
+          ColorScheme.fromSeed(seedColor: Colors.pink.shade200);
       return MaterialApp(
+        locale: _locale,
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
         theme: buildTheme(colorScheme, false),
         darkTheme: buildTheme(colorScheme, true),
-        themeMode: ThemeMode.system, 
+        themeMode: ThemeMode.system,
         navigatorObservers: [AppRouteObserver()],
-        home: MyHomePage(),
+        home: MyHomePage(
+          locale: _locale,
+          onLocaleChanged: _setLocale,
+        ),
       );
     } else {
       return DynamicColorBuilder(
         builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
           return MaterialApp(
+            locale: _locale,
+            supportedLocales: AppLocalizations.supportedLocales,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
             theme: buildTheme(lightDynamic, false),
             darkTheme: buildTheme(darkDynamic, true),
             themeMode: ThemeMode.system,
             navigatorObservers: [AppRouteObserver()],
-            home: MyHomePage(),
+            home: MyHomePage(
+              locale: _locale,
+              onLocaleChanged: _setLocale,
+            ),
           );
         },
       );
@@ -101,7 +140,14 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
+  const MyHomePage({
+    super.key,
+    required this.locale,
+    required this.onLocaleChanged,
+  });
+
+  final Locale? locale;
+  final ValueChanged<Locale?> onLocaleChanged;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -128,7 +174,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('LexiGo - 背了么'),
+        title: Text(context.l10n.appTitle),
         actions: [
           SearchAnchor(
             builder: (BuildContext context, SearchController controller) {
@@ -143,7 +189,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           IconButton(
             icon: const Icon(Icons.language_outlined),
-            onPressed: () {},
+            onPressed: () => _showLanguagePicker(context),
           ),
         ],
       ),
@@ -158,26 +204,68 @@ class _MyHomePageState extends State<MyHomePage> {
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Theme.of(context).colorScheme.surface,
         currentIndex: _selectedIndex,
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.abc_outlined),
-            label: '背',
-            activeIcon: Icon(Icons.abc),
+            icon: const Icon(Icons.abc_outlined),
+            label: context.l10n.tabStudy,
+            activeIcon: const Icon(Icons.abc),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_month_outlined),
-            label: '记录',
-            activeIcon: Icon(Icons.calendar_month),
+            icon: const Icon(Icons.calendar_month_outlined),
+            label: context.l10n.tabRecords,
+            activeIcon: const Icon(Icons.calendar_month),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: '我的',
-            activeIcon: Icon(Icons.person),
+            icon: const Icon(Icons.person_outline),
+            label: context.l10n.tabMe,
+            activeIcon: const Icon(Icons.person),
           ),
         ],
         onTap: _onItemTapped,
       ),
     );
+  }
+
+  Future<void> _showLanguagePicker(BuildContext context) async {
+    final l10n = context.l10n;
+    final selected = await showModalBottomSheet<Locale?>(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: Text(l10n.languageSystem),
+                trailing: widget.locale == null
+                    ? const Icon(Icons.check)
+                    : null,
+                onTap: () => Navigator.pop(context, null),
+              ),
+              ListTile(
+                title: Text(l10n.languageChinese),
+                trailing: widget.locale?.languageCode == 'zh'
+                    ? const Icon(Icons.check)
+                    : null,
+                onTap: () => Navigator.pop(context, const Locale('zh')),
+              ),
+              ListTile(
+                title: Text(l10n.languageEnglish),
+                trailing: widget.locale?.languageCode == 'en'
+                    ? const Icon(Icons.check)
+                    : null,
+                onTap: () => Navigator.pop(context, const Locale('en')),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (!mounted) return;
+    if (selected != widget.locale) {
+      widget.onLocaleChanged(selected);
+    }
   }
 
   void _onItemTapped(int index) {

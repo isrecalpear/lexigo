@@ -9,6 +9,7 @@ import 'package:sqlite3/sqlite3.dart' as sqlite;
 // Project imports:
 import 'package:lexigo/datas/orm/words.dart';
 import 'package:lexigo/datas/word.dart';
+import 'package:lexigo/l10n/app_localizations.dart';
 import 'package:lexigo/pages/word_management/word_add_page.dart';
 import 'package:lexigo/pages/word_management/word_view_page.dart';
 import 'package:lexigo/utils/app_logger.dart';
@@ -20,13 +21,13 @@ class WordManagement extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('单词管理')),
+      appBar: AppBar(title: Text(context.l10n.wordManagementTitle)),
       body: ListView(
         children: [
           ListTile(
             leading: const Icon(Icons.list_alt_outlined),
-            title: const Text('查看单词'),
-            subtitle: const Text('查看单词清单'),
+            title: Text(context.l10n.wordListTitle),
+            subtitle: Text(context.l10n.wordListSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               AppLogger.info('打开查看单词页面');
@@ -39,8 +40,8 @@ class WordManagement extends StatelessWidget {
           const Divider(),
           ListTile(
             leading: const Icon(Icons.download_outlined),
-            title: const Text('导入单词清单'),
-            subtitle: const Text('从外部文件导入单词清单'),
+            title: Text(context.l10n.importWordListTitle),
+            subtitle: Text(context.l10n.importWordListSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               AppLogger.info('选择文件导入单词清单');
@@ -49,8 +50,8 @@ class WordManagement extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.save_outlined),
-            title: const Text('导出单词清单'),
-            subtitle: const Text('将单词清单导出到外部文件'),
+            title: Text(context.l10n.exportWordListTitle),
+            subtitle: Text(context.l10n.exportWordListSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               AppLogger.info('选择文件导出单词清单');
@@ -60,8 +61,8 @@ class WordManagement extends StatelessWidget {
           const Divider(),
           ListTile(
             leading: const Icon(Icons.add_circle_outline),
-            title: const Text('添加单词'),
-            subtitle: const Text('手动添加单词到数据库'),
+            title: Text(context.l10n.addWordTitle),
+            subtitle: Text(context.l10n.addWordSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               AppLogger.info('打开添加单词页面');
@@ -210,14 +211,14 @@ class WordManagement extends StatelessWidget {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('导入成功: ${words.length} 条，跳过: $skipped 条'),
+          content: Text(context.l10n.importSuccess(words.length, skipped)),
         ),
       );
     } catch (e, stackTrace) {
       AppLogger.error('导入单词失败', error: e, stackTrace: stackTrace);
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('导入失败: $e')),
+        SnackBar(content: Text(context.l10n.importFailed('$e'))),
       );
     } finally {
       externalDb?.close();
@@ -240,7 +241,7 @@ class WordManagement extends StatelessWidget {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text('选择语言'),
+              title: Text(context.l10n.selectLanguageTitle),
               content: DropdownButton<LanguageCode>(
                 value: selected,
                 items: LanguageCode.values
@@ -261,11 +262,11 @@ class WordManagement extends StatelessWidget {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text('取消'),
+                  child: Text(context.l10n.cancel),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext, selected),
-                  child: const Text('确定'),
+                  child: Text(context.l10n.confirm),
                 ),
               ],
             );

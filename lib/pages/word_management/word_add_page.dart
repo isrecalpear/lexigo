@@ -7,6 +7,7 @@ import 'package:fsrs/fsrs.dart' as fsrs;
 // Project imports:
 import 'package:lexigo/datas/orm/words.dart';
 import 'package:lexigo/datas/word.dart';
+import 'package:lexigo/l10n/app_localizations.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
 class WordAddPage extends StatefulWidget {
@@ -80,7 +81,7 @@ class _WordAddPageState extends State<WordAddPage> {
 
 			if (!mounted) return;
 			ScaffoldMessenger.of(context).showSnackBar(
-				const SnackBar(content: Text('添加成功')),
+				SnackBar(content: Text(context.l10n.addSuccess)),
 			);
 			form.reset();
 			_originalWordController.clear();
@@ -91,7 +92,7 @@ class _WordAddPageState extends State<WordAddPage> {
 			AppLogger.error('保存单词失败', error: e, stackTrace: stackTrace);
 			if (!mounted) return;
 			ScaffoldMessenger.of(context).showSnackBar(
-				SnackBar(content: Text('添加失败: $e')),
+				SnackBar(content: Text(context.l10n.addFailed('$e'))),
 			);
 		} finally {
 			if (mounted) {
@@ -104,7 +105,7 @@ class _WordAddPageState extends State<WordAddPage> {
 
 	String? _requiredValidator(String? value) {
 		if (value == null || value.trim().isEmpty) {
-			return '必填';
+			return context.l10n.required;
 		}
 		return null;
 	}
@@ -113,7 +114,7 @@ class _WordAddPageState extends State<WordAddPage> {
 	Widget build(BuildContext context) {
 		return Scaffold(
 			appBar: AppBar(
-				title: const Text('添加单词'),
+				title: Text(context.l10n.addWordPageTitle),
 			),
 			body: SafeArea(
 				child: Form(
@@ -123,9 +124,9 @@ class _WordAddPageState extends State<WordAddPage> {
 						children: [
 							DropdownButtonFormField<LanguageCode>(
 								initialValue: _languageCode,
-								decoration: const InputDecoration(
-									labelText: '语言',
-									border: OutlineInputBorder(),
+								decoration: InputDecoration(
+									labelText: context.l10n.fieldLanguage,
+									border: const OutlineInputBorder(),
 								),
 								items: LanguageCode.values
 										.map(
@@ -147,27 +148,27 @@ class _WordAddPageState extends State<WordAddPage> {
 							const SizedBox(height: 16),
 							TextFormField(
 								controller: _originalWordController,
-								decoration: const InputDecoration(
-									labelText: '原文',
-									border: OutlineInputBorder(),
+								decoration: InputDecoration(
+									labelText: context.l10n.fieldOriginal,
+									border: const OutlineInputBorder(),
 								),
 								validator: _requiredValidator,
 							),
 							const SizedBox(height: 16),
 							TextFormField(
 								controller: _translationController,
-								decoration: const InputDecoration(
-									labelText: '翻译',
-									border: OutlineInputBorder(),
+								decoration: InputDecoration(
+									labelText: context.l10n.fieldTranslation,
+									border: const OutlineInputBorder(),
 								),
 								validator: _requiredValidator,
 							),
 							const SizedBox(height: 16),
 							TextFormField(
 								controller: _originalExampleController,
-								decoration: const InputDecoration(
-									labelText: '原文例句',
-									border: OutlineInputBorder(),
+								decoration: InputDecoration(
+									labelText: context.l10n.fieldOriginalExample,
+									border: const OutlineInputBorder(),
 								),
 								validator: _requiredValidator,
 								maxLines: 3,
@@ -175,9 +176,9 @@ class _WordAddPageState extends State<WordAddPage> {
 							const SizedBox(height: 16),
 							TextFormField(
 								controller: _exampleTranslationController,
-								decoration: const InputDecoration(
-									labelText: '例句翻译',
-									border: OutlineInputBorder(),
+								decoration: InputDecoration(
+									labelText: context.l10n.fieldExampleTranslation,
+									border: const OutlineInputBorder(),
 								),
 								validator: _requiredValidator,
 								maxLines: 3,
@@ -185,17 +186,17 @@ class _WordAddPageState extends State<WordAddPage> {
 							const SizedBox(height: 16),
 							TextFormField(
 								controller: _unitIdController,
-								decoration: const InputDecoration(
-									labelText: '单元ID',
-									border: OutlineInputBorder(),
+								decoration: InputDecoration(
+									labelText: context.l10n.fieldUnitId,
+									border: const OutlineInputBorder(),
 								),
 							),
 							const SizedBox(height: 16),
 							TextFormField(
 								controller: _bookIdController,
-								decoration: const InputDecoration(
-									labelText: '书籍ID',
-									border: OutlineInputBorder(),
+								decoration: InputDecoration(
+									labelText: context.l10n.fieldBookId,
+									border: const OutlineInputBorder(),
 								),
 							),
 							const SizedBox(height: 24),
@@ -207,7 +208,7 @@ class _WordAddPageState extends State<WordAddPage> {
 												height: 20,
 												child: CircularProgressIndicator(strokeWidth: 2),
 											)
-										: const Text('保存'),
+										: Text(context.l10n.save),
 							),
 						],
 					),

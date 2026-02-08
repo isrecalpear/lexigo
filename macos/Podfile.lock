@@ -1,6 +1,8 @@
 PODS:
   - dynamic_color (0.0.2):
     - FlutterMacOS
+  - file_selector_macos (0.0.1):
+    - FlutterMacOS
   - flutter_localization (0.0.1):
     - FlutterMacOS
   - FlutterMacOS (1.0.0)
@@ -12,6 +14,7 @@ PODS:
 
 DEPENDENCIES:
   - dynamic_color (from `Flutter/ephemeral/.symlinks/plugins/dynamic_color/macos`)
+  - file_selector_macos (from `Flutter/ephemeral/.symlinks/plugins/file_selector_macos/macos`)
   - flutter_localization (from `Flutter/ephemeral/.symlinks/plugins/flutter_localization/macos`)
   - FlutterMacOS (from `Flutter/ephemeral`)
   - share_plus (from `Flutter/ephemeral/.symlinks/plugins/share_plus/macos`)
@@ -20,6 +23,8 @@ DEPENDENCIES:
 EXTERNAL SOURCES:
   dynamic_color:
     :path: Flutter/ephemeral/.symlinks/plugins/dynamic_color/macos
+  file_selector_macos:
+    :path: Flutter/ephemeral/.symlinks/plugins/file_selector_macos/macos
   flutter_localization:
     :path: Flutter/ephemeral/.symlinks/plugins/flutter_localization/macos
   FlutterMacOS:
@@ -31,6 +36,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   dynamic_color: cb7c2a300ee67ed3bd96c3e852df3af0300bf610
+  file_selector_macos: 9e9e068e90ebee155097d00e89ae91edb2374db7
   flutter_localization: 3cda759884c7dab4466fe963d97fba723a492666
   FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
   share_plus: 510bf0af1a42cd602274b4629920c9649c52f4cc

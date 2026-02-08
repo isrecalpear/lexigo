@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 // Project imports:
+import 'package:lexigo/l10n/app_localizations.dart';
 import 'package:lexigo/pages/log_management/log_view_page.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
@@ -42,16 +43,16 @@ class _LogManagementPageState extends State<LogManagementPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('确认清除'),
-        content: const Text('确定要清除所有日志吗？此操作不可恢复。'),
+        title: Text(context.l10n.logClearConfirmTitle),
+        content: Text(context.l10n.logClearConfirmContent),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('取消'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('确定'),
+            child: Text(context.l10n.confirm),
           ),
         ],
       ),
@@ -63,7 +64,7 @@ class _LogManagementPageState extends State<LogManagementPage> {
         if (mounted) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(const SnackBar(content: Text('日志已清除')));
+          ).showSnackBar(SnackBar(content: Text(context.l10n.logCleared)));
           await _loadLogInfo();
         }
       } catch (e) {
@@ -71,7 +72,9 @@ class _LogManagementPageState extends State<LogManagementPage> {
         if (mounted) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text('清除失败: $e')));
+          ).showSnackBar(
+            SnackBar(content: Text(context.l10n.clearFailed('$e'))),
+          );
         }
       }
     }
@@ -80,20 +83,20 @@ class _LogManagementPageState extends State<LogManagementPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('日志管理')),
+      appBar: AppBar(title: Text(context.l10n.logManagementTitle)),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               children: [
                 ListTile(
                   leading: const Icon(Icons.description_outlined),
-                  title: const Text('日志大小'),
+                  title: Text(context.l10n.logSizeTitle),
                   subtitle: Text('${_logSize.toStringAsFixed(2)} MB'),
                 ),
                 ListTile(
                   leading: const Icon(Icons.article_outlined),
-                  title: const Text('日志查看'),
-                  subtitle: const Text('查看最新日志'),
+                  title: Text(context.l10n.logViewTitle),
+                  subtitle: Text(context.l10n.logViewSubtitle),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
                     AppLogger.info('打开日志查看页面');
@@ -107,8 +110,8 @@ class _LogManagementPageState extends State<LogManagementPage> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.info_outline),
-                  title: const Text('关于日志'),
-                  subtitle: const Text('日志文件保存在应用数据目录，最多保留7天，超过后自动删除旧日志。'),
+                  title: Text(context.l10n.logAboutTitle),
+                  subtitle: Text(context.l10n.logAboutSubtitle),
                 ),
                 Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -118,13 +121,13 @@ class _LogManagementPageState extends State<LogManagementPage> {
                       FilledButton.icon(
                         onPressed: _loadLogInfo,
                         icon: const Icon(Icons.refresh),
-                        label: const Text('刷新信息'),
+                        label: Text(context.l10n.refreshInfo),
                       ),
                       const SizedBox(height: 8),
                       OutlinedButton.icon(
                         onPressed: _logSize > 0 ? _clearLogs : null,
                         icon: const Icon(Icons.delete_outline),
-                        label: const Text('清除日志'),
+                        label: Text(context.l10n.clearLogs),
                       ),
                     ],
                   ),

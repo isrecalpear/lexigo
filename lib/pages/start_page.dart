@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 // Project imports:
 import 'package:lexigo/datas/word.dart';
 import 'package:lexigo/datas/word_provider.dart';
+import 'package:lexigo/l10n/app_localizations.dart';
 import 'package:lexigo/pages/learning_page.dart';
 import 'package:lexigo/pages/widgets/word_card.dart';
 import 'package:lexigo/utils/app_logger.dart';
@@ -26,7 +27,12 @@ class _StartPageState extends State<StartPage> {
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Center(child: Text('你认识吗？', style: TextStyle(fontSize: 24))),
+              Center(
+                child: Text(
+                  context.l10n.startPrompt,
+                  style: const TextStyle(fontSize: 24),
+                ),
+              ),
               Builder(
                 builder: (context) {
                   if (_currentWord == null) {
@@ -49,15 +55,15 @@ class _StartPageState extends State<StartPage> {
                   );
                 },
               ),
-              FilledButton(onPressed: _next, child: const Text('下一个')),
+              FilledButton(onPressed: _next, child: Text(context.l10n.next)),
               const SizedBox(height: 128),
             ],
           ),
         ],
       ),
-      floatingActionButton:FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: _startLearning,
-        label: const Text('开始学习'),
+        label: Text(context.l10n.startLearning),
         icon: const Icon(Icons.play_arrow),
       ),
     );

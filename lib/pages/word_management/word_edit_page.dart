@@ -7,6 +7,7 @@ import 'package:fsrs/fsrs.dart' as fsrs;
 // Project imports:
 import 'package:lexigo/datas/orm/words.dart';
 import 'package:lexigo/datas/word.dart';
+import 'package:lexigo/l10n/app_localizations.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
 class WordEditPage extends StatefulWidget {
@@ -98,14 +99,14 @@ class _WordEditPageState extends State<WordEditPage> {
 
 			if (!mounted) return;
 			ScaffoldMessenger.of(context).showSnackBar(
-				const SnackBar(content: Text('修改成功')),
+				SnackBar(content: Text(context.l10n.editSuccess)),
 			);
 			Navigator.pop<Word>(context, updated);
 		} catch (e, stackTrace) {
 			AppLogger.error('编辑单词失败', error: e, stackTrace: stackTrace);
 			if (!mounted) return;
 			ScaffoldMessenger.of(context).showSnackBar(
-				SnackBar(content: Text('修改失败: $e')),
+				SnackBar(content: Text(context.l10n.editFailed('$e'))),
 			);
 		} finally {
 			if (mounted) {
@@ -118,7 +119,7 @@ class _WordEditPageState extends State<WordEditPage> {
 
 	String? _requiredValidator(String? value) {
 		if (value == null || value.trim().isEmpty) {
-			return '必填';
+			return context.l10n.required;
 		}
 		return null;
 	}
@@ -127,7 +128,7 @@ class _WordEditPageState extends State<WordEditPage> {
 	Widget build(BuildContext context) {
 		return Scaffold(
 			appBar: AppBar(
-				title: const Text('编辑单词'),
+				title: Text(context.l10n.editWordPageTitle),
 			),
 			body: SafeArea(
 				child: Form(
@@ -137,27 +138,27 @@ class _WordEditPageState extends State<WordEditPage> {
 						children: [
 							TextFormField(
 								controller: _originalWordController,
-								decoration: const InputDecoration(
-									labelText: '原文',
-									border: OutlineInputBorder(),
+								decoration: InputDecoration(
+									labelText: context.l10n.fieldOriginal,
+									border: const OutlineInputBorder(),
 								),
 								validator: _requiredValidator,
 							),
 							const SizedBox(height: 16),
 							TextFormField(
 								controller: _translationController,
-								decoration: const InputDecoration(
-									labelText: '翻译',
-									border: OutlineInputBorder(),
+								decoration: InputDecoration(
+									labelText: context.l10n.fieldTranslation,
+									border: const OutlineInputBorder(),
 								),
 								validator: _requiredValidator,
 							),
 							const SizedBox(height: 16),
 							TextFormField(
 								controller: _originalExampleController,
-								decoration: const InputDecoration(
-									labelText: '原文例句',
-									border: OutlineInputBorder(),
+								decoration: InputDecoration(
+									labelText: context.l10n.fieldOriginalExample,
+									border: const OutlineInputBorder(),
 								),
 								validator: _requiredValidator,
 								maxLines: 3,
@@ -165,9 +166,9 @@ class _WordEditPageState extends State<WordEditPage> {
 							const SizedBox(height: 16),
 							TextFormField(
 								controller: _exampleTranslationController,
-								decoration: const InputDecoration(
-									labelText: '例句翻译',
-									border: OutlineInputBorder(),
+								decoration: InputDecoration(
+									labelText: context.l10n.fieldExampleTranslation,
+									border: const OutlineInputBorder(),
 								),
 								validator: _requiredValidator,
 								maxLines: 3,
@@ -175,17 +176,17 @@ class _WordEditPageState extends State<WordEditPage> {
 							const SizedBox(height: 16),
 							TextFormField(
 								controller: _unitIdController,
-								decoration: const InputDecoration(
-									labelText: '单元ID',
-									border: OutlineInputBorder(),
+								decoration: InputDecoration(
+									labelText: context.l10n.fieldUnitId,
+									border: const OutlineInputBorder(),
 								),
 							),
 							const SizedBox(height: 16),
 							TextFormField(
 								controller: _bookIdController,
-								decoration: const InputDecoration(
-									labelText: '书籍ID',
-									border: OutlineInputBorder(),
+								decoration: InputDecoration(
+									labelText: context.l10n.fieldBookId,
+									border: const OutlineInputBorder(),
 								),
 							),
 							const SizedBox(height: 24),
@@ -197,7 +198,7 @@ class _WordEditPageState extends State<WordEditPage> {
 												height: 20,
 												child: CircularProgressIndicator(strokeWidth: 2),
 											)
-										: const Text('保存'),
+										: Text(context.l10n.save),
 							),
 						],
 					),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 // Project imports:
 import 'package:lexigo/datas/word.dart';
 import 'package:lexigo/datas/word_provider.dart';
+import 'package:lexigo/l10n/app_localizations.dart';
 import 'package:lexigo/pages/widgets/word_card.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
@@ -46,7 +47,7 @@ class _LearningPageState extends State<LearningPage> {
         Navigator.pop(context, _currentWord);
       },
       child: Scaffold(
-        appBar: AppBar(title: const Text('学习')),
+        appBar: AppBar(title: Text(context.l10n.learningTitle)),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
           child: SizedBox.expand(
@@ -89,19 +90,19 @@ class _LearningPageState extends State<LearningPage> {
                       children: [
                         FilledButton(
                           onPressed: () => _handleChoice(fsrs.Rating.easy),
-                          child: const Text('简单'),
+                          child: Text(context.l10n.ratingEasy),
                         ),
                         FilledButton(
                           onPressed: () => _handleChoice(fsrs.Rating.good),
-                          child: const Text('还行'),
+                          child: Text(context.l10n.ratingGood),
                         ),
                         FilledButton(
                           onPressed: () => _handleChoice(fsrs.Rating.hard),
-                          child: const Text('困难'),
+                          child: Text(context.l10n.ratingHard),
                         ),
                         FilledButton(
                           onPressed: () => _handleChoice(fsrs.Rating.again),
-                          child: const Text('忘记'),
+                          child: Text(context.l10n.ratingAgain),
                         ),
                       ],
                     ),
