@@ -7,6 +7,8 @@ import 'package:lexigo/datas/word_provider.dart';
 import 'package:lexigo/pages/widgets/word_card.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
+import 'package:fsrs/fsrs.dart' as fsrs;
+
 class LearningPage extends StatefulWidget {
   const LearningPage({super.key, required this.word, required this.heroTag});
 
@@ -39,7 +41,7 @@ class _LearningPageState extends State<LearningPage> {
       onPopInvokedWithResult: (bool didPop, Word? result) {
         if (didPop) return;
         if (!mounted) return;
-        
+
         // 立即弹出，避免延迟导致的问题
         Navigator.pop(context, _currentWord);
       },
@@ -53,12 +55,13 @@ class _LearningPageState extends State<LearningPage> {
               children: [
                 Hero(
                   tag: _heroTag,
-                  flightShuttleBuilder: (context, animation, direction, fromContext, toContext) {
-                    return Material(
-                      color: Colors.transparent,
-                      child: toContext.widget,
-                    );
-                  },
+                  flightShuttleBuilder:
+                      (context, animation, direction, fromContext, toContext) {
+                        return Material(
+                          color: Colors.transparent,
+                          child: toContext.widget,
+                        );
+                      },
                   child: _currentWord == null
                       ? const SizedBox(
                           height: 160,
@@ -85,15 +88,19 @@ class _LearningPageState extends State<LearningPage> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         FilledButton(
-                          onPressed: () => _handleChoice('认识'),
-                          child: const Text('认识'),
+                          onPressed: () => _handleChoice(fsrs.Rating.easy),
+                          child: const Text('简单'),
                         ),
                         FilledButton(
-                          onPressed: () => _handleChoice('模糊'),
-                          child: const Text('模糊'),
+                          onPressed: () => _handleChoice(fsrs.Rating.good),
+                          child: const Text('还行'),
                         ),
                         FilledButton(
-                          onPressed: () => _handleChoice('忘记'),
+                          onPressed: () => _handleChoice(fsrs.Rating.hard),
+                          child: const Text('困难'),
+                        ),
+                        FilledButton(
+                          onPressed: () => _handleChoice(fsrs.Rating.again),
                           child: const Text('忘记'),
                         ),
                       ],
@@ -108,10 +115,11 @@ class _LearningPageState extends State<LearningPage> {
     );
   }
 
-  Future<void> _handleChoice(String choice) async {
-    AppLogger.info('学习选择: $choice - ${_currentWord?.originalWord}');
-    debugPrint('学习选择: $choice - ${_currentWord?.originalWord}');
+  Future<void> _handleChoice(fsrs.Rating rating) async {
+    AppLogger.info('Learning Select: $rating - ${_currentWord?.originalWord}');
+    _wordProvider.reviewWord(_currentWord!, rating);
     final nextWord = await _wordProvider.getWord();
+    
     if (!mounted) return;
     setState(() {
       _currentWord = nextWord;

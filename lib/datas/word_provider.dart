@@ -2,12 +2,14 @@
 import 'dart:math';
 
 // Package imports:
-import 'package:fsrs/fsrs.dart';
+import 'package:flutter/material.dart';
+import 'package:fsrs/fsrs.dart' as fsrs;
 
 // Project imports:
 import 'package:lexigo/datas/orm/words.dart';
 import 'package:lexigo/datas/word.dart';
 import 'package:lexigo/utils/app_logger.dart';
+import 'package:lexigo/pages/word_management/word_edit_page.dart';
 
 class WordProvider {
   static const List<double> _schedulerParameters = [
@@ -44,7 +46,7 @@ class WordProvider {
   static const int _schedulerMaximumInterval = 36500;
   static const bool _schedulerEnableFuzzing = true;
 
-  static final Scheduler scheduler = Scheduler(
+  static final fsrs.Scheduler scheduler = fsrs.Scheduler(
     parameters: _schedulerParameters,
     desiredRetention: _schedulerDesiredRetention,
     learningSteps: _schedulerLearningSteps,
@@ -59,7 +61,7 @@ class WordProvider {
     originalExample: "I love you.",
     exampleTranslation: "我爱你。",
     sourceLanguageCode: LanguageCode.en,
-    card: Card.create(),
+    card: fsrs.Card.create(),
   );
 
   Future<Word> getWord({LanguageCode? language}) async {
@@ -94,14 +96,34 @@ class WordProvider {
     return _staticWord;
   }
 
-  bool signAsKnown(Word word) {
+  bool signAsKnown(BuildContext context, Word word) {
+    // TODO: Implement signAsKnown functionality
     AppLogger.info('标记为熟知: ${word.originalWord}');
     return true;
   }
 
-  bool signAsWrong(Word word) {
-    AppLogger.info('纠错单词: ${word.originalWord}');
-    return true;
+  Future<Word?> signAsWrong(BuildContext context, Word word) async {
+    final card = await word.card;
+    if (!context.mounted) return null;
+    final updated = await Navigator.push<Word>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WordEditPage(word: word, card: card),
+      ),
+    );
+    return updated;
   }
 
+  Future<void> reviewWord(Word word, fsrs.Rating rating) async {
+    final card_ = await word.card;
+    final (:card, :reviewLog) = scheduler.reviewCard(card_, rating);
+    AppLogger.info("Card rated  ${reviewLog.rating} at ${reviewLog.reviewDateTime}");
+
+    final due = card.due;
+
+    final timeDelta = due.difference(DateTime.now());
+
+    AppLogger.debug("Card due on $due");
+    AppLogger.debug("Card due in ${timeDelta.inSeconds} seconds");
+    }
 }

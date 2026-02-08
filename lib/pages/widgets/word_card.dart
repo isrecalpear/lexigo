@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 // Project imports:
 import 'package:lexigo/datas/word.dart';
-import 'package:lexigo/pages/word_management/word_edit_page.dart';
+import 'package:lexigo/datas/word_provider.dart';
 
 class WordCard extends StatelessWidget {
   const WordCard({
@@ -100,14 +100,7 @@ class WordCard extends StatelessWidget {
   }
 
   Future<void> signAsWrong(BuildContext context) async {
-    final card = await word.card;
-    if (!context.mounted) return;
-    final updated = await Navigator.push<Word>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => WordEditPage(word: word, card: card),
-      ),
-    );
+    final updated = await WordProvider().signAsWrong(context, word);
     if (updated != null) {
       onUpdated?.call(updated);
     }

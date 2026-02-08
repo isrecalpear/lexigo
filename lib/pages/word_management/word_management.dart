@@ -38,13 +38,23 @@ class WordManagement extends StatelessWidget {
           ),
           const Divider(),
           ListTile(
-            leading: const Icon(Icons.import_export_outlined),
+            leading: const Icon(Icons.download_outlined),
             title: const Text('导入单词清单'),
             subtitle: const Text('从外部文件导入单词清单'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               AppLogger.info('选择文件导入单词清单');
               _importWords(context);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.save_outlined),
+            title: const Text('导出单词清单'),
+            subtitle: const Text('将单词清单导出到外部文件'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              AppLogger.info('选择文件导出单词清单');
+              _exportWords(context);
             },
           ),
           const Divider(),
@@ -103,6 +113,7 @@ class WordManagement extends StatelessWidget {
             .firstWhere((item) => item.name == tableName);
         AppLogger.info('自动识别语言表: $tableName');
       } else {
+        if (!context.mounted) return;
         final LanguageCode? selected = await _selectLanguage(context);
         if (selected == null) {
           AppLogger.info('用户取消了语言选择');
@@ -213,6 +224,14 @@ class WordManagement extends StatelessWidget {
     }
   }
 
+
+  Future<void> _exportWords(BuildContext context) async {
+    if (!context.mounted) return;
+    final LanguageCode? selected = await _selectLanguage(context);
+    if (selected == null) return;
+    
+  }
+
   Future<LanguageCode?> _selectLanguage(BuildContext context) async {
     LanguageCode selected = LanguageCode.ko;
     return showDialog<LanguageCode>(
@@ -221,7 +240,7 @@ class WordManagement extends StatelessWidget {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: const Text('选择导入语言'),
+              title: const Text('选择语言'),
               content: DropdownButton<LanguageCode>(
                 value: selected,
                 items: LanguageCode.values
