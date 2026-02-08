@@ -19,20 +19,20 @@ import 'utils/app_logger.dart';
 class AppRouteObserver extends NavigatorObserver {
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
-    AppLogger.info('页面进入: ${route.settings.name ?? route.runtimeType}');
+    AppLogger.info('Entering page: ${route.settings.name ?? route.runtimeType}');
     super.didPush(route, previousRoute);
   }
 
   @override
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
-    AppLogger.info('页面退出: ${route.settings.name ?? route.runtimeType}');
+    AppLogger.info('Exiting page: ${route.settings.name ?? route.runtimeType}');
     super.didPop(route, previousRoute);
   }
 
   @override
   void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
     AppLogger.info(
-      '页面替换: ${oldRoute?.settings.name ?? oldRoute?.runtimeType} -> ${newRoute?.settings.name ?? newRoute?.runtimeType}',
+      'Replacing page: ${oldRoute?.settings.name ?? oldRoute?.runtimeType} -> ${newRoute?.settings.name ?? newRoute?.runtimeType}',
     );
     super.didReplace(newRoute: newRoute, oldRoute: oldRoute);
   }
@@ -41,27 +41,27 @@ class AppRouteObserver extends NavigatorObserver {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 初始化日志系统
+  // Initialize the logging system
   await AppLogger.initialize();
-  AppLogger.info('应用启动');
+  AppLogger.info('Application started');
 
-  // 捕获Flutter框架错误
+  // Capture Flutter framework errors
   FlutterError.onError = (FlutterErrorDetails details) {
     AppLogger.error(
-      'Flutter错误: ${details.exception}',
+      'Flutter error: ${details.exception}',
       error: details.exception,
       stackTrace: details.stack,
     );
     FlutterError.presentError(details);
   };
 
-  // 捕获异步错误
+  // Capture asynchronous errors
   runZonedGuarded(
     () {
       runApp(const MyApp());
     },
     (error, stackTrace) {
-      AppLogger.error('未捕获的异常', error: error, stackTrace: stackTrace);
+      AppLogger.error('Uncaught exception', error: error, stackTrace: stackTrace);
     },
   );
 }
@@ -91,7 +91,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     if (Platform.isIOS) {
-      AppLogger.warning('iOS平台暂不支持动态色彩，使用默认主题色彩');
+      AppLogger.warning('iOS don\'t support dynamic color, using fallback color scheme');
       ColorScheme colorScheme =
           ColorScheme.fromSeed(seedColor: Colors.pink.shade200);
       return MaterialApp(
@@ -160,12 +160,12 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    AppLogger.info('主页面初始化');
+    AppLogger.info('Main page initialized');
   }
 
   @override
   void dispose() {
-    AppLogger.info('主页面销毁');
+    AppLogger.info('Main page disposed');
     _pageController.dispose();
     super.dispose();
   }
@@ -269,7 +269,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _onItemTapped(int index) {
-    AppLogger.debug('切换到标签页: $index');
+    AppLogger.debug('Switching to tab: $index');
     setState(() => _selectedIndex = index);
     _pageController.animateToPage(
       index,

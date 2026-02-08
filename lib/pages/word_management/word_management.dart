@@ -30,7 +30,7 @@ class WordManagement extends StatelessWidget {
             subtitle: Text(context.l10n.wordListSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              AppLogger.info('打开查看单词页面');
+              AppLogger.info('Opening word list page');
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const WordViewPage()),
@@ -44,7 +44,7 @@ class WordManagement extends StatelessWidget {
             subtitle: Text(context.l10n.importWordListSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              AppLogger.info('选择文件导入单词清单');
+              AppLogger.info('Selecting file to import word list');
               _importWords(context);
             },
           ),
@@ -54,7 +54,7 @@ class WordManagement extends StatelessWidget {
             subtitle: Text(context.l10n.exportWordListSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              AppLogger.info('选择文件导出单词清单');
+              AppLogger.info('Selecting file to export word list');
               _exportWords(context);
             },
           ),
@@ -65,7 +65,7 @@ class WordManagement extends StatelessWidget {
             subtitle: Text(context.l10n.addWordSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              AppLogger.info('打开添加单词页面');
+              AppLogger.info('Opening add word page');
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const WordAddPage()),
@@ -88,12 +88,12 @@ class WordManagement extends StatelessWidget {
       acceptedTypeGroups: <XTypeGroup>[sqliteTypeGroup],
     );
     if (file == null) {
-      AppLogger.info('用户取消了文件选择');
+      AppLogger.info('User canceled file selection');
       return;
     }
     sqlite.Database? externalDb;
     try {
-      AppLogger.info('开始导入外部SQLite: ${file.path}');
+      AppLogger.info('Starting to import external SQLite: ${file.path}');
       externalDb = sqlite.sqlite3.open(file.path);
 
       final validTableNames = LanguageCode.values.map((e) => e.name).toSet();
@@ -112,19 +112,19 @@ class WordManagement extends StatelessWidget {
         tableName = matched.first;
         language = LanguageCode.values
             .firstWhere((item) => item.name == tableName);
-        AppLogger.info('自动识别语言表: $tableName');
+        AppLogger.info('Automatically detected language table: $tableName');
       } else {
         if (!context.mounted) return;
         final LanguageCode? selected = await _selectLanguage(context);
         if (selected == null) {
-          AppLogger.info('用户取消了语言选择');
+          AppLogger.info('User canceled language selection');
           return;
         }
         language = selected;
         tableName = language.name;
         final exists = tableNames.contains(tableName);
         if (!exists) {
-          throw Exception('未找到表: $tableName');
+          throw Exception('Table not found: $tableName');
         }
       }
 
@@ -145,7 +145,7 @@ class WordManagement extends StatelessWidget {
           .toSet();
       final missingColumns = requiredColumns.difference(existingColumns);
       if (missingColumns.isNotEmpty) {
-        throw Exception('缺少字段: ${missingColumns.join(', ')}');
+        throw Exception('Missing columns: ${missingColumns.join(', ')}');
       }
 
       final rows = externalDb.select(
@@ -153,7 +153,7 @@ class WordManagement extends StatelessWidget {
         'example_translation, unit_id, book_id FROM "$tableName";',
       );
       if (rows.isEmpty) {
-        throw Exception('未读取到任何数据');
+        throw Exception('No data found');
       }
 
       final dao = await WordDao.open();
@@ -206,7 +206,7 @@ class WordManagement extends StatelessWidget {
       }
 
       await dao.insertWords(language, words);
-      AppLogger.info('导入完成: ${words.length} 条, 跳过: $skipped 条');
+      AppLogger.info('Import completed: ${words.length} words, skipped: $skipped words');
 
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -215,7 +215,7 @@ class WordManagement extends StatelessWidget {
         ),
       );
     } catch (e, stackTrace) {
-      AppLogger.error('导入单词失败', error: e, stackTrace: stackTrace);
+      AppLogger.error('Failed to import words', error: e, stackTrace: stackTrace);
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.l10n.importFailed('$e'))),

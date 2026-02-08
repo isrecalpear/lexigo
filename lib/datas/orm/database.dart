@@ -25,14 +25,14 @@ class Database {
     db.execute('PRAGMA foreign_keys = ON;');
     _ensureBaseSchema(db);
     _db = db;
-    AppLogger.info('数据库初始化完成: ${dbFile.path}');
+    AppLogger.info('Database initialized: ${dbFile.path}');
     return db;
   }
 
   static Future<void> close() async {
     _db?.close();
     _db = null;
-    AppLogger.info('数据库连接已关闭');
+    AppLogger.info('Database connection closed');
   }
 
   static Future<File> _getDatabaseFile() async {
@@ -54,7 +54,7 @@ class Database {
         updated_at TEXT NOT NULL
       );
     ''');
-      AppLogger.debug('语言汇总表已确保存在');
+      AppLogger.debug('Language summary table ensured');
   }
 
   static String tableNameForLanguage(String languageCode) {
@@ -88,7 +88,7 @@ class Database {
         UNIQUE(original_word, book_id, unit_id)
       );
     ''');
-      AppLogger.debug('语言分表已确保存在: $tableName');
+      AppLogger.debug('Language table ensured: $tableName');
 
     db.execute('''
       CREATE INDEX IF NOT EXISTS idx_${tableName}_due
@@ -109,6 +109,6 @@ class Database {
       ''',
       [languageCode, tableName, displayName, now, now],
     );
-    AppLogger.info('更新语言表信息: $languageCode -> $tableName');
+    AppLogger.info('Updated language table info: $languageCode -> $tableName');
   }
 }

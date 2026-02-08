@@ -9,13 +9,12 @@ import 'package:intl/intl.dart';
 import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
 
-/// 应用日志管理器
 class AppLogger {
   static final AppLogger _instance = AppLogger._internal();
   static Logger? _logger;
   static File? _logFile;
-  static const int _maxLogFiles = 7; // 保留最近7天的日志
-  static const int _maxLogSizeBytes = 5 * 1024 * 1024; // 单个日志文件最大5MB
+  static const int _maxLogFiles = 7;
+  static const int _maxLogSizeBytes = 5 * 1024 * 1024;
 
   factory AppLogger() {
     return _instance;
@@ -29,26 +28,20 @@ class AppLogger {
         : await getApplicationSupportDirectory();
   }
 
-  /// 初始化日志系统
   static Future<void> initialize() async {
     try {
-      // 获取应用数据目录（Android使用Documents目录，其他平台使用Support目录）
       final Directory appDir = await _getLogBaseDirectory();
       final Directory logDir = Directory('${appDir.path}/logs');
 
-      // 创建日志目录（如果不存在）
       if (!await logDir.exists()) {
         await logDir.create(recursive: true);
       }
 
-      // 清理旧日志文件
       await _cleanOldLogs(logDir);
 
-      // 创建今天的日志文件
       final String dateStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
-      _logFile = File('${logDir.path}/lexigo_$dateStr.log');
+      _logFile = File('${logDir.path}/$dateStr.log');
 
-      // 配置日志器
       _logger = Logger(
         filter: ProductionFilter(),
         printer: _CustomLogPrinter(),
@@ -56,20 +49,19 @@ class AppLogger {
         level: Level.debug,
       );
 
-      _logger!.i('日志系统初始化成功');
+      _logger!.i('Logger initialized');
     } catch (e, stackTrace) {
       FlutterError.reportError(
         FlutterErrorDetails(
           exception: e,
           stack: stackTrace,
           library: 'app_logger',
-          context: ErrorDescription('初始化日志系统失败'),
+          context: ErrorDescription('Failed to initialize logger'),
         ),
       );
     }
   }
 
-  /// 清理旧的日志文件
   static Future<void> _cleanOldLogs(Directory logDir) async {
     try {
       final List<FileSystemEntity> files = logDir.listSync();
@@ -78,19 +70,16 @@ class AppLogger {
           .where((f) => f.path.endsWith('.log'))
           .toList();
 
-      // 按修改时间排序
       logFiles.sort(
         (a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()),
       );
 
-      // 删除超过保留数量的文件
       if (logFiles.length > _maxLogFiles) {
         for (int i = _maxLogFiles; i < logFiles.length; i++) {
           await logFiles[i].delete();
         }
       }
 
-      // 检查并删除过大的文件
       for (final file in logFiles) {
         final int fileSize = await file.length();
         if (fileSize > _maxLogSizeBytes) {
@@ -103,13 +92,12 @@ class AppLogger {
           exception: e,
           stack: stackTrace,
           library: 'app_logger',
-          context: ErrorDescription('清理旧日志失败'),
+          context: ErrorDescription('Failed to clean old logs'),
         ),
       );
     }
   }
 
-  /// 获取日志目录路径
   static Future<String?> getLogDirectory() async {
     try {
       final Directory appDir = await _getLogBaseDirectory();
@@ -119,7 +107,6 @@ class AppLogger {
     }
   }
 
-  /// 获取当天日志文件路径
   static Future<String?> getCurrentLogFilePath() async {
     try {
       if (_logFile != null) {
@@ -128,13 +115,13 @@ class AppLogger {
       final String? logDirPath = await getLogDirectory();
       if (logDirPath == null) return null;
       final String dateStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
-      return '$logDirPath/lexigo_$dateStr.log';
+      return '$logDirPath/$dateStr.log';
     } catch (e) {
       return null;
     }
   }
 
-  /// 读取当天日志内容
+  /// Read today's log content.
   static Future<String> readCurrentLog() async {
     try {
       final String? path = await getCurrentLogFilePath();
@@ -143,12 +130,11 @@ class AppLogger {
       if (!await file.exists()) return '';
       return await file.readAsString();
     } catch (e) {
-      _logger?.e('读取日志失败', error: e);
+      _logger?.e('Failed to read log file', error: e);
       return '';
     }
   }
 
-  /// 清除所有日志
   static Future<void> clearAllLogs() async {
     try {
       final String? logDirPath = await getLogDirectory();
@@ -157,15 +143,14 @@ class AppLogger {
         if (await logDir.exists()) {
           await logDir.delete(recursive: true);
           await logDir.create();
-          _logger?.i('所有日志已清除');
+          _logger?.i('All logs have been cleared');
         }
       }
     } catch (e) {
-      _logger?.e('清除日志失败', error: e);
+      _logger?.e('Failed to clear logs', error: e);
     }
   }
 
-  /// 获取日志文件大小（MB）
   static Future<double> getLogSize() async {
     try {
       final String? logDirPath = await getLogDirectory();
@@ -179,16 +164,15 @@ class AppLogger {
               totalSize += await file.length();
             }
           }
-          return totalSize / (1024 * 1024); // 转换为MB
+          return totalSize / (1024 * 1024);
         }
       }
     } catch (e) {
-      _logger?.e('获取日志大小失败', error: e);
+      _logger?.e('Failed to get log size', error: e);
     }
     return 0.0;
   }
 
-  // 日志方法
   static void debug(String message, {dynamic error, StackTrace? stackTrace}) {
     _logger?.d(message, error: error, stackTrace: stackTrace);
   }
@@ -210,7 +194,6 @@ class AppLogger {
   }
 }
 
-/// 自定义日志打印器
 class _CustomLogPrinter extends LogPrinter {
   @override
   List<String> log(LogEvent event) {
@@ -234,7 +217,6 @@ class _CustomLogPrinter extends LogPrinter {
   }
 }
 
-/// 文件输出
 class _FileOutput extends LogOutput {
   final File file;
 
@@ -251,7 +233,7 @@ class _FileOutput extends LogOutput {
           exception: e,
           stack: stackTrace,
           library: 'app_logger',
-          context: ErrorDescription('写入日志文件失败'),
+          context: ErrorDescription('Failed to write log to file'),
         ),
       );
     }

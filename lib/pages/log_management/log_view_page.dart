@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
 // Project imports:
+import 'package:lexigo/l10n/app_localizations.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
 class LogViewPage extends StatefulWidget {
@@ -40,7 +41,7 @@ class _LogViewPageState extends State<LogViewPage> {
       if (path == null) {
         setState(() {
           _content = '';
-          _error = '未找到日志路径';
+          _error = context.l10n.logPathNotFound;
           _loading = false;
         });
         return;
@@ -50,7 +51,7 @@ class _LogViewPageState extends State<LogViewPage> {
       if (!await file.exists()) {
         setState(() {
           _content = '';
-          _error = '暂无日志';
+          _error = context.l10n.logEmpty;
           _loading = false;
         });
         return;
@@ -64,7 +65,7 @@ class _LogViewPageState extends State<LogViewPage> {
     } catch (e) {
       setState(() {
         _content = '';
-        _error = '读取日志失败: $e';
+        _error = context.l10n.logReadFailed('$e');
         _loading = false;
       });
     }
@@ -78,8 +79,10 @@ class _LogViewPageState extends State<LogViewPage> {
     if (Platform.isLinux) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Linux 系统暂不支持日志分享')));
-      AppLogger.warning('分享日志失败: Linux 系统暂不支持日志分享');
+      ).showSnackBar(
+        SnackBar(content: Text(context.l10n.logShareNotSupported)),
+      );
+      AppLogger.warning('Log sharing is not supported on Linux');
       return;
     }
 
@@ -90,8 +93,8 @@ class _LogViewPageState extends State<LogViewPage> {
       if (path == null) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('未找到日志文件')));
-        AppLogger.warning('分享日志失败: 未找到日志文件');
+        ).showSnackBar(SnackBar(content: Text(context.l10n.logFileNotFound)));
+        AppLogger.warning('Failed to share log: log file not found');
         return;
       }
 
@@ -104,16 +107,20 @@ class _LogViewPageState extends State<LogViewPage> {
       if (result.status == ShareResultStatus.success) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('日志已分享')));
-        AppLogger.info('日志已分享');
+        ).showSnackBar(
+          SnackBar(content: Text(context.l10n.logShareSuccess)),
+        );
+        AppLogger.info('Log shared successfully');
       }
     } catch (e) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('分享日志失败: $e')));
-      AppLogger.error('分享日志失败', error: e);
+      ).showSnackBar(
+        SnackBar(content: Text(context.l10n.logShareFailed('$e'))),
+      );
+      AppLogger.error('Failed to share log', error: e);
     }
   }
 
@@ -121,7 +128,7 @@ class _LogViewPageState extends State<LogViewPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('日志查看'),
+        title: Text(context.l10n.logViewTitle),
         actions: [
           IconButton(
             onPressed: _loading ? null : _loadLog,
@@ -153,7 +160,7 @@ class _LogViewPageState extends State<LogViewPage> {
                       child: _error != null
                           ? Center(child: Text(_error!))
                           : _content.isEmpty
-                          ? const Center(child: Text('暂无日志'))
+                          ? Center(child: Text(context.l10n.logEmpty))
                           : SingleChildScrollView(
                               child: SelectableText(
                                 _content,

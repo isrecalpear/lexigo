@@ -22,7 +22,7 @@ class SettingsPage extends StatelessWidget {
             subtitle: Text(context.l10n.settingsWordManagementSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              AppLogger.info('打开单词管理页面');
+              AppLogger.info('Opening word management page');
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const WordManagement()),
@@ -36,7 +36,7 @@ class SettingsPage extends StatelessWidget {
             subtitle: Text(context.l10n.settingsLogManagementSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              AppLogger.info('打开日志管理页面');
+              AppLogger.info('Opening log management page');
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -52,7 +52,7 @@ class SettingsPage extends StatelessWidget {
             subtitle: Text(context.l10n.settingsAboutSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              AppLogger.info('打开关于页面');
+              AppLogger.info('Opening about page');
               showAboutDialog(
                 context: context,
                 applicationName: context.l10n.appTitle,

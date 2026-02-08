@@ -6,7 +6,7 @@ import 'package:lexigo/l10n/app_localizations.dart';
 import 'package:lexigo/pages/log_management/log_view_page.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
-/// 日志管理页面
+/// Log management page
 class LogManagementPage extends StatefulWidget {
   const LogManagementPage({super.key});
 
@@ -32,9 +32,9 @@ class _LogManagementPageState extends State<LogManagementPage> {
         _logSize = size;
         _isLoading = false;
       });
-      AppLogger.debug('加载日志信息: 大小=${size.toStringAsFixed(2)}MB');
+      AppLogger.debug('Loaded log info: size=${size.toStringAsFixed(2)}MB');
     } catch (e) {
-      AppLogger.error('加载日志信息失败', error: e);
+      AppLogger.error('Failed to load log info', error: e);
       setState(() => _isLoading = false);
     }
   }
@@ -68,7 +68,7 @@ class _LogManagementPageState extends State<LogManagementPage> {
           await _loadLogInfo();
         }
       } catch (e) {
-        AppLogger.error('清除日志失败', error: e);
+        AppLogger.error('Failed to clear logs', error: e);
         if (mounted) {
           ScaffoldMessenger.of(
             context,
@@ -99,7 +99,7 @@ class _LogManagementPageState extends State<LogManagementPage> {
                   subtitle: Text(context.l10n.logViewSubtitle),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
-                    AppLogger.info('打开日志查看页面');
+                    AppLogger.info('Opening log view page');
                     Navigator.push(
                       context,
                       MaterialPageRoute(

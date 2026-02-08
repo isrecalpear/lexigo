@@ -75,7 +75,7 @@ class WordProvider {
         final words = await dao.getWords(language);
         if (words.isNotEmpty) {
           final word = words[random.nextInt(words.length)];
-          AppLogger.debug('从数据库获取单词: ${word.originalWord}');
+          AppLogger.debug('Get word from database: ${word.originalWord}');
           return word;
         }
       } else {
@@ -86,21 +86,21 @@ class WordProvider {
         }
         if (allWords.isNotEmpty) {
           final word = allWords[random.nextInt(allWords.length)];
-          AppLogger.debug('从数据库获取单词: ${word.originalWord}');
+          AppLogger.debug('Get word from database: ${word.originalWord}');
           return word;
         }
       }
     } catch (e, stackTrace) {
-      AppLogger.error('从数据库获取单词失败', error: e, stackTrace: stackTrace);
+      AppLogger.error('Failed to get word from database', error: e, stackTrace: stackTrace);
     }
 
-    AppLogger.warning('数据库暂无单词，返回静态单词');
+    AppLogger.warning('No words in database, returning static word');
     return _staticWord;
   }
 
   bool signAsKnown(BuildContext context, Word word) {
     // TODO: Implement signAsKnown functionality
-    AppLogger.info('标记为熟知: ${word.originalWord}');
+    AppLogger.info('Marking as known: ${word.originalWord}');
     return true;
   }
 

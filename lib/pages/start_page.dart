@@ -76,7 +76,7 @@ class _StartPageState extends State<StartPage> {
   void _startLearning() {
     if (_currentWord == null) return;
     final word = _currentWord!;
-    AppLogger.info('开始学习单词: ${word.originalWord}');
+    AppLogger.info('Start learning word: ${word.originalWord}');
     final tag = 'word_${word.originalWord}';
     Navigator.of(context)
         .push<Word?>(
@@ -96,7 +96,7 @@ class _StartPageState extends State<StartPage> {
   @override
   void initState() {
     super.initState();
-    AppLogger.info('开始页面初始化');
+    AppLogger.info('Initializing start page');
     _loadNextWord();
   }
 

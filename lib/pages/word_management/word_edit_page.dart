@@ -52,7 +52,7 @@ class _WordEditPageState extends State<WordEditPage> {
 		);
 		_unitIdController = TextEditingController(text: widget.word.unitID);
 		_bookIdController = TextEditingController(text: widget.word.bookID);
-		AppLogger.info('进入编辑单词页面: ${widget.word.originalWord}');
+		AppLogger.info('Entering edit word page: ${widget.word.originalWord}');
 	}
 
 	@override
@@ -63,7 +63,7 @@ class _WordEditPageState extends State<WordEditPage> {
 		_exampleTranslationController.dispose();
 		_unitIdController.dispose();
 		_bookIdController.dispose();
-		AppLogger.info('离开编辑单词页面');
+		AppLogger.info('Leaving edit word page: ${widget.word.originalWord}');
 		super.dispose();
 	}
 
@@ -95,7 +95,7 @@ class _WordEditPageState extends State<WordEditPage> {
 
 			final dao = await WordDao.open();
 			await dao.updateWord(widget.word.sourceLanguageCode, updated);
-			AppLogger.info('编辑单词成功: ${updated.originalWord}');
+			AppLogger.info('Word updated successfully: ${updated.originalWord}');
 
 			if (!mounted) return;
 			ScaffoldMessenger.of(context).showSnackBar(
@@ -103,7 +103,7 @@ class _WordEditPageState extends State<WordEditPage> {
 			);
 			Navigator.pop<Word>(context, updated);
 		} catch (e, stackTrace) {
-			AppLogger.error('编辑单词失败', error: e, stackTrace: stackTrace);
+			AppLogger.error('Failed to update word', error: e, stackTrace: stackTrace);
 			if (!mounted) return;
 			ScaffoldMessenger.of(context).showSnackBar(
 				SnackBar(content: Text(context.l10n.editFailed('$e'))),

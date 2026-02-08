@@ -32,7 +32,7 @@ class _WordAddPageState extends State<WordAddPage> {
 	@override
 	void initState() {
 		super.initState();
-		AppLogger.info('进入添加单词页面');
+		AppLogger.info('Entering add word page');
 	}
 
 	@override
@@ -43,7 +43,7 @@ class _WordAddPageState extends State<WordAddPage> {
 		_exampleTranslationController.dispose();
 		_unitIdController.dispose();
 		_bookIdController.dispose();
-		AppLogger.info('离开添加单词页面');
+		AppLogger.info('Leaving add word page');
 		super.dispose();
 	}
 
@@ -58,7 +58,7 @@ class _WordAddPageState extends State<WordAddPage> {
 		});
 
 		try {
-			AppLogger.debug('开始保存单词: ${_originalWordController.text.trim()}');
+			AppLogger.debug('Starting to save word: ${_originalWordController.text.trim()}');
 			final card = fsrs.Card.create();
 			final word = Word(
 				originalWord: _originalWordController.text.trim(),
@@ -77,7 +77,7 @@ class _WordAddPageState extends State<WordAddPage> {
 
 			final dao = await WordDao.open();
 			await dao.insertWords(_languageCode, [word]);
-			AppLogger.info('保存单词成功: ${word.originalWord}');
+			AppLogger.info('Word saved successfully: ${word.originalWord}');
 
 			if (!mounted) return;
 			ScaffoldMessenger.of(context).showSnackBar(
@@ -89,7 +89,7 @@ class _WordAddPageState extends State<WordAddPage> {
 			_originalExampleController.clear();
 			_exampleTranslationController.clear();
 		} catch (e, stackTrace) {
-			AppLogger.error('保存单词失败', error: e, stackTrace: stackTrace);
+			AppLogger.error('Failed to save word', error: e, stackTrace: stackTrace);
 			if (!mounted) return;
 			ScaffoldMessenger.of(context).showSnackBar(
 				SnackBar(content: Text(context.l10n.addFailed('$e'))),

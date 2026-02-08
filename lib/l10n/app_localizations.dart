@@ -99,6 +99,14 @@ class AppLocalizations {
   String get logSizeTitle => _t('logSizeTitle');
   String get logViewTitle => _t('logViewTitle');
   String get logViewSubtitle => _t('logViewSubtitle');
+  String get logPathNotFound => _t('logPathNotFound');
+  String get logEmpty => _t('logEmpty');
+  String logReadFailed(String error) => _t('logReadFailed', {'error': error});
+  String get logShareNotSupported => _t('logShareNotSupported');
+  String get logFileNotFound => _t('logFileNotFound');
+  String get logShareSuccess => _t('logShareSuccess');
+  String logShareFailed(String error) =>
+      _t('logShareFailed', {'error': error});
   String get logAboutTitle => _t('logAboutTitle');
   String get logAboutSubtitle => _t('logAboutSubtitle');
   String get refreshInfo => _t('refreshInfo');
@@ -205,6 +213,13 @@ const Map<String, Map<String, String>> _localizedValues = {
     'logSizeTitle': 'Log size',
     'logViewTitle': 'View logs',
     'logViewSubtitle': 'View latest logs',
+    'logPathNotFound': 'Log file path not found',
+    'logEmpty': 'No logs',
+    'logReadFailed': 'Failed to read logs: {error}',
+    'logShareNotSupported': 'Log sharing is not supported on Linux',
+    'logFileNotFound': 'Log file not found',
+    'logShareSuccess': 'Log shared successfully',
+    'logShareFailed': 'Failed to share log: {error}',
     'logAboutTitle': 'About logs',
     'logAboutSubtitle':
         'Logs are stored in app data and kept for 7 days, older logs are removed automatically.',
@@ -286,6 +301,13 @@ const Map<String, Map<String, String>> _localizedValues = {
     'logSizeTitle': '日志大小',
     'logViewTitle': '日志查看',
     'logViewSubtitle': '查看最新日志',
+    'logPathNotFound': '未找到日志路径',
+    'logEmpty': '暂无日志',
+    'logReadFailed': '读取日志失败: {error}',
+    'logShareNotSupported': 'Linux 系统不支持分享日志',
+    'logFileNotFound': '未找到日志文件',
+    'logShareSuccess': '日志分享成功',
+    'logShareFailed': '分享日志失败: {error}',
     'logAboutTitle': '关于日志',
     'logAboutSubtitle': '日志文件保存在应用数据目录，最多保留7天，超过后自动删除旧日志。',
     'refreshInfo': '刷新信息',

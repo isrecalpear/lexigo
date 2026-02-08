@@ -60,7 +60,7 @@ class WordDao {
 				updated_at = excluded.updated_at;
 		''');
 
-		AppLogger.info('开始批量插入单词: ${words.length}');
+		AppLogger.info('Start to insert words: ${words.length}');
 		_db.execute('BEGIN');
 		try {
 			for (final word in words) {
@@ -70,7 +70,7 @@ class WordDao {
 			_db.execute('COMMIT');
 		} catch (e) {
 			_db.execute('ROLLBACK');
-			AppLogger.error('批量插入单词失败', error: e);
+			AppLogger.error('Failed to insert words', error: e);
 			rethrow;
 		} finally {
 			stmt.close();
@@ -120,7 +120,7 @@ class WordDao {
 				map[14],
 				map[6],
 			]);
-			AppLogger.info('更新单词成功: ${word.originalWord}');
+			AppLogger.info('Updated word successfully: ${word.originalWord}');
 			return _changes();
 		} finally {
 			stmt.close();
@@ -139,7 +139,7 @@ class WordDao {
 		final tableName = _tableName(language);
 		int total = 0;
 
-		AppLogger.info('开始批量删除单词: ${cardIds.length}');
+		AppLogger.info('Start to delete words in batch: ${cardIds.length}');
 		_db.execute('BEGIN');
 		try {
 			for (final chunk in _chunk(cardIds, 500)) {
@@ -157,7 +157,7 @@ class WordDao {
 			_db.execute('COMMIT');
 		} catch (e) {
 			_db.execute('ROLLBACK');
-			AppLogger.error('批量删除单词失败', error: e);
+			AppLogger.error('Failed to delete words in batch', error: e);
 			rethrow;
 		}
 
@@ -170,7 +170,7 @@ class WordDao {
 		final tableName = _tableName(language);
 		_db.execute('DELETE FROM $tableName;');
 		final count = _changes();
-		AppLogger.info('清空单词表: $tableName, 删除数量: $count');
+		AppLogger.info('Cleared word table: $tableName, deleted count: $count');
 		_refreshWordCount(language);
 		return count;
 	}
@@ -188,7 +188,7 @@ class WordDao {
 		if (result.isEmpty) {
 			return null;
 		}
-		AppLogger.debug('查询单词成功: cardId=$cardId');
+		AppLogger.debug('Retrieved word successfully: cardId=$cardId');
 		return _fromRow(result.first, language);
 	}
 
@@ -213,7 +213,7 @@ class WordDao {
 		buffer.write(';');
 
 		final result = _db.select(buffer.toString());
-		AppLogger.debug('查询单词列表: ${result.length}');
+		AppLogger.debug('Retrieved word list: ${result.length}');
 		return result.map((row) => _fromRow(row, language)).toList();
 	}
 

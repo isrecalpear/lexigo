@@ -4,8 +4,12 @@ import 'package:flutter/material.dart';
 // Project imports:
 import 'package:lexigo/datas/word.dart';
 import 'package:lexigo/datas/word_provider.dart';
+import 'package:lexigo/l10n/app_localizations.dart';
 
 class WordCard extends StatelessWidget {
+  static const String _menuCorrect = 'correct';
+  static const String _menuKnown = 'known';
+
   const WordCard({
     super.key,
     required this.word,
@@ -47,16 +51,21 @@ class WordCard extends StatelessWidget {
                     const Spacer(),
                     PopupMenuButton<String>(
                       onSelected: (value) {
-                        if (value == '纠错') {
+                        if (value == _menuCorrect) {
                           signAsWrong(context);
-                        } else if (value == '熟知') {
+                        } else if (value == _menuKnown) {
                           signAsKnown();
                         }
                       },
                       itemBuilder: (context) => [
-                        // TODO: Change to Enum
-                        const PopupMenuItem(value: '纠错', child: Text('纠错')),
-                        const PopupMenuItem(value: '熟知', child: Text('标记为熟知')),
+                        PopupMenuItem(
+                          value: _menuCorrect,
+                          child: Text(context.l10n.wordCardCorrect),
+                        ),
+                        PopupMenuItem(
+                          value: _menuKnown,
+                          child: Text(context.l10n.wordCardMarkKnown),
+                        ),
                       ],
                       icon: Icon(
                         Icons.more_vert_outlined,
@@ -96,7 +105,7 @@ class WordCard extends StatelessWidget {
   }
 
   void signAsKnown() {
-    debugPrint('WordCard: 标记为熟知 for ${word.originalWord}');
+    debugPrint('WordCard: marked as known for ${word.originalWord}');
   }
 
   Future<void> signAsWrong(BuildContext context) async {

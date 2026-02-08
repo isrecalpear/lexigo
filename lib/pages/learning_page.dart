@@ -31,7 +31,7 @@ class _LearningPageState extends State<LearningPage> {
     super.initState();
     _currentWord = widget.word;
     _heroTag = widget.heroTag;
-    AppLogger.info('进入学习页面: ${widget.word.originalWord}');
+    AppLogger.info('Entering learning page: ${widget.word.originalWord}');
   }
 
   @override
@@ -44,7 +44,7 @@ class _LearningPageState extends State<LearningPage> {
         if (didPop) return;
         if (!mounted) return;
 
-        // 立即弹出，避免延迟导致的问题
+        // Pop immediately to avoid issues caused by delayed navigation.
         Navigator.pop(context, _currentWord);
       },
       child: Scaffold(
@@ -80,7 +80,7 @@ class _LearningPageState extends State<LearningPage> {
                         ),
                 ),
                 const SizedBox(height: 12),
-                // 上方内容占据上方空间，按钮区域占据底部三分之一
+                // Keep content above and reserve the bottom third for actions.
                 Expanded(child: SizedBox()),
                 Container(
                   height: screenHeight / 3,
