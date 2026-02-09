@@ -23,9 +23,12 @@ class AppLogger {
   AppLogger._internal();
 
   static Future<Directory> _getLogBaseDirectory() async {
+    /* 
     return Platform.isAndroid
         ? await getApplicationDocumentsDirectory()
         : await getApplicationSupportDirectory();
+    */
+    return await getApplicationSupportDirectory();
   }
 
   static Future<void> initialize() async {

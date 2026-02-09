@@ -15,11 +15,14 @@ import 'pages/records.dart';
 import 'pages/settings_page.dart';
 import 'pages/start_page.dart';
 import 'utils/app_logger.dart';
+import 'utils/settings.dart';
 
 class AppRouteObserver extends NavigatorObserver {
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
-    AppLogger.info('Entering page: ${route.settings.name ?? route.runtimeType}');
+    AppLogger.info(
+      'Entering page: ${route.settings.name ?? route.runtimeType}',
+    );
     super.didPush(route, previousRoute);
   }
 
@@ -61,14 +64,25 @@ void main() async {
       runApp(const MyApp());
     },
     (error, stackTrace) {
-      AppLogger.error('Uncaught exception', error: error, stackTrace: stackTrace);
+      AppLogger.error(
+        'Uncaught exception',
+        error: error,
+        stackTrace: stackTrace,
+      );
     },
   );
 }
 
-ThemeData buildTheme(ColorScheme? dynamicScheme, bool isDarkMode) {
-  ColorScheme colorScheme =
-      dynamicScheme ?? (isDarkMode ? ColorScheme.dark() : ColorScheme.light());
+ThemeData buildTheme(
+  ColorScheme? dynamicScheme,
+  bool isDarkMode, {
+  Color? seedColor,
+}) {
+  final Brightness brightness = isDarkMode ? Brightness.dark : Brightness.light;
+  final ColorScheme colorScheme = seedColor != null
+      ? ColorScheme.fromSeed(seedColor: seedColor, brightness: brightness)
+      : (dynamicScheme ??
+            (isDarkMode ? ColorScheme.dark() : ColorScheme.light()));
   return ThemeData(colorScheme: colorScheme, useMaterial3: true);
 }
 
@@ -80,20 +94,52 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  late final SettingsStore _settingsStore;
   Locale? _locale;
+  ThemeMode _themeMode = ThemeMode.system;
+  Color? _colorSeed;
+
+  @override
+  void initState() {
+    super.initState();
+    _settingsStore = SettingsStore(Settings.defaults());
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    await _settingsStore.loadSettings();
+    final Settings settings = _settingsStore.settings;
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _locale = settings.locale;
+      _themeMode = settings.themeMode;
+      _colorSeed = settings.colorSeed;
+    });
+  }
 
   void _setLocale(Locale? locale) {
     setState(() {
       _locale = locale;
     });
+    final Settings updated = _settingsStore.settings.copyWith(
+      locale: locale,
+      localeSet: true,
+    );
+    _settingsStore.updateSettings(updated);
+    unawaited(_settingsStore.saveSettings());
   }
 
   @override
   Widget build(BuildContext context) {
     if (Platform.isIOS) {
-      AppLogger.warning('iOS don\'t support dynamic color, using fallback color scheme');
-      ColorScheme colorScheme =
-          ColorScheme.fromSeed(seedColor: Colors.pink.shade200);
+      AppLogger.warning(
+        'iOS don\'t support dynamic color, using fallback color scheme',
+      );
+      ColorScheme colorScheme = ColorScheme.fromSeed(
+        seedColor: _colorSeed ?? Colors.pink.shade200,
+      );
       return MaterialApp(
         locale: _locale,
         supportedLocales: AppLocalizations.supportedLocales,
@@ -103,13 +149,17 @@ class _MyAppState extends State<MyApp> {
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-        theme: buildTheme(colorScheme, false),
-        darkTheme: buildTheme(colorScheme, true),
-        themeMode: ThemeMode.system,
+        theme: buildTheme(colorScheme, false, seedColor: _colorSeed),
+        darkTheme: buildTheme(colorScheme, true, seedColor: _colorSeed),
+        themeMode: _themeMode,
         navigatorObservers: [AppRouteObserver()],
         home: MyHomePage(
           locale: _locale,
           onLocaleChanged: _setLocale,
+          themeMode: _themeMode,
+          onThemeModeChanged: _setThemeMode,
+          colorSeed: _colorSeed,
+          onColorSeedChanged: _setColorSeed,
         ),
       );
     } else {
@@ -124,18 +174,40 @@ class _MyAppState extends State<MyApp> {
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
-            theme: buildTheme(lightDynamic, false),
-            darkTheme: buildTheme(darkDynamic, true),
-            themeMode: ThemeMode.system,
+            theme: buildTheme(lightDynamic, false, seedColor: _colorSeed),
+            darkTheme: buildTheme(darkDynamic, true, seedColor: _colorSeed),
+            themeMode: _themeMode,
             navigatorObservers: [AppRouteObserver()],
             home: MyHomePage(
               locale: _locale,
               onLocaleChanged: _setLocale,
+              themeMode: _themeMode,
+              onThemeModeChanged: _setThemeMode,
+              colorSeed: _colorSeed,
+              onColorSeedChanged: _setColorSeed,
             ),
           );
         },
       );
     }
+  }
+
+  void _setThemeMode(ThemeMode mode) {
+    setState(() {
+      _themeMode = mode;
+    });
+    final Settings updated = _settingsStore.settings.copyWith(themeMode: mode);
+    _settingsStore.updateSettings(updated);
+    unawaited(_settingsStore.saveSettings());
+  }
+
+  void _setColorSeed(Color? seed) {
+    setState(() {
+      _colorSeed = seed;
+    });
+    final Settings updated = _settingsStore.settings.copyWith(colorSeed: seed);
+    _settingsStore.updateSettings(updated);
+    unawaited(_settingsStore.saveSettings());
   }
 }
 
@@ -144,10 +216,18 @@ class MyHomePage extends StatefulWidget {
     super.key,
     required this.locale,
     required this.onLocaleChanged,
+    required this.themeMode,
+    required this.onThemeModeChanged,
+    required this.colorSeed,
+    required this.onColorSeedChanged,
   });
 
   final Locale? locale;
   final ValueChanged<Locale?> onLocaleChanged;
+  final ThemeMode themeMode;
+  final ValueChanged<ThemeMode> onThemeModeChanged;
+  final Color? colorSeed;
+  final ValueChanged<Color?> onColorSeedChanged;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -187,10 +267,6 @@ class _MyHomePageState extends State<MyHomePage> {
             },
             suggestionsBuilder: _suggestionsBuilder,
           ),
-          IconButton(
-            icon: const Icon(Icons.language_outlined),
-            onPressed: () => _showLanguagePicker(context),
-          ),
         ],
       ),
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -199,7 +275,18 @@ class _MyHomePageState extends State<MyHomePage> {
         onPageChanged: (index) {
           setState(() => _selectedIndex = index);
         },
-        children: const [StartPage(), RecordsPicker(), SettingsPage()],
+        children: [
+          const StartPage(),
+          const RecordsPicker(),
+          SettingsPage(
+            locale: widget.locale,
+            onLocaleChanged: widget.onLocaleChanged,
+            themeMode: widget.themeMode,
+            onThemeModeChanged: widget.onThemeModeChanged,
+            colorSeed: widget.colorSeed,
+            onColorSeedChanged: widget.onColorSeedChanged,
+          ),
+        ],
       ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Theme.of(context).colorScheme.surface,
@@ -224,48 +311,6 @@ class _MyHomePageState extends State<MyHomePage> {
         onTap: _onItemTapped,
       ),
     );
-  }
-
-  Future<void> _showLanguagePicker(BuildContext context) async {
-    final l10n = context.l10n;
-    final selected = await showModalBottomSheet<Locale?>(
-      context: context,
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                title: Text(l10n.languageSystem),
-                trailing: widget.locale == null
-                    ? const Icon(Icons.check)
-                    : null,
-                onTap: () => Navigator.pop(context, null),
-              ),
-              ListTile(
-                title: Text(l10n.languageChinese),
-                trailing: widget.locale?.languageCode == 'zh'
-                    ? const Icon(Icons.check)
-                    : null,
-                onTap: () => Navigator.pop(context, const Locale('zh')),
-              ),
-              ListTile(
-                title: Text(l10n.languageEnglish),
-                trailing: widget.locale?.languageCode == 'en'
-                    ? const Icon(Icons.check)
-                    : null,
-                onTap: () => Navigator.pop(context, const Locale('en')),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-
-    if (!mounted) return;
-    if (selected != widget.locale) {
-      widget.onLocaleChanged(selected);
-    }
   }
 
   void _onItemTapped(int index) {

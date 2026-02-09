@@ -7,10 +7,7 @@ class AppLocalizations {
 
   final Locale locale;
 
-  static const supportedLocales = <Locale>[
-    Locale('en'),
-    Locale('zh'),
-  ];
+  static const supportedLocales = <Locale>[Locale('en'), Locale('zh')];
 
   static AppLocalizations of(BuildContext context) {
     final value = Localizations.of<AppLocalizations>(context, AppLocalizations);
@@ -54,6 +51,23 @@ class AppLocalizations {
   String get settingsWordManagement => _t('settingsWordManagement');
   String get settingsWordManagementSubtitle =>
       _t('settingsWordManagementSubtitle');
+  String get settingsEditSettings => _t('settingsEditSettings');
+  String get settingsEditSettingsSubtitle => _t('settingsEditSettingsSubtitle');
+  String get settingsLanguage => _t('settingsLanguage');
+  String get settingsTheme => _t('settingsTheme');
+  String get settingsThemeColor => _t('settingsThemeColor');
+  String get themeSystem => _t('themeSystem');
+  String get themeLight => _t('themeLight');
+  String get themeDark => _t('themeDark');
+  String get themeColorAuto => _t('themeColorAuto');
+  String get themeColorPick => _t('themeColorPick');
+  String get themeColorPickerTitle => _t('themeColorPickerTitle');
+  String get themeColorHue => _t('themeColorHue');
+  String get themeColorSaturation => _t('themeColorSaturation');
+  String get themeColorBrightness => _t('themeColorBrightness');
+  String get themeColorHexLabel => _t('themeColorHexLabel');
+  String get themeColorHexHint => _t('themeColorHexHint');
+  String get themeColorHexInvalid => _t('themeColorHexInvalid');
   String get settingsLogManagement => _t('settingsLogManagement');
   String get settingsLogManagementSubtitle =>
       _t('settingsLogManagementSubtitle');
@@ -71,10 +85,8 @@ class AppLocalizations {
   String get selectLanguageTitle => _t('selectLanguageTitle');
   String get cancel => _t('cancel');
   String get confirm => _t('confirm');
-  String importSuccess(int count, int skipped) => _t('importSuccess', {
-        'count': '$count',
-        'skipped': '$skipped',
-      });
+  String importSuccess(int count, int skipped) =>
+      _t('importSuccess', {'count': '$count', 'skipped': '$skipped'});
   String importFailed(String error) => _t('importFailed', {'error': error});
   String get addWordPageTitle => _t('addWordPageTitle');
   String get editWordPageTitle => _t('editWordPageTitle');
@@ -105,8 +117,7 @@ class AppLocalizations {
   String get logShareNotSupported => _t('logShareNotSupported');
   String get logFileNotFound => _t('logFileNotFound');
   String get logShareSuccess => _t('logShareSuccess');
-  String logShareFailed(String error) =>
-      _t('logShareFailed', {'error': error});
+  String logShareFailed(String error) => _t('logShareFailed', {'error': error});
   String get logAboutTitle => _t('logAboutTitle');
   String get logAboutSubtitle => _t('logAboutSubtitle');
   String get refreshInfo => _t('refreshInfo');
@@ -134,9 +145,9 @@ class _AppLocalizationsDelegate
   const _AppLocalizationsDelegate();
 
   @override
-  bool isSupported(Locale locale) =>
-      AppLocalizations.supportedLocales
-          .any((supported) => supported.languageCode == locale.languageCode);
+  bool isSupported(Locale locale) => AppLocalizations.supportedLocales.any(
+    (supported) => supported.languageCode == locale.languageCode,
+  );
 
   @override
   Future<AppLocalizations> load(Locale locale) {
@@ -171,6 +182,23 @@ const Map<String, Map<String, String>> _localizedValues = {
     'ratingAgain': 'Again',
     'settingsWordManagement': 'Word management',
     'settingsWordManagementSubtitle': 'View and maintain words',
+    'settingsEditSettings': 'Edit settings',
+    'settingsEditSettingsSubtitle': 'Edit app settings',
+    'settingsLanguage': 'Language',
+    'settingsTheme': 'Theme',
+    'settingsThemeColor': 'Theme color',
+    'themeSystem': 'System',
+    'themeLight': 'Light',
+    'themeDark': 'Dark',
+    'themeColorAuto': 'Auto',
+    'themeColorPick': 'Choose color',
+    'themeColorPickerTitle': 'Pick theme color',
+    'themeColorHue': 'Hue',
+    'themeColorSaturation': 'Saturation',
+    'themeColorBrightness': 'Brightness',
+    'themeColorHexLabel': 'Hex color',
+    'themeColorHexHint': '#RRGGBB or #AARRGGBB',
+    'themeColorHexInvalid': 'Invalid hex color',
     'settingsLogManagement': 'Log management',
     'settingsLogManagementSubtitle': 'View and manage logs',
     'settingsAbout': 'About',
@@ -206,8 +234,7 @@ const Map<String, Map<String, String>> _localizedValues = {
     'editFailed': 'Update failed: {error}',
     'logManagementTitle': 'Log management',
     'logClearConfirmTitle': 'Confirm clear',
-    'logClearConfirmContent':
-        'Clear all logs? This action cannot be undone.',
+    'logClearConfirmContent': 'Clear all logs? This action cannot be undone.',
     'logCleared': 'Logs cleared',
     'clearFailed': 'Clear failed: {error}',
     'logSizeTitle': 'Log size',
@@ -260,6 +287,23 @@ const Map<String, Map<String, String>> _localizedValues = {
     'ratingAgain': '忘记',
     'settingsWordManagement': '单词管理',
     'settingsWordManagementSubtitle': '查看与维护单词数据',
+    'settingsEditSettings': '编辑设置',
+    'settingsEditSettingsSubtitle': '编辑应用设置',
+    'settingsLanguage': '语言',
+    'settingsTheme': '主题',
+    'settingsThemeColor': '主题色',
+    'themeSystem': '跟随系统',
+    'themeLight': '浅色',
+    'themeDark': '深色',
+    'themeColorAuto': '自动',
+    'themeColorPick': '选择颜色',
+    'themeColorPickerTitle': '选择主题色',
+    'themeColorHue': '色相',
+    'themeColorSaturation': '饱和度',
+    'themeColorBrightness': '亮度',
+    'themeColorHexLabel': '十六进制颜色',
+    'themeColorHexHint': '#RRGGBB 或 #AARRGGBB',
+    'themeColorHexInvalid': '无效的颜色值',
     'settingsLogManagement': '日志管理',
     'settingsLogManagementSubtitle': '查看和管理应用日志',
     'settingsAbout': '关于',
