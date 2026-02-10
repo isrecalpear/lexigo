@@ -11,8 +11,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 // Project imports:
 import 'l10n/app_localizations.dart';
-import 'pages/records.dart';
-import 'pages/settings_page.dart';
+import 'pages/my_page.dart';
+import 'pages/records_page.dart';
 import 'pages/start_page.dart';
 import 'utils/app_logger.dart';
 import 'utils/settings.dart';

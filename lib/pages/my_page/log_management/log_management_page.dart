@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 // Project imports:
 import 'package:lexigo/l10n/app_localizations.dart';
-import 'package:lexigo/pages/log_management/log_view_page.dart';
+import 'package:lexigo/pages/my_page/log_management/log_view_page.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
 /// Log management page
