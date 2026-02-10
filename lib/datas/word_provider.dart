@@ -57,7 +57,7 @@ class WordProvider {
     enableFuzzing: _schedulerEnableFuzzing,
   );
 
-  static final Word _staticWord =  Word(
+  static final Word _staticWord = Word(
     originalWord: "Love",
     translation: "爱",
     originalExample: "I love you.",
@@ -91,11 +91,37 @@ class WordProvider {
         }
       }
     } catch (e, stackTrace) {
-      AppLogger.error('Failed to get word from database', error: e, stackTrace: stackTrace);
+      AppLogger.error(
+        'Failed to get word from database',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
 
     AppLogger.warning('No words in database, returning static word');
     return _staticWord;
+  }
+
+  Future<Word?> getReviewWord() async {
+    try {
+      final dao = await WordDao.open();
+      // TODO: read the language code from settings
+      final dueCard = await dao.getReviewWord(LanguageCode.en);
+      if (dueCard != null) {
+        AppLogger.debug(
+          'Get review word from database: ${dueCard.originalWord}',
+        );
+        return dueCard;
+      }
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'Failed to get review word from database',
+        error: e,
+        stackTrace: stackTrace,
+      );
+    }
+    AppLogger.warning('No review words in database, returning static word');
+    return null;
   }
 
   bool signAsKnown(BuildContext context, Word word) {
@@ -117,15 +143,37 @@ class WordProvider {
   }
 
   Future<void> reviewWord(Word word, fsrs.Rating rating) async {
-    final card_ = await word.card;
-    final (:card, :reviewLog) = scheduler.reviewCard(card_, rating);
-    AppLogger.info("Card rated  ${reviewLog.rating} at ${reviewLog.reviewDateTime}");
+    try {
+      final card_ = await word.card;
+      final (:card, :reviewLog) = scheduler.reviewCard(card_, rating);
+      AppLogger.info(
+        "Card rated ${reviewLog.rating} at ${reviewLog.reviewDateTime}",
+      );
 
-    final due = card.due;
+      final updatedWord = Word(
+        originalWord: word.originalWord,
+        translation: word.translation,
+        originalExample: word.originalExample,
+        exampleTranslation: word.exampleTranslation,
+        sourceLanguageCode: word.sourceLanguageCode,
+        card: Future.value(card),
+        unitID: word.unitID,
+        bookID: word.bookID,
+      );
 
-    final timeDelta = due.difference(DateTime.now());
+      final dao = await WordDao.open();
+      await dao.updateWord(word.sourceLanguageCode, updatedWord);
 
-    AppLogger.debug("Card due on $due");
-    AppLogger.debug("Card due in ${timeDelta.inSeconds} seconds");
+      final due = card.due;
+      final timeDelta = due.difference(DateTime.now());
+      AppLogger.debug("Card due on $due");
+      AppLogger.debug("Card due in ${timeDelta.inSeconds} seconds");
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'Failed to review word',
+        error: e,
+        stackTrace: stackTrace,
+      );
     }
+  }
 }

@@ -50,11 +50,11 @@ class Database {
         table_name TEXT NOT NULL UNIQUE,
         display_name TEXT,
         word_count INTEGER NOT NULL DEFAULT 0,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
       );
     ''');
-      AppLogger.debug('Language summary table ensured');
+    AppLogger.debug('Language summary table ensured');
   }
 
   static String tableNameForLanguage(String languageCode) {
@@ -81,21 +81,21 @@ class Database {
         card_step INTEGER,
         card_stability REAL,
         card_difficulty REAL,
-        card_due TEXT NOT NULL,
-        card_last_review TEXT,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
+        card_due INTEGER NOT NULL,
+        card_last_review INTEGER,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
         UNIQUE(original_word, book_id, unit_id)
       );
     ''');
-      AppLogger.debug('Language table ensured: $tableName');
+    AppLogger.debug('Language table ensured: $tableName');
 
     db.execute('''
       CREATE INDEX IF NOT EXISTS idx_${tableName}_due
       ON $tableName (card_due);
     ''');
 
-    final now = DateTime.now().toUtc().toIso8601String();
+    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
     db.execute(
       '''
       INSERT INTO language_tables (

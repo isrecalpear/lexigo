@@ -323,6 +323,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  // TODO: Implement the searching functionality
   static const List<String> _kOptions = <String>[
     'aardvark',
     'bobcat',
