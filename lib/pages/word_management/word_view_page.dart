@@ -94,9 +94,7 @@ class _WordViewPageState extends State<WordViewPage> {
       builder: (context) {
         return AlertDialog(
           title: Text(context.l10n.deleteWordTitle),
-          content: Text(
-            context.l10n.deleteWordConfirm(item.word.originalWord),
-          ),
+          content: Text(context.l10n.deleteWordConfirm(item.word.originalWord)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
@@ -132,9 +130,7 @@ class _WordViewPageState extends State<WordViewPage> {
         stackTrace: stackTrace,
       );
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(context.l10n.deleteFailed('$e'))),
         );
       }
@@ -174,7 +170,10 @@ class _WordViewPageState extends State<WordViewPage> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const WordAddPage()),
+                MaterialPageRoute(
+                  builder: (context) =>
+                      WordAddPage(languageCode: _languageCode),
+                ),
               ).then((_) => _loadWords());
             },
           ),
@@ -213,8 +212,8 @@ class _WordViewPageState extends State<WordViewPage> {
                 onRefresh: _loadWords,
                 child: _isLoading
                     ? const Center(child: CircularProgressIndicator())
-                  : _words.isEmpty
-                  ? Center(child: Text(context.l10n.wordViewEmpty))
+                    : _words.isEmpty
+                    ? Center(child: Text(context.l10n.wordViewEmpty))
                     : ListView.separated(
                         itemCount: _words.length,
                         separatorBuilder: (_, _) => const Divider(height: 1),
