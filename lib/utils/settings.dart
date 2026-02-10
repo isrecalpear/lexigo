@@ -11,8 +11,8 @@ import 'package:yaml/yaml.dart' as yaml;
 class Settings {
   // FSRS Scheduler Settings
   double fsrsDesiredRetention;
-  List fsrsLearningSteps = [Duration(minutes: 1), Duration(minutes: 10)];
-  List fsrsRelearningSteps = [Duration(minutes: 10)];
+  List<Duration> fsrsLearningSteps = [Duration(minutes: 1), Duration(minutes: 10)];
+  List<Duration> fsrsRelearningSteps = [Duration(minutes: 10)];
   int fsrsMaximumInterval;
   bool fsrsEnableFuzzing;
 
@@ -49,8 +49,8 @@ class Settings {
 
   Settings copyWith({
     double? fsrsDesiredRetention,
-    List? fsrsLearningSteps,
-    List? fsrsRelearningSteps,
+    List<Duration>? fsrsLearningSteps,
+    List<Duration>? fsrsRelearningSteps,
     int? fsrsMaximumInterval,
     bool? fsrsEnableFuzzing,
     Locale? locale,
