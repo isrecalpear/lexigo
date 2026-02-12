@@ -10,6 +10,7 @@ import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 // Project imports:
+import 'datas/orm/words.dart';
 import 'datas/word.dart';
 import 'l10n/app_localizations.dart';
 import 'pages/my_page.dart';
@@ -259,6 +260,11 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final PageController _pageController = PageController();
   int _selectedIndex = 0;
+  Timer? _searchDebounceTimer;
+  Completer<List<Word>>? _searchCompleter;
+  int _searchRequestId = 0;
+  static const Duration _searchDebounceDuration = Duration(milliseconds: 300);
+  Iterable<Widget> _lastOptions = <Widget>[];
 
   @override
   void initState() {
@@ -269,6 +275,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void dispose() {
     AppLogger.info('Main page disposed');
+    _searchDebounceTimer?.cancel();
     _pageController.dispose();
     super.dispose();
   }
@@ -375,48 +382,79 @@ class _MyHomePageState extends State<MyHomePage> {
     widget.onLearningLanguageChanged(selected);
   }
 
-  // TODO: Implement the searching functionality
-  static const List<String> _kOptions = <String>[
-    'aardvark',
-    'bobcat',
-    'chameleon',
-  ];
-
-  String? _searchingWithQuery;
-  late Iterable<Widget> _lastOptions = <Widget>[];
-
   Future<Iterable<Widget>> _suggestionsBuilder(
     BuildContext context,
     SearchController controller,
   ) async {
-    _searchingWithQuery = controller.text;
-    final List<String> options = (await _performSearch(
-      _searchingWithQuery!,
-    )).toList();
-
-    // If another search happened after this one, throw away these options.
-    // Use the previous options instead and wait for the newer request to
-    // finish.
-    if (_searchingWithQuery != controller.text) {
+    final String query = controller.text.trim();
+    if (query.isEmpty) {
+      _lastOptions = <Widget>[];
       return _lastOptions;
     }
 
-    _lastOptions = List<ListTile>.generate(options.length, (int index) {
-      final String item = options[index];
-      return ListTile(title: Text(item));
-    });
+    final List<Word> results = await _debouncedSearch(query);
+
+    if (query != controller.text.trim()) {
+      return _lastOptions;
+    }
+
+    _lastOptions = results
+        .map(
+          (word) => ListTile(
+            title: Text(word.originalWord),
+            subtitle: Text(word.translation),
+            onTap: () {
+              controller.closeView(word.originalWord);
+            },
+          ),
+        )
+        .toList();
 
     return _lastOptions;
   }
 
-  // Searches the options, but injects a fake "network" delay.
-  static Future<Iterable<String>> _performSearch(String query) async {
-    await Future<void>.delayed(Duration(seconds: 1)); // Fake 1 second delay.
-    if (query == '') {
-      return const Iterable<String>.empty();
+  Future<List<Word>> _debouncedSearch(String query) async {
+    _searchDebounceTimer?.cancel();
+    if (_searchCompleter != null && !_searchCompleter!.isCompleted) {
+      _searchCompleter!.complete(<Word>[]);
     }
-    return _kOptions.where((String option) {
-      return option.contains(query.toLowerCase());
+    final completer = Completer<List<Word>>();
+    _searchCompleter = completer;
+    final int requestId = ++_searchRequestId;
+
+    _searchDebounceTimer = Timer(_searchDebounceDuration, () async {
+      final List<Word> results = await _performSearch(query);
+      if (requestId != _searchRequestId) {
+        return;
+      }
+      if (!completer.isCompleted) {
+        completer.complete(results);
+      }
     });
+
+    return completer.future;
+  }
+
+  Future<List<Word>> _performSearch(String query) async {
+    final String trimmed = query.trim();
+    if (trimmed.isEmpty) {
+      return <Word>[];
+    }
+
+    try {
+      final dao = await WordDao.open();
+      return await dao.searchWords(
+        widget.learningLanguage,
+        trimmed,
+        limit: 20,
+      );
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'Failed to search words',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      return <Word>[];
+    }
   }
 }

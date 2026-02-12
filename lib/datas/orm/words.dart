@@ -214,6 +214,28 @@ class WordDao {
     return result.map((row) => _fromRow(row, language)).toList();
   }
 
+  Future<List<Word>> searchWords(
+    LanguageCode language,
+    String query, {
+    int limit = 20,
+  }) async {
+    _ensureTable(language);
+    final tableName = _tableName(language);
+    final String like = '%$query%';
+    final result = _db.select(
+      'SELECT * FROM $tableName '
+      'WHERE original_word LIKE ? '
+      'OR translation LIKE ? '
+      'OR original_example LIKE ? '
+      'OR example_translation LIKE ? '
+      'ORDER BY card_due ASC '
+      'LIMIT ?;',
+      [like, like, like, like, limit],
+    );
+    AppLogger.debug('Search words: query="$query", count=${result.length}');
+    return result.map((row) => _fromRow(row, language)).toList();
+  }
+
   Future<Word?> getReviewWord(LanguageCode language) async {
     // get due cards from database, return the first one if exists
     _ensureTable(language);
