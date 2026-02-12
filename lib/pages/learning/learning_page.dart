@@ -12,10 +12,16 @@ import 'package:lexigo/pages/widgets/word_card.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
 class LearningPage extends StatefulWidget {
-  const LearningPage({super.key, required this.word, required this.heroTag});
+  const LearningPage({
+    super.key,
+    required this.word,
+    required this.heroTag,
+    required this.learningLanguage,
+  });
 
   final Word word;
   final String heroTag;
+  final LanguageCode learningLanguage;
 
   @override
   State<LearningPage> createState() => _LearningPageState();
@@ -120,7 +126,9 @@ class _LearningPageState extends State<LearningPage> {
   Future<void> _handleChoice(fsrs.Rating rating) async {
     AppLogger.info('Learning Select: $rating - ${_currentWord?.originalWord}');
     _wordProvider.reviewWord(_currentWord!, rating);
-    final nextWord = await _wordProvider.getWord();
+    final nextWord = await _wordProvider.getWord(
+      language: widget.learningLanguage,
+    );
     
     if (!mounted) return;
     setState(() {

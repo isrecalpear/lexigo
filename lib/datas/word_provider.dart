@@ -57,14 +57,37 @@ class WordProvider {
     enableFuzzing: _schedulerEnableFuzzing,
   );
 
-  static final Word _staticWord = Word(
-    originalWord: "Love",
-    translation: "爱",
-    originalExample: "I love you.",
-    exampleTranslation: "我爱你。",
-    sourceLanguageCode: LanguageCode.en,
-    card: fsrs.Card.create(),
-  );
+  static Word _fallbackWordFor(LanguageCode language) {
+    switch (language) {
+      case LanguageCode.ru:
+        return Word(
+          originalWord: "любить",
+          translation: "爱",
+          originalExample: "Я люблю тебя.",
+          exampleTranslation: "我爱你。",
+          sourceLanguageCode: LanguageCode.ru,
+          card: fsrs.Card.create(),
+        );
+      case LanguageCode.ko:
+        return Word(
+          originalWord: "사랑하다",
+          translation: "爱",
+          originalExample: "사랑해요.",
+          exampleTranslation: "我爱你。",
+          sourceLanguageCode: LanguageCode.ko,
+          card: fsrs.Card.create(),
+        );
+      case LanguageCode.en:
+        return Word(
+          originalWord: "love",
+          translation: "爱",
+          originalExample: "I love you.",
+          exampleTranslation: "我爱你。",
+          sourceLanguageCode: LanguageCode.en,
+          card: fsrs.Card.create(),
+        );
+    }
+  }
 
   Future<Word> getWord({LanguageCode? language}) async {
     try {
@@ -98,15 +121,17 @@ class WordProvider {
       );
     }
 
-    AppLogger.warning('No words in database, returning static word');
-    return _staticWord;
+    final fallbackLanguage = language ?? LanguageCode.en;
+    AppLogger.warning(
+      'No words in database, returning fallback word for $fallbackLanguage',
+    );
+    return _fallbackWordFor(fallbackLanguage);
   }
 
-  Future<Word?> getReviewWord() async {
+  Future<Word?> getReviewWord({required LanguageCode language}) async {
     try {
       final dao = await WordDao.open();
-      // TODO: read the language code from settings
-      final dueCard = await dao.getReviewWord(LanguageCode.en);
+      final dueCard = await dao.getReviewWord(language);
       if (dueCard != null) {
         AppLogger.debug(
           'Get review word from database: ${dueCard.originalWord}',
@@ -120,7 +145,9 @@ class WordProvider {
         stackTrace: stackTrace,
       );
     }
-    AppLogger.warning('No review words in database, returning static word');
+    AppLogger.warning(
+      'No review words in database for language: $language',
+    );
     return null;
   }
 

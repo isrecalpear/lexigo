@@ -8,7 +8,13 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:yaml/yaml.dart' as yaml;
 
+// Project imports:
+import 'package:lexigo/datas/word.dart';
+
 class Settings {
+  // Learning Settings
+  LanguageCode learningLanguage;
+
   // FSRS Scheduler Settings
   double fsrsDesiredRetention;
   List<Duration> fsrsLearningSteps = [Duration(minutes: 1), Duration(minutes: 10)];
@@ -24,6 +30,7 @@ class Settings {
   Color? colorSeed;
 
   Settings({
+    required this.learningLanguage,
     required this.fsrsDesiredRetention,
     required this.fsrsLearningSteps,
     required this.fsrsRelearningSteps,
@@ -36,6 +43,7 @@ class Settings {
 
   factory Settings.defaults() {
     return Settings(
+      learningLanguage: LanguageCode.en,
       fsrsDesiredRetention: 0.9,
       fsrsLearningSteps: [Duration(minutes: 1), Duration(minutes: 10)],
       fsrsRelearningSteps: [Duration(minutes: 10)],
@@ -48,6 +56,7 @@ class Settings {
   }
 
   Settings copyWith({
+    LanguageCode? learningLanguage,
     double? fsrsDesiredRetention,
     List<Duration>? fsrsLearningSteps,
     List<Duration>? fsrsRelearningSteps,
@@ -59,6 +68,7 @@ class Settings {
     Color? colorSeed,
   }) {
     return Settings(
+      learningLanguage: learningLanguage ?? this.learningLanguage,
       fsrsDesiredRetention: fsrsDesiredRetention ?? this.fsrsDesiredRetention,
       fsrsLearningSteps: fsrsLearningSteps ?? this.fsrsLearningSteps,
       fsrsRelearningSteps: fsrsRelearningSteps ?? this.fsrsRelearningSteps,
@@ -72,6 +82,7 @@ class Settings {
 
   Map<String, dynamic> serializedSettings() {
     return {
+      'learningLanguage': learningLanguage.toString(),
       'fsrsDesiredRetention': fsrsDesiredRetention,
       'fsrsLearningSteps': fsrsLearningSteps.map((e) => e.inSeconds).toList(),
       'fsrsRelearningSteps': fsrsRelearningSteps
@@ -171,6 +182,10 @@ class SettingsStore extends ChangeNotifier {
       }
 
       _settings = Settings(
+        learningLanguage: LanguageCode.values.firstWhere(
+          (e) => e.toString() == yamlMap['learningLanguage'],
+          orElse: () => LanguageCode.en,
+        ),
         fsrsDesiredRetention:
             _parseDouble(yamlMap['fsrsDesiredRetention']) ?? 0.9,
         fsrsLearningSteps:

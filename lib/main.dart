@@ -10,6 +10,7 @@ import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 // Project imports:
+import 'datas/word.dart';
 import 'l10n/app_localizations.dart';
 import 'pages/my_page.dart';
 import 'pages/records_page.dart';
@@ -98,6 +99,7 @@ class _MyAppState extends State<MyApp> {
   Locale? _locale;
   ThemeMode _themeMode = ThemeMode.system;
   Color? _colorSeed;
+  LanguageCode? _language;
 
   @override
   void initState() {
@@ -113,6 +115,7 @@ class _MyAppState extends State<MyApp> {
       return;
     }
     setState(() {
+      _language = settings.learningLanguage;
       _locale = settings.locale;
       _themeMode = settings.themeMode;
       _colorSeed = settings.colorSeed;
@@ -126,6 +129,17 @@ class _MyAppState extends State<MyApp> {
     final Settings updated = _settingsStore.settings.copyWith(
       locale: locale,
       localeSet: true,
+    );
+    _settingsStore.updateSettings(updated);
+    unawaited(_settingsStore.saveSettings());
+  }
+
+  void _setLearningLanguage(LanguageCode language) {
+    setState(() {
+      _language = language;
+    });
+    final Settings updated = _settingsStore.settings.copyWith(
+      learningLanguage: language,
     );
     _settingsStore.updateSettings(updated);
     unawaited(_settingsStore.saveSettings());
@@ -155,6 +169,8 @@ class _MyAppState extends State<MyApp> {
         navigatorObservers: [AppRouteObserver()],
         home: MyHomePage(
           locale: _locale,
+          onLearningLanguageChanged: _setLearningLanguage,
+          learningLanguage: _language ?? LanguageCode.en,
           onLocaleChanged: _setLocale,
           themeMode: _themeMode,
           onThemeModeChanged: _setThemeMode,
@@ -180,6 +196,8 @@ class _MyAppState extends State<MyApp> {
             navigatorObservers: [AppRouteObserver()],
             home: MyHomePage(
               locale: _locale,
+              onLearningLanguageChanged: _setLearningLanguage,
+              learningLanguage: _language ?? LanguageCode.en,
               onLocaleChanged: _setLocale,
               themeMode: _themeMode,
               onThemeModeChanged: _setThemeMode,
@@ -214,6 +232,8 @@ class _MyAppState extends State<MyApp> {
 class MyHomePage extends StatefulWidget {
   const MyHomePage({
     super.key,
+    required this.learningLanguage,
+    required this.onLearningLanguageChanged,
     required this.locale,
     required this.onLocaleChanged,
     required this.themeMode,
@@ -222,7 +242,10 @@ class MyHomePage extends StatefulWidget {
     required this.onColorSeedChanged,
   });
 
+
   final Locale? locale;
+  final ValueChanged<LanguageCode> onLearningLanguageChanged;
+  final LanguageCode learningLanguage;
   final ValueChanged<Locale?> onLocaleChanged;
   final ThemeMode themeMode;
   final ValueChanged<ThemeMode> onThemeModeChanged;
@@ -256,6 +279,10 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(context.l10n.appTitle),
         actions: [
+          IconButton(
+            onPressed: _openLearningLanguagePicker,
+            icon: const Icon(Icons.language_outlined),
+          ),
           SearchAnchor(
             builder: (BuildContext context, SearchController controller) {
               return IconButton(
@@ -276,7 +303,7 @@ class _MyHomePageState extends State<MyHomePage> {
           setState(() => _selectedIndex = index);
         },
         children: [
-          const StartPage(),
+          StartPage(learningLanguage: widget.learningLanguage),
           const RecordsPicker(),
           SettingsPage(
             locale: widget.locale,
@@ -321,6 +348,31 @@ class _MyHomePageState extends State<MyHomePage> {
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
+  }
+
+  Future<void> _openLearningLanguagePicker() async {
+    final LanguageCode? selected = await showDialog<LanguageCode>(
+      context: context,
+      builder: (context) {
+        return SimpleDialog(
+          title: Text(context.l10n.selectLanguageTitle),
+          children: LanguageCode.values
+              .map(
+                (item) => SimpleDialogOption(
+                  onPressed: () => Navigator.pop(context, item),
+                  child: Text(item.name),
+                ),
+              )
+              .toList(),
+        );
+      },
+    );
+
+    if (selected == null || selected == widget.learningLanguage) {
+      return;
+    }
+
+    widget.onLearningLanguageChanged(selected);
   }
 
   // TODO: Implement the searching functionality

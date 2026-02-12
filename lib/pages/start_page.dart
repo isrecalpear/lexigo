@@ -10,7 +10,9 @@ import 'package:lexigo/pages/widgets/word_card.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
 class StartPage extends StatefulWidget {
-  const StartPage({super.key});
+  const StartPage({super.key, required this.learningLanguage});
+
+  final LanguageCode learningLanguage;
 
   @override
   State<StartPage> createState() => _StartPageState();
@@ -62,9 +64,9 @@ class _StartPageState extends State<StartPage> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _startLearning,
         label: Text(context.l10n.startLearning),
         icon: const Icon(Icons.play_arrow),
+        onPressed: _startLearning,
       ),
     );
   }
@@ -80,17 +82,21 @@ class _StartPageState extends State<StartPage> {
     final tag = 'word_${word.originalWord}';
     Navigator.of(context)
         .push<Word?>(
-      MaterialPageRoute(
-        builder: (context) => LearningPage(word: word, heroTag: tag),
-      ),
-    )
+          MaterialPageRoute(
+            builder: (context) => LearningPage(
+              word: word,
+              heroTag: tag,
+              learningLanguage: widget.learningLanguage,
+            ),
+          ),
+        )
         .then((returned) {
-      if (returned != null) {
-        setState(() {
-          _currentWord = returned;
+          if (returned != null) {
+            setState(() {
+              _currentWord = returned;
+            });
+          }
         });
-      }
-    });
   }
 
   @override
@@ -100,8 +106,21 @@ class _StartPageState extends State<StartPage> {
     _loadNextWord();
   }
 
+  @override
+  void didUpdateWidget(covariant StartPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.learningLanguage != widget.learningLanguage) {
+      setState(() {
+        _currentWord = null;
+      });
+      _loadNextWord();
+    }
+  }
+
   Future<void> _loadNextWord() async {
-    final word = await _wordProvider.getWord();
+    final word = await _wordProvider.getWord(
+      language: widget.learningLanguage,
+    );
     if (!mounted) return;
     setState(() {
       _currentWord = word;
