@@ -1,3 +1,8 @@
+/// Reusable word card widget for displaying word information.
+///
+/// Displays original word, translation, example sentences with translations,
+/// and provides a menu for marking words as correct or known.
+
 // Flutter imports:
 import 'package:flutter/material.dart';
 
@@ -6,16 +11,17 @@ import 'package:lexigo/datas/word.dart';
 import 'package:lexigo/datas/word_provider.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
 
+/// Displays a single word card with bilingual content.
 class WordCard extends StatelessWidget {
   static const String _menuCorrect = 'correct';
   static const String _menuKnown = 'known';
 
-  const WordCard({
-    super.key,
-    required this.word,
-    this.onUpdated,
-  });
+  const WordCard({super.key, required this.word, this.onUpdated});
+
+  /// The word to display.
   final Word word;
+
+  /// Callback when word is updated (e.g., after editing).
   final ValueChanged<Word>? onUpdated;
 
   @override
@@ -54,7 +60,7 @@ class WordCard extends StatelessWidget {
                         if (value == _menuCorrect) {
                           signAsWrong(context);
                         } else if (value == _menuKnown) {
-                          signAsKnown();
+                          signAsKnown(context);
                         }
                       },
                       itemBuilder: (context) => [
@@ -104,10 +110,15 @@ class WordCard extends StatelessWidget {
     );
   }
 
-  void signAsKnown() {
-    debugPrint('WordCard: marked as known for ${word.originalWord}');
+  /// Marks the word as known (implementation pending).
+  Future<void> signAsKnown(BuildContext context) async {
+    final updated = await WordProvider().signAsKnown(context, word);
+    if (updated != null) {
+      onUpdated?.call(updated);
+    }
   }
 
+  /// Marks the word as wrong and opens the edit dialog.
   Future<void> signAsWrong(BuildContext context) async {
     final updated = await WordProvider().signAsWrong(context, word);
     if (updated != null) {

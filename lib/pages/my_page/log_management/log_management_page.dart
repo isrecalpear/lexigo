@@ -1,3 +1,7 @@
+/// Log file management interface.
+///
+/// Provides options to view logs, clear logs, and share logs.
+
 // Flutter imports:
 import 'package:flutter/material.dart';
 
@@ -7,6 +11,7 @@ import 'package:lexigo/pages/my_page/log_management/log_view_page.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
 /// Log management page
+/// Log management menu page.
 class LogManagementPage extends StatefulWidget {
   const LogManagementPage({super.key});
 
@@ -70,9 +75,7 @@ class _LogManagementPageState extends State<LogManagementPage> {
       } catch (e) {
         AppLogger.error('Failed to clear logs', error: e);
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(
+          ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(context.l10n.clearFailed('$e'))),
           );
         }

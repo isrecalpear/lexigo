@@ -1,3 +1,8 @@
+/// Interactive learning page where users rate their knowledge of words.
+///
+/// Displays words one at a time with four rating options (Again, Hard, Good, Easy).
+/// Updates FSRS scheduling based on ratings and loads the next word.
+
 // Flutter imports:
 import 'package:flutter/material.dart';
 
@@ -11,6 +16,7 @@ import 'package:lexigo/l10n/app_localizations.dart';
 import 'package:lexigo/pages/widgets/word_card.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
+/// Interactive learning widget for studying individual words.
 class LearningPage extends StatefulWidget {
   const LearningPage({
     super.key,
@@ -19,14 +25,20 @@ class LearningPage extends StatefulWidget {
     required this.learningLanguage,
   });
 
+  /// The word being studied.
   final Word word;
+
+  /// Hero animation tag for word card transition.
   final String heroTag;
+
+  /// The currently selected learning language.
   final LanguageCode learningLanguage;
 
   @override
   State<LearningPage> createState() => _LearningPageState();
 }
 
+/// State for LearningPage that manages word progression and scheduling.
 class _LearningPageState extends State<LearningPage> {
   final WordProvider _wordProvider = WordProvider();
   late String _heroTag;
@@ -123,17 +135,19 @@ class _LearningPageState extends State<LearningPage> {
     );
   }
 
+  /// Handles user rating and loads the next word.
   Future<void> _handleChoice(fsrs.Rating rating) async {
     AppLogger.info('Learning Select: $rating - ${_currentWord?.originalWord}');
     _wordProvider.reviewWord(_currentWord!, rating);
     final nextWord = await _wordProvider.getWord(
       language: widget.learningLanguage,
     );
-    
-    if (!mounted) return;
-    setState(() {
-      _currentWord = nextWord;
-      _heroTag = 'word_${_currentWord!.originalWord}';
-    });
+
+    if (mounted) {
+      setState(() {
+        _currentWord = nextWord;
+        _heroTag = 'word_${_currentWord!.originalWord}';
+      });
+    }
   }
 }

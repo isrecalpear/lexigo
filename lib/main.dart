@@ -1,3 +1,8 @@
+/// Main entry point for LexiGo flashcard learning application.
+///
+/// Sets up error handling, logging, and the root Material application with
+/// support for dynamic colors, localization, and theme customization.
+
 // Dart imports:
 import 'dart:async';
 import 'dart:io';
@@ -19,7 +24,9 @@ import 'pages/start_page.dart';
 import 'utils/app_logger.dart';
 import 'utils/settings.dart';
 
+/// Observes navigation events and logs route changes for debugging.
 class AppRouteObserver extends NavigatorObserver {
+  /// Logs when a route is pushed onto the navigation stack.
   @override
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
     AppLogger.info(
@@ -28,12 +35,14 @@ class AppRouteObserver extends NavigatorObserver {
     super.didPush(route, previousRoute);
   }
 
+  /// Logs when a route is popped from the navigation stack.
   @override
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
     AppLogger.info('Exiting page: ${route.settings.name ?? route.runtimeType}');
     super.didPop(route, previousRoute);
   }
 
+  /// Logs when a route is replaced with another route.
   @override
   void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
     AppLogger.info(
@@ -43,6 +52,10 @@ class AppRouteObserver extends NavigatorObserver {
   }
 }
 
+/// Application entry point.
+///
+/// Initializes the logging system and sets up error handling for both
+/// framework errors and uncaught asynchronous exceptions.
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -75,6 +88,10 @@ void main() async {
   );
 }
 
+/// Builds a theme based on the provided colorScheme and brightness.
+///
+/// Uses Material 3 design. If [seedColor] is provided, generates a color scheme
+/// from that seed. Otherwise, uses [dynamicScheme] or falls back to system defaults.
 ThemeData buildTheme(
   ColorScheme? dynamicScheme,
   bool isDarkMode, {
@@ -88,6 +105,10 @@ ThemeData buildTheme(
   return ThemeData(colorScheme: colorScheme, useMaterial3: true);
 }
 
+/// Root stateful widget that manages global app state and settings.
+///
+/// Manages learning language selection, UI locale, theme mode, and color seed.
+/// Persists settings and provides them to the home page.
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
@@ -95,6 +116,7 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
+/// State for MyApp that handles settings loading and persistence.
 class _MyAppState extends State<MyApp> {
   late final SettingsStore _settingsStore;
   Locale? _locale;
@@ -211,6 +233,7 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
+  /// Updates the theme mode and persists it.
   void _setThemeMode(ThemeMode mode) {
     setState(() {
       _themeMode = mode;
@@ -220,6 +243,7 @@ class _MyAppState extends State<MyApp> {
     unawaited(_settingsStore.saveSettings());
   }
 
+  /// Updates the color seed and persists it.
   void _setColorSeed(Color? seed) {
     setState(() {
       _colorSeed = seed;
@@ -230,6 +254,10 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
+/// Main home page widget with navigation tabs.
+///
+/// Contains three sections: Study (learning), Records (statistics), and Settings.
+/// Manages the search functionality with debouncing and language-specific search.
 class MyHomePage extends StatefulWidget {
   const MyHomePage({
     super.key,
@@ -243,27 +271,52 @@ class MyHomePage extends StatefulWidget {
     required this.onColorSeedChanged,
   });
 
-
+  /// Currently selected learning language.
   final Locale? locale;
+
+  /// Callback when learning language is changed.
   final ValueChanged<LanguageCode> onLearningLanguageChanged;
+
+  /// Currently selected learning language code.
   final LanguageCode learningLanguage;
+
+  /// Callback when UI locale is changed.
   final ValueChanged<Locale?> onLocaleChanged;
+
+  /// Current theme mode setting.
   final ThemeMode themeMode;
+
+  /// Callback when theme mode is changed.
   final ValueChanged<ThemeMode> onThemeModeChanged;
+
+  /// Current color seed (null = use dynamic/default colors).
   final Color? colorSeed;
+
+  /// Callback when color seed is changed.
   final ValueChanged<Color?> onColorSeedChanged;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
+/// State for MyHomePage that manages page navigation and search.
 class _MyHomePageState extends State<MyHomePage> {
   final PageController _pageController = PageController();
   int _selectedIndex = 0;
+
+  /// Debounce timer for search queries.
   Timer? _searchDebounceTimer;
+
+  /// Outstanding search result completer.
   Completer<List<Word>>? _searchCompleter;
+
+  /// Request ID to track outdated search requests.
   int _searchRequestId = 0;
+
+  /// Debounce duration for search (300ms).
   static const Duration _searchDebounceDuration = Duration(milliseconds: 300);
+
+  /// Cached last search results.
   Iterable<Widget> _lastOptions = <Widget>[];
 
   @override
@@ -272,6 +325,7 @@ class _MyHomePageState extends State<MyHomePage> {
     AppLogger.info('Main page initialized');
   }
 
+  /// Cleans up search debounce timer on widget disposal.
   @override
   void dispose() {
     AppLogger.info('Main page disposed');
@@ -357,6 +411,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  /// Opens the learning language selection dialog.
   Future<void> _openLearningLanguagePicker() async {
     final LanguageCode? selected = await showDialog<LanguageCode>(
       context: context,
@@ -382,6 +437,9 @@ class _MyHomePageState extends State<MyHomePage> {
     widget.onLearningLanguageChanged(selected);
   }
 
+  /// Handles search suggestions with debouncing.
+  ///
+  /// Debounces user input and returns word matches from the current language table.
   Future<Iterable<Widget>> _suggestionsBuilder(
     BuildContext context,
     SearchController controller,
@@ -413,6 +471,9 @@ class _MyHomePageState extends State<MyHomePage> {
     return _lastOptions;
   }
 
+  /// Performs debounced search with request cancellation.
+  ///
+  /// Cancels previous requests if a new search is triggered before completion.
   Future<List<Word>> _debouncedSearch(String query) async {
     _searchDebounceTimer?.cancel();
     if (_searchCompleter != null && !_searchCompleter!.isCompleted) {
@@ -435,6 +496,9 @@ class _MyHomePageState extends State<MyHomePage> {
     return completer.future;
   }
 
+  /// Executes the actual database search query.
+  ///
+  /// Searches words by originalWord, translation, example, and example translation.
   Future<List<Word>> _performSearch(String query) async {
     final String trimmed = query.trim();
     if (trimmed.isEmpty) {
@@ -443,11 +507,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     try {
       final dao = await WordDao.open();
-      return await dao.searchWords(
-        widget.learningLanguage,
-        trimmed,
-        limit: 20,
-      );
+      return await dao.searchWords(widget.learningLanguage, trimmed, limit: 20);
     } catch (e, stackTrace) {
       AppLogger.error(
         'Failed to search words',

@@ -11,6 +11,9 @@ import 'package:share_plus/share_plus.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
+/// Page for viewing application logs.
+
+/// Log viewer page showing recent log entries.
 class LogViewPage extends StatefulWidget {
   const LogViewPage({super.key});
 
@@ -77,9 +80,7 @@ class _LogViewPageState extends State<LogViewPage> {
     // Linux system may not support file sharing, so we can show a message instead
     // TODO: Implement Linux-specific sharing if needed
     if (Platform.isLinux) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.l10n.logShareNotSupported)),
       );
       AppLogger.warning('Log sharing is not supported on Linux');
@@ -107,17 +108,13 @@ class _LogViewPageState extends State<LogViewPage> {
       if (result.status == ShareResultStatus.success) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(
-          SnackBar(content: Text(context.l10n.logShareSuccess)),
-        );
+        ).showSnackBar(SnackBar(content: Text(context.l10n.logShareSuccess)));
         AppLogger.info('Log shared successfully');
       }
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.l10n.logShareFailed('$e'))),
       );
       AppLogger.error('Failed to share log', error: e);

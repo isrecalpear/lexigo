@@ -1,3 +1,8 @@
+/// Study page that displays words for preview and learning initiation.
+///
+/// Shows the current word with "Next" button to browse and a "Start" button
+/// to begin the interactive learning session for the selected language.
+
 // Flutter imports:
 import 'package:flutter/material.dart';
 
@@ -9,6 +14,7 @@ import 'package:lexigo/pages/learning/learning_page.dart';
 import 'package:lexigo/pages/widgets/word_card.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
+/// Widget that displays a single word and allows starting learning.
 class StartPage extends StatefulWidget {
   const StartPage({super.key, required this.learningLanguage});
 
@@ -18,6 +24,7 @@ class StartPage extends StatefulWidget {
   State<StartPage> createState() => _StartPageState();
 }
 
+/// State for StartPage that manages word loading and navigation.
 class _StartPageState extends State<StartPage> {
   final WordProvider _wordProvider = WordProvider();
   Word? _currentWord;
@@ -71,10 +78,12 @@ class _StartPageState extends State<StartPage> {
     );
   }
 
+  /// Handles next button press.
   void _next() {
     _loadNextWord();
   }
 
+  /// Starts the interactive learning session.
   void _startLearning() {
     if (_currentWord == null) return;
     final word = _currentWord!;
@@ -117,10 +126,9 @@ class _StartPageState extends State<StartPage> {
     }
   }
 
+  /// Loads the next word from the database for the current language.
   Future<void> _loadNextWord() async {
-    final word = await _wordProvider.getWord(
-      language: widget.learningLanguage,
-    );
+    final word = await _wordProvider.getWord(language: widget.learningLanguage);
     if (!mounted) return;
     setState(() {
       _currentWord = word;

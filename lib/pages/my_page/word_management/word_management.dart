@@ -1,3 +1,8 @@
+/// Word management interface for importing, exporting, and adding words.
+///
+/// Provides options to manage words through import/export, add new words,
+/// and view the word database.
+
 // Flutter imports:
 import 'package:flutter/material.dart';
 
@@ -15,6 +20,7 @@ import 'package:lexigo/pages/my_page/word_management/word_view_page.dart';
 import 'package:lexigo/utils/app_logger.dart';
 import 'package:lexigo/utils/permission_manager.dart';
 
+/// Word management menu page.
 class WordManagement extends StatelessWidget {
   const WordManagement({super.key});
 
@@ -110,8 +116,9 @@ class WordManagement extends StatelessWidget {
       LanguageCode language;
       if (matched.length == 1) {
         tableName = matched.first;
-        language = LanguageCode.values
-            .firstWhere((item) => item.name == tableName);
+        language = LanguageCode.values.firstWhere(
+          (item) => item.name == tableName,
+        );
         AppLogger.info('Automatically detected language table: $tableName');
       } else {
         if (!context.mounted) return;
@@ -136,9 +143,7 @@ class WordManagement extends StatelessWidget {
         'unit_id',
         'book_id',
       };
-      final columnInfo = externalDb.select(
-        'PRAGMA table_info("$tableName");',
-      );
+      final columnInfo = externalDb.select('PRAGMA table_info("$tableName");');
       final existingColumns = columnInfo
           .map((row) => row['name']?.toString())
           .whereType<String>()
@@ -168,7 +173,8 @@ class WordManagement extends StatelessWidget {
       for (final row in rows) {
         final originalWord = row['original_word']?.toString().trim() ?? '';
         final translation = row['translation']?.toString().trim() ?? '';
-        final originalExample = row['original_example']?.toString().trim() ?? '';
+        final originalExample =
+            row['original_example']?.toString().trim() ?? '';
         final exampleTranslation =
             row['example_translation']?.toString().trim() ?? '';
         final unitId = (row['unit_id']?.toString().trim().isEmpty ?? true)
@@ -206,7 +212,9 @@ class WordManagement extends StatelessWidget {
       }
 
       await dao.insertWords(language, words);
-      AppLogger.info('Import completed: ${words.length} words, skipped: $skipped words');
+      AppLogger.info(
+        'Import completed: ${words.length} words, skipped: $skipped words',
+      );
 
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -215,22 +223,24 @@ class WordManagement extends StatelessWidget {
         ),
       );
     } catch (e, stackTrace) {
-      AppLogger.error('Failed to import words', error: e, stackTrace: stackTrace);
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.importFailed('$e'))),
+      AppLogger.error(
+        'Failed to import words',
+        error: e,
+        stackTrace: stackTrace,
       );
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(context.l10n.importFailed('$e'))));
     } finally {
       externalDb?.close();
     }
   }
 
-
   Future<void> _exportWords(BuildContext context) async {
     if (!context.mounted) return;
     final LanguageCode? selected = await _selectLanguage(context);
     if (selected == null) return;
-    
   }
 
   Future<LanguageCode?> _selectLanguage(BuildContext context) async {
@@ -246,10 +256,8 @@ class WordManagement extends StatelessWidget {
                 value: selected,
                 items: LanguageCode.values
                     .map(
-                      (item) => DropdownMenuItem(
-                        value: item,
-                        child: Text(item.name),
-                      ),
+                      (item) =>
+                          DropdownMenuItem(value: item, child: Text(item.name)),
                     )
                     .toList(),
                 onChanged: (value) {

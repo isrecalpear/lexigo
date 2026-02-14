@@ -1,14 +1,22 @@
+/// Application localization strings for multi-language support.
+///
+/// Supports English and Chinese with a fallback to English.
+/// See _localizedValues map at the bottom for all translated strings.
+
 // Flutter imports:
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
+/// Provides localized strings for the current locale.
 class AppLocalizations {
   AppLocalizations(this.locale);
 
   final Locale locale;
 
+  /// Supported locales (English and Chinese).
   static const supportedLocales = <Locale>[Locale('en'), Locale('zh')];
 
+  /// Gets the AppLocalizations instance from context.
   static AppLocalizations of(BuildContext context) {
     final value = Localizations.of<AppLocalizations>(context, AppLocalizations);
     assert(value != null, 'No AppLocalizations found in context');
@@ -18,6 +26,7 @@ class AppLocalizations {
   static const LocalizationsDelegate<AppLocalizations> delegate =
       _AppLocalizationsDelegate();
 
+  /// Retrieves a translated string by key with optional parameter substitution.
   String _t(String key, [Map<String, String>? params]) {
     final languageCode = locale.languageCode;
     final value =

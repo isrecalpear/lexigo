@@ -1,3 +1,8 @@
+/// Application logging system with file rotation and persistence.
+///
+/// Logs to daily files with automatic cleanup of old logs (7-day retention).
+/// Prevents log files from exceeding 5MB.
+
 // Dart imports:
 import 'dart:io';
 
@@ -9,11 +14,16 @@ import 'package:intl/intl.dart';
 import 'package:logger/logger.dart';
 import 'package:path_provider/path_provider.dart';
 
+/// Singleton logger for application-wide logging.
 class AppLogger {
   static final AppLogger _instance = AppLogger._internal();
   static Logger? _logger;
   static File? _logFile;
+
+  /// Maximum number of log files to retain (7 days).
   static const int _maxLogFiles = 7;
+
+  /// Maximum size per log file (5MB).
   static const int _maxLogSizeBytes = 5 * 1024 * 1024;
 
   factory AppLogger() {
@@ -22,15 +32,7 @@ class AppLogger {
 
   AppLogger._internal();
 
-  static Future<Directory> _getLogBaseDirectory() async {
-    /* 
-    return Platform.isAndroid
-        ? await getApplicationDocumentsDirectory()
-        : await getApplicationSupportDirectory();
-    */
-    return await getApplicationSupportDirectory();
-  }
-
+  /// Initializes the logging system with file output and log rotation.
   static Future<void> initialize() async {
     try {
       final Directory appDir = await _getLogBaseDirectory();
@@ -65,6 +67,115 @@ class AppLogger {
     }
   }
 
+  /// Gets the current log directory path.
+  static Future<String?> getLogDirectory() async {
+    try {
+      final Directory appDir = await _getLogBaseDirectory();
+      return '${appDir.path}/logs';
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Gets the path to today's log file.
+  static Future<String?> getCurrentLogFilePath() async {
+    try {
+      if (_logFile != null) {
+        return _logFile!.path;
+      }
+      final String? logDirPath = await getLogDirectory();
+      if (logDirPath == null) return null;
+      final String dateStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+      return '$logDirPath/$dateStr.log';
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static Future<double> getLogSize() async {
+    try {
+      final String? logDirPath = await getLogDirectory();
+      if (logDirPath != null) {
+        final Directory logDir = Directory(logDirPath);
+        if (await logDir.exists()) {
+          int totalSize = 0;
+          final List<FileSystemEntity> files = logDir.listSync();
+          for (final file in files) {
+            if (file is File) {
+              totalSize += await file.length();
+            }
+          }
+          return totalSize / (1024 * 1024);
+        }
+      }
+    } catch (e) {
+      _logger?.e('Failed to get log size', error: e);
+    }
+    return 0.0;
+  }
+
+  /// Read today's log content.
+  /// Reads all content from today's log file.
+  static Future<String> readCurrentLog() async {
+    try {
+      final String? path = await getCurrentLogFilePath();
+      if (path == null) return '';
+      final File file = File(path);
+      if (!await file.exists()) return '';
+      return await file.readAsString();
+    } catch (e) {
+      _logger?.e('Failed to read log file', error: e);
+      return '';
+    }
+  }
+
+  /// Clears all log files and recreates the logs directory.
+  static Future<void> clearAllLogs() async {
+    try {
+      final String? logDirPath = await getLogDirectory();
+      if (logDirPath != null) {
+        final Directory logDir = Directory(logDirPath);
+        if (await logDir.exists()) {
+          await logDir.delete(recursive: true);
+          await logDir.create();
+          _logger?.i('All logs have been cleared');
+        }
+      }
+    } catch (e) {
+      _logger?.e('Failed to clear logs', error: e);
+    }
+  }
+
+  static void debug(String message, {dynamic error, StackTrace? stackTrace}) {
+    _logger?.d(message, error: error, stackTrace: stackTrace);
+  }
+
+  static void info(String message, {dynamic error, StackTrace? stackTrace}) {
+    _logger?.i(message, error: error, stackTrace: stackTrace);
+  }
+
+  static void warning(String message, {dynamic error, StackTrace? stackTrace}) {
+    _logger?.w(message, error: error, stackTrace: stackTrace);
+  }
+
+  static void error(String message, {dynamic error, StackTrace? stackTrace}) {
+    _logger?.e(message, error: error, stackTrace: stackTrace);
+  }
+
+  static void fatal(String message, {dynamic error, StackTrace? stackTrace}) {
+    _logger?.f(message, error: error, stackTrace: stackTrace);
+  }
+
+  static Future<Directory> _getLogBaseDirectory() async {
+    /* 
+    return Platform.isAndroid
+        ? await getApplicationDocumentsDirectory()
+        : await getApplicationSupportDirectory();
+    */
+    return await getApplicationSupportDirectory();
+  }
+
+  /// Removes old log files and files exceeding size limit.
   static Future<void> _cleanOldLogs(Directory logDir) async {
     try {
       final List<FileSystemEntity> files = logDir.listSync();
@@ -99,101 +210,6 @@ class AppLogger {
         ),
       );
     }
-  }
-
-  static Future<String?> getLogDirectory() async {
-    try {
-      final Directory appDir = await _getLogBaseDirectory();
-      return '${appDir.path}/logs';
-    } catch (e) {
-      return null;
-    }
-  }
-
-  static Future<String?> getCurrentLogFilePath() async {
-    try {
-      if (_logFile != null) {
-        return _logFile!.path;
-      }
-      final String? logDirPath = await getLogDirectory();
-      if (logDirPath == null) return null;
-      final String dateStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
-      return '$logDirPath/$dateStr.log';
-    } catch (e) {
-      return null;
-    }
-  }
-
-  /// Read today's log content.
-  static Future<String> readCurrentLog() async {
-    try {
-      final String? path = await getCurrentLogFilePath();
-      if (path == null) return '';
-      final File file = File(path);
-      if (!await file.exists()) return '';
-      return await file.readAsString();
-    } catch (e) {
-      _logger?.e('Failed to read log file', error: e);
-      return '';
-    }
-  }
-
-  static Future<void> clearAllLogs() async {
-    try {
-      final String? logDirPath = await getLogDirectory();
-      if (logDirPath != null) {
-        final Directory logDir = Directory(logDirPath);
-        if (await logDir.exists()) {
-          await logDir.delete(recursive: true);
-          await logDir.create();
-          _logger?.i('All logs have been cleared');
-        }
-      }
-    } catch (e) {
-      _logger?.e('Failed to clear logs', error: e);
-    }
-  }
-
-  static Future<double> getLogSize() async {
-    try {
-      final String? logDirPath = await getLogDirectory();
-      if (logDirPath != null) {
-        final Directory logDir = Directory(logDirPath);
-        if (await logDir.exists()) {
-          int totalSize = 0;
-          final List<FileSystemEntity> files = logDir.listSync();
-          for (final file in files) {
-            if (file is File) {
-              totalSize += await file.length();
-            }
-          }
-          return totalSize / (1024 * 1024);
-        }
-      }
-    } catch (e) {
-      _logger?.e('Failed to get log size', error: e);
-    }
-    return 0.0;
-  }
-
-  static void debug(String message, {dynamic error, StackTrace? stackTrace}) {
-    _logger?.d(message, error: error, stackTrace: stackTrace);
-  }
-
-  static void info(String message, {dynamic error, StackTrace? stackTrace}) {
-    _logger?.i(message, error: error, stackTrace: stackTrace);
-  }
-
-  static void warning(String message, {dynamic error, StackTrace? stackTrace}) {
-    _logger?.w(message, error: error, stackTrace: stackTrace);
-  }
-
-  static void error(String message, {dynamic error, StackTrace? stackTrace}) {
-    _logger?.e(message, error: error, stackTrace: stackTrace);
-  }
-
-  static void fatal(String message, {dynamic error, StackTrace? stackTrace}) {
-    _logger?.f(message, error: error, stackTrace: stackTrace);
   }
 }
 

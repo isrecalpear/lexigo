@@ -12,11 +12,14 @@ class WordDao {
 
   final sqlite.Database _db;
 
+  /// Opens a connection to the word database.
   static Future<WordDao> open() async {
     final db = await Database.getInstance();
     return WordDao._(db);
   }
 
+  /// Inserts a batch of words for the specified language.
+  /// Handles duplicates by updating existing entries based on card_id.
   Future<void> insertWords(LanguageCode language, List<Word> words) async {
     if (words.isEmpty) {
       return;
@@ -79,6 +82,8 @@ class WordDao {
     _refreshWordCount(language);
   }
 
+  /// Updates a single word in the database.
+  /// Returns the number of rows affected.
   Future<int> updateWord(LanguageCode language, Word word) async {
     _ensureTable(language);
     final tableName = _tableName(language);
@@ -127,6 +132,8 @@ class WordDao {
     }
   }
 
+  /// Deletes multiple words by their card IDs for the specified language.
+  /// Returns the total number of deleted rows.
   Future<int> deleteWordsByCardIds(
     LanguageCode language,
     List<int> cardIds,
@@ -165,6 +172,8 @@ class WordDao {
     return total;
   }
 
+  /// Deletes all words in the specified language table.
+  /// Returns the number of deleted rows.
   Future<int> deleteAll(LanguageCode language) async {
     _ensureTable(language);
     final tableName = _tableName(language);
@@ -175,20 +184,8 @@ class WordDao {
     return count;
   }
 
-  Future<Word?> getWordByCardId(LanguageCode language, int cardId) async {
-    _ensureTable(language);
-    final tableName = _tableName(language);
-    final result = _db.select(
-      'SELECT * FROM $tableName WHERE card_id = ? LIMIT 1;',
-      [cardId],
-    );
-    if (result.isEmpty) {
-      return null;
-    }
-    AppLogger.debug('Retrieved word successfully: cardId=$cardId');
-    return _fromRow(result.first, language);
-  }
-
+  /// Retrieves all words for the specified language.
+  /// Supports optional ordering, limiting, and pagination.
   Future<List<Word>> getWords(
     LanguageCode language, {
     int? limit,
@@ -214,6 +211,45 @@ class WordDao {
     return result.map((row) => _fromRow(row, language)).toList();
   }
 
+  Future<Word?> getWordByCardId(LanguageCode language, int cardId) async {
+    _ensureTable(language);
+    final tableName = _tableName(language);
+    final result = _db.select(
+      'SELECT * FROM $tableName WHERE card_id = ? LIMIT 1;',
+      [cardId],
+    );
+    if (result.isEmpty) {
+      return null;
+    }
+    AppLogger.debug('Retrieved word successfully: cardId=$cardId');
+    return _fromRow(result.first, language);
+  }
+
+  /// Retrieves the next due review word for the specified language.
+  /// Returns null if no review words are available.
+  Future<Word?> getReviewWord(LanguageCode language) async {
+    // get due cards from database, return the first one if exists
+    _ensureTable(language);
+    final tableName = _tableName(language);
+    final result = _db.select('''
+      SELECT * FROM $tableName
+      ORDER BY card_due ASC
+      LIMIT 1;
+    ''');
+    if (result.isNotEmpty) {
+      AppLogger.debug(
+        'Retrieved review word successfully: cardId=${result.first['card_id']}',
+      );
+      return _fromRow(result.first, language);
+    }
+
+    return null;
+  }
+
+  /// Searches for words matching the query string in the specified language.
+  /// Searches across originalWord, translation, originalExample, and exampleTranslation fields.
+  /// Supports case-insensitive fuzzy matching.
+  /// [limit] defaults to 20 results.
   Future<List<Word>> searchWords(
     LanguageCode language,
     String query, {
@@ -236,25 +272,7 @@ class WordDao {
     return result.map((row) => _fromRow(row, language)).toList();
   }
 
-  Future<Word?> getReviewWord(LanguageCode language) async {
-    // get due cards from database, return the first one if exists
-    _ensureTable(language);
-    final tableName = _tableName(language);
-    final result = _db.select('''
-      SELECT * FROM $tableName
-      ORDER BY card_due ASC
-      LIMIT 1;
-    ''');
-    if (result.isNotEmpty) {
-      AppLogger.debug(
-        'Retrieved review word successfully: cardId=${result.first['card_id']}',
-      );
-      return _fromRow(result.first, language);
-    }
-
-    return null;
-  }
-
+  /// Retrieves a summary of all languages currently in the database.
   Future<List<Map<String, Object?>>> getLanguageSummary() async {
     final result = _db.select('SELECT * FROM language_tables;');
     final columns = result.columnNames;
@@ -263,19 +281,24 @@ class WordDao {
         .toList();
   }
 
+  /// Ensures the language table exists in the database.
   void _ensureTable(LanguageCode language) {
     final languageCode = _languageCode(language);
     Database.ensureLanguageTable(_db, languageCode);
   }
 
+  /// Returns the language code as a string representation.
   String _languageCode(LanguageCode language) {
     return language.name;
   }
 
+  /// Returns the table name for the specified language.
   String _tableName(LanguageCode language) {
     return Database.tableNameForLanguage(_languageCode(language));
   }
 
+  /// Converts a Word object to a database-compatible format.
+  /// Returns a list of values in the order expected by the insert/update SQL.
   Future<List<Object?>> _toDbMap(
     Word word,
     int? createdAt,
@@ -304,6 +327,7 @@ class WordDao {
     ];
   }
 
+  /// Converts a database row to a Word object.
   Word _fromRow(sqlite.Row row, LanguageCode language) {
     final card = Card.fromMap({
       'cardId': row['card_id'] as int,
@@ -327,11 +351,13 @@ class WordDao {
     );
   }
 
+  /// Returns the number of rows affected by the last database operation.
   int _changes() {
     final result = _db.select('SELECT changes() AS count;');
     return result.first['count'] as int;
   }
 
+  /// Splits a list into chunks of the specified size.
   List<List<int>> _chunk(List<int> values, int size) {
     final chunks = <List<int>>[];
     for (var i = 0; i < values.length; i += size) {
@@ -342,6 +368,7 @@ class WordDao {
     return chunks;
   }
 
+  /// Updates the word count for the language table.
   void _refreshWordCount(LanguageCode language) {
     final tableName = _tableName(language);
     final now = DateTime.now().toUtc().millisecondsSinceEpoch;
@@ -356,6 +383,7 @@ class WordDao {
     );
   }
 
+  /// Converts various time formats to milliseconds since epoch.
   int? _toEpochMillis(Object? value) {
     if (value == null) {
       return null;
@@ -375,6 +403,8 @@ class WordDao {
     throw ArgumentError('Unsupported time value: $value');
   }
 
+  /// Converts various time formats to milliseconds since epoch.
+  /// Throws [ArgumentError] if the value is null.
   int _requireEpochMillis(Object? value) {
     final millis = _toEpochMillis(value);
     if (millis == null) {
@@ -383,6 +413,7 @@ class WordDao {
     return millis;
   }
 
+  /// Converts a time value to ISO 8601 string format.
   String _toIsoString(Object value) {
     if (value is String) {
       return value;

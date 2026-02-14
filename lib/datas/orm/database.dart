@@ -1,3 +1,8 @@
+/// SQLite database initialization and schema management.
+///
+/// This file handles database setup, singleton instance management,
+/// and ensures the schema with proper indexes for word storage by language.
+
 // Dart imports:
 import 'dart:io';
 
@@ -8,9 +13,15 @@ import 'package:sqlite3/sqlite3.dart' as sqlite;
 // Project imports:
 import 'package:lexigo/utils/app_logger.dart';
 
+/// Database singleton that manages SQLite connection and schema.
 class Database {
+  /// Singleton database instance.
   static sqlite.Database? _db;
 
+  /// Gets or initializes the SQLite database.
+  ///
+  /// Creates database file if needed and ensures base schema exists.
+  /// Returns the same instance on subsequent calls (singleton pattern).
   static Future<sqlite.Database> getInstance() async {
     if (_db != null) {
       return _db!;
@@ -29,38 +40,24 @@ class Database {
     return db;
   }
 
+  /// Closes the database connection.
   static Future<void> close() async {
     _db?.close();
     _db = null;
     AppLogger.info('Database connection closed');
   }
 
-  static Future<File> _getDatabaseFile() async {
-    final Directory appDocDir = Platform.isAndroid
-        ? await getApplicationDocumentsDirectory()
-        : await getApplicationSupportDirectory();
-    final String dbPath = '${appDocDir.path}/database.db';
-    return File(dbPath);
-  }
-
-  static void _ensureBaseSchema(sqlite.Database db) {
-    db.execute('''
-      CREATE TABLE IF NOT EXISTS language_tables (
-        language_code TEXT PRIMARY KEY,
-        table_name TEXT NOT NULL UNIQUE,
-        display_name TEXT,
-        word_count INTEGER NOT NULL DEFAULT 0,
-        created_at INTEGER NOT NULL,
-        updated_at INTEGER NOT NULL
-      );
-    ''');
-    AppLogger.debug('Language summary table ensured');
-  }
-
+  /// Generates the table name for a given language code.
+  ///
+  /// Example: 'en' -> 'words_en'
   static String tableNameForLanguage(String languageCode) {
     return 'words_$languageCode';
   }
 
+  /// Ensures a language-specific word table exists with proper schema and indexes.
+  ///
+  /// Each language has its own table to organize words by source language.
+  /// Indexes are created on card_due for efficient scheduling queries.
   static void ensureLanguageTable(
     sqlite.Database db,
     String languageCode, {
@@ -110,5 +107,32 @@ class Database {
       [languageCode, tableName, displayName, now, now],
     );
     AppLogger.info('Updated language table info: $languageCode -> $tableName');
+  }
+
+  /// Gets the database file path.
+  ///
+  /// On Android, uses application documents directory.
+  /// On other platforms, uses application support directory.
+  static Future<File> _getDatabaseFile() async {
+    final Directory appDocDir = Platform.isAndroid
+        ? await getApplicationDocumentsDirectory()
+        : await getApplicationSupportDirectory();
+    final String dbPath = '${appDocDir.path}/database.db';
+    return File(dbPath);
+  }
+
+  /// Ensures the base schema exists (language_tables metadata table).
+  static void _ensureBaseSchema(sqlite.Database db) {
+    db.execute('''
+      CREATE TABLE IF NOT EXISTS language_tables (
+        language_code TEXT PRIMARY KEY,
+        table_name TEXT NOT NULL UNIQUE,
+        display_name TEXT,
+        word_count INTEGER NOT NULL DEFAULT 0,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL
+      );
+    ''');
+    AppLogger.debug('Language summary table ensured');
   }
 }

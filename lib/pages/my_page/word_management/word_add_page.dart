@@ -1,3 +1,7 @@
+/// Page for adding a new word to the database.
+///
+/// Provides form fields for word, translation, examples, unit ID, and book ID.
+
 // Flutter imports:
 import 'package:flutter/material.dart';
 
@@ -10,6 +14,7 @@ import 'package:lexigo/datas/word.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
+/// Form widget for adding words.
 class WordAddPage extends StatefulWidget {
   final LanguageCode? languageCode;
 
@@ -19,6 +24,7 @@ class WordAddPage extends StatefulWidget {
   State<WordAddPage> createState() => _WordAddPageState();
 }
 
+/// State for WordAddPage that handles form submission.
 class _WordAddPageState extends State<WordAddPage> {
   final _formKey = GlobalKey<FormState>();
   final _originalWordController = TextEditingController();
@@ -83,21 +89,23 @@ class _WordAddPageState extends State<WordAddPage> {
       await dao.insertWords(_languageCode, [word]);
       AppLogger.info('Word saved successfully: ${word.originalWord}');
 
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(context.l10n.addSuccess)));
-      form.reset();
-      _originalWordController.clear();
-      _translationController.clear();
-      _originalExampleController.clear();
-      _exampleTranslationController.clear();
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(context.l10n.addSuccess)));
+        form.reset();
+        _originalWordController.clear();
+        _translationController.clear();
+        _originalExampleController.clear();
+        _exampleTranslationController.clear();
+      }
     } catch (e, stackTrace) {
       AppLogger.error('Failed to save word', error: e, stackTrace: stackTrace);
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(context.l10n.addFailed('$e'))));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(context.l10n.addFailed('$e'))));
+      }
     } finally {
       if (mounted) {
         setState(() {

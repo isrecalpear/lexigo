@@ -1,3 +1,7 @@
+/// Page for viewing and managing existing words in a language.
+///
+/// Displays words in a list with buttons to add, edit, or delete words.
+
 // Flutter imports:
 import 'package:flutter/material.dart';
 
@@ -12,6 +16,7 @@ import 'package:lexigo/pages/my_page/word_management/word_add_page.dart';
 import 'package:lexigo/pages/my_page/word_management/word_edit_page.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
+/// Word list viewer and manager.
 class WordViewPage extends StatefulWidget {
   const WordViewPage({super.key});
 

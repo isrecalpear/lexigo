@@ -1,3 +1,9 @@
+/// Application settings and configuration management.
+///
+/// This file manages all user preferences including learning language,
+/// FSRS scheduler settings, UI locale, theme, and color scheme.
+/// Settings are persisted to disk in YAML format.
+
 // Dart imports:
 import 'dart:io';
 
@@ -11,24 +17,43 @@ import 'package:yaml/yaml.dart' as yaml;
 // Project imports:
 import 'package:lexigo/datas/word.dart';
 
+/// Immutable settings configuration.
+///
+/// Contains all user preferences for learning (language selection),
+/// FSRS scheduling parameters, UI localization, theme, and color customization.
+/// Use [copyWith] to create modified copies for state management.
 class Settings {
-  // Learning Settings
+  /// The language currently selected for learning.
   LanguageCode learningLanguage;
 
-  // FSRS Scheduler Settings
+  /// FSRS target retention rate (0.0-1.0). Higher values mean more frequent reviews.
   double fsrsDesiredRetention;
-  List<Duration> fsrsLearningSteps = [Duration(minutes: 1), Duration(minutes: 10)];
+
+  /// Learning steps for new cards (in minutes between reviews).
+  List<Duration> fsrsLearningSteps = [
+    Duration(minutes: 1),
+    Duration(minutes: 10),
+  ];
+
+  /// Relearning steps for cards that were failed (in minutes between reviews).
   List<Duration> fsrsRelearningSteps = [Duration(minutes: 10)];
+
+  /// Maximum interval (in days) between reviews.
   int fsrsMaximumInterval;
+
+  /// Whether to enable fuzzing (randomization) in scheduling.
   bool fsrsEnableFuzzing;
 
-  // General Settings
+  /// UI language locale (null means system default).
   Locale? locale;
 
-  // Display Settings
+  /// Theme mode (system, light, or dark).
   ThemeMode themeMode = ThemeMode.system;
+
+  /// Custom theme color seed (null means use dynamic/default colors).
   Color? colorSeed;
 
+  /// Creates a Settings instance with all required parameters.
   Settings({
     required this.learningLanguage,
     required this.fsrsDesiredRetention,
@@ -41,6 +66,10 @@ class Settings {
     required this.colorSeed,
   });
 
+  /// Creates default Settings with recommended values.
+  ///
+  /// Default learning language is English.
+  /// FSRS parameters follow standard spaced repetition best practices.
   factory Settings.defaults() {
     return Settings(
       learningLanguage: LanguageCode.en,
@@ -55,6 +84,9 @@ class Settings {
     );
   }
 
+  /// Creates a copy of this Settings with specified fields replaced.
+  ///
+  /// If [localeSet] is false, the locale field is unchanged (used for system locale).
   Settings copyWith({
     LanguageCode? learningLanguage,
     double? fsrsDesiredRetention,
@@ -80,6 +112,7 @@ class Settings {
     );
   }
 
+  /// Serializes all settings to a Map for storage.
   Map<String, dynamic> serializedSettings() {
     return {
       'learningLanguage': learningLanguage.toString(),
@@ -96,6 +129,7 @@ class Settings {
     };
   }
 
+  /// Converts settings to YAML format for persistent storage.
   String toYamlString() {
     final Map<String, dynamic> data = serializedSettings();
     final StringBuffer buffer = StringBuffer();
@@ -110,6 +144,7 @@ class Settings {
     return buffer.toString();
   }
 
+  /// Formats a value for YAML serialization.
   static String _yamlValue(dynamic value) {
     if (value == null) {
       return 'null';
@@ -133,18 +168,26 @@ class Settings {
   }
 }
 
+/// State management for Settings with persistence.
+///
+/// Extends [ChangeNotifier] to work with Provider pattern.
+/// Handles loading/saving settings from disk in YAML format.
 class SettingsStore extends ChangeNotifier {
   Settings _settings;
 
+  /// Initialize with initial settings.
   SettingsStore(this._settings);
 
+  /// Get the current settings.
   Settings get settings => _settings;
 
+  /// Update settings and notify listeners.
   void updateSettings(Settings newSettings) {
     _settings = newSettings;
     notifyListeners();
   }
 
+  /// Saves current settings to disk in YAML format.
   Future<void> saveSettings() async {
     final Directory appDir = await getApplicationSupportDirectory();
     final File settingsFile = File('${appDir.path}/settings.yaml');
@@ -152,6 +195,8 @@ class SettingsStore extends ChangeNotifier {
     await settingsFile.writeAsString(_settings.toYamlString());
   }
 
+  /// Loads settings from disk and updates the store.
+  /// Creates default settings if file doesn't exist.
   Future<void> loadSettings() async {
     final Directory appDir = await getApplicationSupportDirectory();
     final File settingsFile = File('${appDir.path}/settings.yaml');
@@ -211,6 +256,7 @@ class SettingsStore extends ChangeNotifier {
     }
   }
 
+  /// Parses a locale string (e.g., 'en_US') to a Locale object.
   static Locale? _parseLocale(String? raw) {
     if (raw == null || raw.isEmpty || raw == 'null' || raw == 'system') {
       return null;
@@ -224,6 +270,7 @@ class SettingsStore extends ChangeNotifier {
     return Locale(parts[0]);
   }
 
+  /// Safely parses a value to double.
   static double? _parseDouble(dynamic value) {
     if (value is num) {
       return value.toDouble();
@@ -236,6 +283,7 @@ class SettingsStore extends ChangeNotifier {
     return null;
   }
 
+  /// Safely parses a list of durations from various formats.
   static List<Duration>? _parseDurationList(
     dynamic value, {
     required List<Duration> fallback,

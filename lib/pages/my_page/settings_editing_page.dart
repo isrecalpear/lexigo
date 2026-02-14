@@ -1,3 +1,8 @@
+/// Page for editing application settings (locale, theme, color).
+///
+/// Allows users to customize UI language, theme mode (light/dark/system),
+/// and theme color seed.
+
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -5,6 +10,7 @@ import 'package:flutter/services.dart';
 // Project imports:
 import 'package:lexigo/l10n/app_localizations.dart';
 
+/// Settings editor widget for locale, theme, and color customization.
 class SettingsEditingPage extends StatefulWidget {
   const SettingsEditingPage({
     super.key,
@@ -26,6 +32,7 @@ class SettingsEditingPage extends StatefulWidget {
   State<SettingsEditingPage> createState() => _SettingsEditingPageState();
 }
 
+/// State for SettingsEditingPage that manages setting UI and dialogs.
 class _SettingsEditingPageState extends State<SettingsEditingPage> {
   late String _selectedLanguage;
   late ThemeMode _selectedThemeMode;

@@ -1,3 +1,9 @@
+/// Word data provider and FSRS scheduler management.
+///
+/// This file provides word retrieval methods and FSRS spaced repetition scheduling.
+/// It handles loading words from the database, managing fallback words, and
+/// updating card states after reviews.
+
 // Dart imports:
 import 'dart:math';
 
@@ -13,7 +19,9 @@ import 'package:lexigo/datas/word.dart';
 import 'package:lexigo/pages/my_page/word_management/word_edit_page.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
+/// Provides word loading and FSRS scheduling operations.
 class WordProvider {
+  /// FSRS v5 algorithm parameters (from FSRS community defaults).
   static const List<double> _schedulerParameters = [
     0.212,
     1.2931,
@@ -37,17 +45,28 @@ class WordProvider {
     0.0658,
     0.1542,
   ];
+
+  /// Target retention rate for scheduling (0.9 = 90%).
   static const double _schedulerDesiredRetention = 0.9;
+
+  /// Initial learning delays for new cards (1 min, then 10 min).
   static const List<Duration> _schedulerLearningSteps = [
     Duration(minutes: 1),
     Duration(minutes: 10),
   ];
+
+  /// Delays for cards being relearned after a failure (10 min).
   static const List<Duration> _schedulerRelearningSteps = [
     Duration(minutes: 10),
   ];
+
+  /// Maximum interval (in days) between reviews to prevent forgotten cards.
   static const int _schedulerMaximumInterval = 36500;
+
+  /// Whether to add randomization to scheduling.
   static const bool _schedulerEnableFuzzing = true;
 
+  /// Shared FSRS scheduler instance with configured parameters.
   static final fsrs.Scheduler scheduler = fsrs.Scheduler(
     parameters: _schedulerParameters,
     desiredRetention: _schedulerDesiredRetention,
@@ -57,6 +76,7 @@ class WordProvider {
     enableFuzzing: _schedulerEnableFuzzing,
   );
 
+  /// Returns a fallback word for the specified language when database is empty.
   static Word _fallbackWordFor(LanguageCode language) {
     switch (language) {
       case LanguageCode.ru:
@@ -89,11 +109,16 @@ class WordProvider {
     }
   }
 
+  /// Retrieves a random word for the specified language or all languages if null.
+  ///
+  /// First tries to load from database. If no words exist, returns a fallback
+  /// word in the selected language.
   Future<Word> getWord({LanguageCode? language}) async {
     try {
       final dao = await WordDao.open();
       final random = Random();
 
+      // TODO: Change the logic, select a word that user don't know, not a random word.
       if (language != null) {
         final words = await dao.getWords(language);
         if (words.isNotEmpty) {
@@ -128,6 +153,9 @@ class WordProvider {
     return _fallbackWordFor(fallbackLanguage);
   }
 
+  /// Retrieves the next word due for review in the specified language.
+  ///
+  /// Returns null if no review words are available.
   Future<Word?> getReviewWord({required LanguageCode language}) async {
     try {
       final dao = await WordDao.open();
@@ -145,30 +173,14 @@ class WordProvider {
         stackTrace: stackTrace,
       );
     }
-    AppLogger.warning(
-      'No review words in database for language: $language',
-    );
+    AppLogger.warning('No review words in database for language: $language');
     return null;
   }
 
-  bool signAsKnown(BuildContext context, Word word) {
-    // TODO: Implement signAsKnown functionality
-    AppLogger.info('Marking as known: ${word.originalWord}');
-    return true;
-  }
-
-  Future<Word?> signAsWrong(BuildContext context, Word word) async {
-    final card = await word.card;
-    if (!context.mounted) return null;
-    final updated = await Navigator.push<Word>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => WordEditPage(word: word, card: card),
-      ),
-    );
-    return updated;
-  }
-
+  /// Processes a word review with the given rating.
+  ///
+  /// Updates the FSRS card state based on the rating and saves to database.
+  /// Logs the scheduling result for debugging.
   Future<void> reviewWord(Word word, fsrs.Rating rating) async {
     try {
       final card_ = await word.card;
@@ -202,5 +214,27 @@ class WordProvider {
         stackTrace: stackTrace,
       );
     }
+  }
+
+  /// Marks a word as known (implementation pending).
+  Future<Word?> signAsKnown(BuildContext context, Word word) async {
+    // TODO: Implement signAsKnown functionality
+    AppLogger.info('Marking as known: ${word.originalWord}');
+    return null;
+  }
+
+  /// Opens the word edit dialog to correct/update a word.
+  ///
+  /// Returns the updated word if changes were made, or null if cancelled.
+  Future<Word?> signAsWrong(BuildContext context, Word word) async {
+    final card = await word.card;
+    if (!context.mounted) return null;
+    final updated = await Navigator.push<Word>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WordEditPage(word: word, card: card),
+      ),
+    );
+    return updated;
   }
 }

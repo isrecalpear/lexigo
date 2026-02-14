@@ -1,9 +1,12 @@
+/// Records/statistics page (planned feature).
+
 // Flutter imports:
 import 'package:flutter/material.dart';
 
 // Project imports:
 import 'package:lexigo/l10n/app_localizations.dart';
 
+/// Placeholder for records/learning statistics page.
 class RecordsPicker extends StatefulWidget {
   const RecordsPicker({super.key});
 
@@ -14,8 +17,6 @@ class RecordsPicker extends StatefulWidget {
 class _RecordsPickerState extends State<RecordsPicker> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(child: Text(context.l10n.recordsBuilding)),
-    );
+    return Scaffold(body: Center(child: Text(context.l10n.recordsBuilding)));
   }
 }
