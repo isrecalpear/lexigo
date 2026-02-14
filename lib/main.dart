@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 // Package imports:
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:navigation_rail_m3e/navigation_rail_m3e.dart';
 
 // Project imports:
 import 'datas/orm/words.dart';
@@ -304,6 +305,8 @@ class _MyHomePageState extends State<MyHomePage> {
   final PageController _pageController = PageController();
   int _selectedIndex = 0;
 
+  static const double _landscapeAspectRatioThreshold = 1.2;
+
   /// Debounce timer for search queries.
   Timer? _searchDebounceTimer;
 
@@ -336,79 +339,136 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final Size size = MediaQuery.sizeOf(context);
+    final bool useRail =
+        size.width / size.height >= _landscapeAspectRatioThreshold;
+    final List<Widget> pages = [
+      StartPage(learningLanguage: widget.learningLanguage),
+      const RecordsPicker(),
+      SettingsPage(
+        locale: widget.locale,
+        onLocaleChanged: widget.onLocaleChanged,
+        themeMode: widget.themeMode,
+        onThemeModeChanged: widget.onThemeModeChanged,
+        colorSeed: widget.colorSeed,
+        onColorSeedChanged: widget.onColorSeedChanged,
+      ),
+    ];
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(context.l10n.appTitle),
-        actions: [
-          IconButton(
-            onPressed: _openLearningLanguagePicker,
-            icon: const Icon(Icons.language_outlined),
-          ),
-          SearchAnchor(
-            builder: (BuildContext context, SearchController controller) {
-              return IconButton(
-                icon: const Icon(Icons.search),
-                onPressed: () {
-                  controller.openView();
-                },
-              );
-            },
-            suggestionsBuilder: _suggestionsBuilder,
-          ),
-        ],
-      ),
       backgroundColor: Theme.of(context).colorScheme.surface,
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: (index) {
-          setState(() => _selectedIndex = index);
-        },
+      body: Row(
         children: [
-          StartPage(learningLanguage: widget.learningLanguage),
-          const RecordsPicker(),
-          SettingsPage(
-            locale: widget.locale,
-            onLocaleChanged: widget.onLocaleChanged,
-            themeMode: widget.themeMode,
-            onThemeModeChanged: widget.onThemeModeChanged,
-            colorSeed: widget.colorSeed,
-            onColorSeedChanged: widget.onColorSeedChanged,
+          if (useRail)
+            NavigationRailM3E(
+              type: NavigationRailM3EType.expanded,
+              modality: NavigationRailM3EModality.standard,
+              selectedIndex: _selectedIndex,
+              onDestinationSelected: _onItemTapped,
+              onTypeChanged: (_) {},
+              sections: [
+                NavigationRailM3ESection(
+                  destinations: [
+                    NavigationRailM3EDestination(
+                      icon: const Icon(Icons.abc_outlined),
+                      selectedIcon: const Icon(Icons.abc),
+                      label: context.l10n.tabStudy,
+                    ),
+                    NavigationRailM3EDestination(
+                      icon: const Icon(Icons.calendar_month_outlined),
+                      selectedIcon: const Icon(Icons.calendar_month),
+                      label: context.l10n.tabRecords,
+                    ),
+                    NavigationRailM3EDestination(
+                      icon: const Icon(Icons.person_outline),
+                      selectedIcon: const Icon(Icons.person),
+                      label: context.l10n.tabMe,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          Expanded(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: SafeArea(
+                    top: true,
+                    bottom: false,
+                    minimum: const EdgeInsets.only(top: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        IconButton(
+                          onPressed: _openLearningLanguagePicker,
+                          icon: const Icon(Icons.language_outlined),
+                        ),
+                        SearchAnchor(
+                          builder:
+                              (
+                                BuildContext context,
+                                SearchController controller,
+                              ) {
+                                return IconButton(
+                                  icon: const Icon(Icons.search),
+                                  onPressed: () {
+                                    controller.openView();
+                                  },
+                                );
+                              },
+                          suggestionsBuilder: _suggestionsBuilder,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: PageView(
+                    controller: _pageController,
+                    physics: const NeverScrollableScrollPhysics(),
+                    onPageChanged: (index) {
+                      setState(() => _selectedIndex = index);
+                    },
+                    children: pages,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        currentIndex: _selectedIndex,
-        items: [
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.abc_outlined),
-            label: context.l10n.tabStudy,
-            activeIcon: const Icon(Icons.abc),
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.calendar_month_outlined),
-            label: context.l10n.tabRecords,
-            activeIcon: const Icon(Icons.calendar_month),
-          ),
-          BottomNavigationBarItem(
-            icon: const Icon(Icons.person_outline),
-            label: context.l10n.tabMe,
-            activeIcon: const Icon(Icons.person),
-          ),
-        ],
-        onTap: _onItemTapped,
-      ),
+      bottomNavigationBar: useRail
+          ? null
+          : BottomNavigationBar(
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              currentIndex: _selectedIndex,
+              items: [
+                BottomNavigationBarItem(
+                  icon: const Icon(Icons.abc_outlined),
+                  label: context.l10n.tabStudy,
+                  activeIcon: const Icon(Icons.abc),
+                ),
+                BottomNavigationBarItem(
+                  icon: const Icon(Icons.calendar_month_outlined),
+                  label: context.l10n.tabRecords,
+                  activeIcon: const Icon(Icons.calendar_month),
+                ),
+                BottomNavigationBarItem(
+                  icon: const Icon(Icons.person_outline),
+                  label: context.l10n.tabMe,
+                  activeIcon: const Icon(Icons.person),
+                ),
+              ],
+              onTap: _onItemTapped,
+            ),
     );
   }
 
   void _onItemTapped(int index) {
     AppLogger.debug('Switching to tab: $index');
     setState(() => _selectedIndex = index);
-    _pageController.animateToPage(
-      index,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
+    _pageController.jumpToPage(index);
   }
 
   /// Opens the learning language selection dialog.

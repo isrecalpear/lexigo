@@ -35,8 +35,8 @@ class SettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: ListView(
+        padding: const EdgeInsets.all(0),
         children: [
-          const SizedBox(height: 16),
           ListTile(
             leading: const Icon(Icons.menu_book_outlined),
             title: Text(context.l10n.settingsWordManagement),

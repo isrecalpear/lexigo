@@ -54,8 +54,6 @@ class _LearningPageState extends State<LearningPage> {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-
     return PopScope<Word>(
       canPop: false,
       onPopInvokedWithResult: (bool didPop, Word? result) {
@@ -97,34 +95,29 @@ class _LearningPageState extends State<LearningPage> {
                           },
                         ),
                 ),
-                const SizedBox(height: 12),
                 // Keep content above and reserve the bottom third for actions.
                 Expanded(child: SizedBox()),
-                Container(
-                  height: screenHeight / 3,
-                  padding: const EdgeInsets.symmetric(vertical: 12.0),
-                  child: Center(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        FilledButton(
-                          onPressed: () => _handleChoice(fsrs.Rating.easy),
-                          child: Text(context.l10n.ratingEasy),
-                        ),
-                        FilledButton(
-                          onPressed: () => _handleChoice(fsrs.Rating.good),
-                          child: Text(context.l10n.ratingGood),
-                        ),
-                        FilledButton(
-                          onPressed: () => _handleChoice(fsrs.Rating.hard),
-                          child: Text(context.l10n.ratingHard),
-                        ),
-                        FilledButton(
-                          onPressed: () => _handleChoice(fsrs.Rating.again),
-                          child: Text(context.l10n.ratingAgain),
-                        ),
-                      ],
-                    ),
+                Center(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      FilledButton(
+                        onPressed: () => _handleChoice(fsrs.Rating.easy),
+                        child: Text(context.l10n.ratingEasy),
+                      ),
+                      FilledButton(
+                        onPressed: () => _handleChoice(fsrs.Rating.good),
+                        child: Text(context.l10n.ratingGood),
+                      ),
+                      FilledButton(
+                        onPressed: () => _handleChoice(fsrs.Rating.hard),
+                        child: Text(context.l10n.ratingHard),
+                      ),
+                      FilledButton(
+                        onPressed: () => _handleChoice(fsrs.Rating.again),
+                        child: Text(context.l10n.ratingAgain),
+                      ),
+                    ],
                   ),
                 ),
               ],

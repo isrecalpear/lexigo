@@ -64,8 +64,17 @@ class _StartPageState extends State<StartPage> {
                   );
                 },
               ),
-              FilledButton(onPressed: _next, child: Text(context.l10n.next)),
-              const SizedBox(height: 128),
+              FilledButton(
+                onPressed: _next,
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size(140, 52),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 14,
+                  ),
+                ),
+                child: Text(context.l10n.next),
+              ),
             ],
           ),
         ],
