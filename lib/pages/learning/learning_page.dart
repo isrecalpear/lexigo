@@ -96,7 +96,7 @@ class _LearningPageState extends State<LearningPage> {
                         ),
                 ),
                 // Keep content above and reserve the bottom third for actions.
-                Expanded(child: SizedBox()),
+                Spacer(),
                 Center(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -120,6 +120,7 @@ class _LearningPageState extends State<LearningPage> {
                     ],
                   ),
                 ),
+              Spacer(),
               ],
             ),
           ),

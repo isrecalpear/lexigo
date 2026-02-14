@@ -31,53 +31,57 @@ class _StartPageState extends State<StartPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Center(
-                child: Text(
-                  context.l10n.startPrompt,
-                  style: const TextStyle(fontSize: 24),
-                ),
-              ),
-              Builder(
-                builder: (context) {
-                  if (_currentWord == null) {
-                    return const SizedBox(
-                      height: 160,
-                      child: Center(child: CircularProgressIndicator()),
-                    );
-                  }
-                  final tag = 'word_${_currentWord!.originalWord}';
-                  return Hero(
-                    tag: tag,
-                    child: WordCard(
-                      word: _currentWord!,
-                      onUpdated: (updated) {
-                        setState(() {
-                          _currentWord = updated;
-                        });
-                      },
-                    ),
-                  );
-                },
-              ),
-              FilledButton(
-                onPressed: _next,
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size(140, 52),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 14,
+      body: SafeArea(
+        left: false,
+        top: false,
+        bottom: false,
+        child: Stack(
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Center(
+                  child: Text(
+                    context.l10n.startPrompt,
+                    style: const TextStyle(fontSize: 24),
                   ),
                 ),
-                child: Text(context.l10n.next),
-              ),
-            ],
-          ),
-        ],
+                Builder(
+                  builder: (context) {
+                    if (_currentWord == null) {
+                      return const SizedBox(
+                        height: 160,
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                    final tag = 'word_${_currentWord!.originalWord}';
+                    return Hero(
+                      tag: tag,
+                      child: WordCard(
+                        word: _currentWord!,
+                        onUpdated: (updated) {
+                          setState(() {
+                            _currentWord = updated;
+                          });
+                        },
+                      ),
+                    );
+                  },
+                ),
+                FilledButton(
+                  onPressed: _next,
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 14,
+                    ),
+                  ),
+                  child: Text(context.l10n.next),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         label: Text(context.l10n.startLearning),

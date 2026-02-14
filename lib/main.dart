@@ -360,46 +360,53 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Row(
         children: [
           if (useRail)
-            NavigationRailM3E(
-              type: NavigationRailM3EType.expanded,
-              modality: NavigationRailM3EModality.standard,
-              selectedIndex: _selectedIndex,
-              onDestinationSelected: _onItemTapped,
-              onTypeChanged: (_) {},
-              sections: [
-                NavigationRailM3ESection(
-                  destinations: [
-                    NavigationRailM3EDestination(
-                      icon: const Icon(Icons.abc_outlined),
-                      selectedIcon: const Icon(Icons.abc),
-                      label: context.l10n.tabStudy,
-                    ),
-                    NavigationRailM3EDestination(
-                      icon: const Icon(Icons.calendar_month_outlined),
-                      selectedIcon: const Icon(Icons.calendar_month),
-                      label: context.l10n.tabRecords,
-                    ),
-                    NavigationRailM3EDestination(
-                      icon: const Icon(Icons.person_outline),
-                      selectedIcon: const Icon(Icons.person),
-                      label: context.l10n.tabMe,
-                    ),
-                  ],
-                ),
-              ],
+            SafeArea(
+              child: NavigationRailM3E(
+                type: NavigationRailM3EType.expanded,
+                modality: NavigationRailM3EModality.standard,
+                selectedIndex: _selectedIndex,
+                onDestinationSelected: _onItemTapped,
+                onTypeChanged: (_) {},
+                sections: [
+                  NavigationRailM3ESection(
+                    destinations: [
+                      NavigationRailM3EDestination(
+                        icon: const Icon(Icons.abc_outlined),
+                        selectedIcon: const Icon(Icons.abc),
+                        label: context.l10n.tabStudy,
+                      ),
+                      NavigationRailM3EDestination(
+                        icon: const Icon(Icons.calendar_month_outlined),
+                        selectedIcon: const Icon(Icons.calendar_month),
+                        label: context.l10n.tabRecords,
+                      ),
+                      NavigationRailM3EDestination(
+                        icon: const Icon(Icons.person_outline),
+                        selectedIcon: const Icon(Icons.person),
+                        label: context.l10n.tabMe,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           Expanded(
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: SafeArea(
-                    top: true,
                     bottom: false,
                     minimum: const EdgeInsets.only(top: 8),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
+                        if (!useRail)
+                          Text(
+                            context.l10n.appTitle,
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                        const Spacer(),
                         IconButton(
                           onPressed: _openLearningLanguagePicker,
                           icon: const Icon(Icons.language_outlined),
