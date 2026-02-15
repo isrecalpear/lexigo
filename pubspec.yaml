@@ -38,7 +38,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_localization: ^0.3.3
   m3e_design: ^0.2.1
-  material_color_utilities: ^0.11.1
+  material_color_utilities: ^0.13.0
   dynamic_color: ^1.8.1
   split_button_m3e: ^0.2.1
   logger: ^2.5.0
@@ -52,6 +52,7 @@ dependencies:
   permission_handler: ^12.0.1
   yaml: ^3.1.2
   navigation_rail_m3e: ^0.3.5
+  vibration: ^3.1.6
 
 dev_dependencies:
   flutter_test:
