@@ -147,6 +147,11 @@ class AppLocalizations {
   String get familiarityReview => _t('familiarityReview');
   String get wordCardCorrect => _t('wordCardCorrect');
   String get wordCardMarkKnown => _t('wordCardMarkKnown');
+  String get learningSummary => _t('learningSummary');
+  String get learningSummaryTitle => _t('learningSummaryTitle');
+  String get learningSummaryNextLabel => _t('learningSummaryNextLabel');
+  String get learningSummaryEnd => _t('learningSummaryEnd');
+  String get learningSummaryNextGroup => _t('learningSummaryNextGroup');
 }
 
 class _AppLocalizationsDelegate
@@ -276,6 +281,12 @@ const Map<String, Map<String, String>> _localizedValues = {
     'familiarityReview': 'Review',
     'wordCardCorrect': 'Correct',
     'wordCardMarkKnown': 'Mark as known',
+    'learningSummary':
+        '{learned} words learned, {reviewed} reviewed, {toReview} to review',
+    'learningSummaryTitle': 'Summary',
+    'learningSummaryNextLabel': 'Next word:',
+    'learningSummaryEnd': 'End learning',
+    'learningSummaryNextGroup': 'Next set',
   },
   'zh': {
     'appTitle': '背了么 - LexiGo',
@@ -380,5 +391,10 @@ const Map<String, Map<String, String>> _localizedValues = {
     'familiarityReview': '熟悉',
     'wordCardCorrect': '纠错',
     'wordCardMarkKnown': '标记为熟知',
+    'learningSummary': '已学 {learned} 个，复习 {reviewed} 个，还剩 {toReview} 个',
+    'learningSummaryTitle': '总结',
+    'learningSummaryNextLabel': '接下来的是：',
+    'learningSummaryEnd': '结束学习',
+    'learningSummaryNextGroup': '下一组单词',
   },
 };

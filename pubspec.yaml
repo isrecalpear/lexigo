@@ -53,6 +53,7 @@ dependencies:
   yaml: ^3.1.2
   navigation_rail_m3e: ^0.3.5
   vibration: ^3.1.6
+  progress_indicator_m3e: ^0.1.1
 
 dev_dependencies:
   flutter_test:

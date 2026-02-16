@@ -13,8 +13,10 @@ import 'package:fsrs/fsrs.dart' as fsrs;
 import 'package:lexigo/datas/word.dart';
 import 'package:lexigo/datas/word_provider.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
+import 'package:lexigo/pages/learning/learning_summarize.dart';
 import 'package:lexigo/pages/widgets/word_card.dart';
 import 'package:lexigo/utils/app_logger.dart';
+import 'package:progress_indicator_m3e/progress_indicator_m3e.dart';
 
 /// Interactive learning widget for studying individual words.
 class LearningPage extends StatefulWidget {
@@ -43,6 +45,8 @@ class _LearningPageState extends State<LearningPage> {
   final WordProvider _wordProvider = WordProvider();
   late String _heroTag;
   Word? _currentWord;
+  int _learnedCount = 0;
+  static const int _totalCount = 10;
 
   @override
   void initState() {
@@ -65,64 +69,94 @@ class _LearningPageState extends State<LearningPage> {
       },
       child: Scaffold(
         appBar: AppBar(title: Text(context.l10n.learningTitle)),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: SizedBox.expand(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Hero(
-                  tag: _heroTag,
-                  flightShuttleBuilder:
-                      (context, animation, direction, fromContext, toContext) {
-                        return Material(
-                          color: Colors.transparent,
-                          child: toContext.widget,
-                        );
-                      },
-                  child: _currentWord == null
-                      ? const SizedBox(
-                          height: 160,
-                          child: Center(child: CircularProgressIndicator()),
-                        )
-                      : WordCard(
-                          word: _currentWord!,
-                          onUpdated: (updated) {
-                            setState(() {
-                              _currentWord = updated;
-                              _heroTag = 'word_${updated.originalWord}';
-                            });
-                          },
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 16,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TweenAnimationBuilder<double>(
+                        duration: const Duration(milliseconds: 500),
+                        curve: Curves.easeOutCubic,
+                        tween: Tween<double>(
+                          begin: 0,
+                          end: _learnedCount / _totalCount,
                         ),
+                        builder: (context, value, child) {
+                          return LinearProgressIndicatorM3E(
+                            value: value,
+                            trackColor: Theme.of(
+                              context,
+                            ).colorScheme.primaryContainer,
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '$_learnedCount/$_totalCount',
+                      style: Theme.of(context).textTheme.labelMedium,
+                    ),
+                  ],
                 ),
-                // Keep content above and reserve the bottom third for actions.
-                Spacer(),
-                Center(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      FilledButton(
-                        onPressed: () => _handleChoice(fsrs.Rating.easy),
-                        child: Text(context.l10n.ratingEasy),
+              ),
+              Hero(
+                tag: _heroTag,
+                flightShuttleBuilder:
+                    (context, animation, direction, fromContext, toContext) {
+                      return Material(
+                        color: Colors.transparent,
+                        child: toContext.widget,
+                      );
+                    },
+                child: _currentWord == null
+                    ? const SizedBox(
+                        height: 160,
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    : WordCard(
+                        word: _currentWord!,
+                        onUpdated: (updated) {
+                          setState(() {
+                            _currentWord = updated;
+                            _heroTag = 'word_${updated.originalWord}';
+                          });
+                        },
                       ),
-                      FilledButton(
-                        onPressed: () => _handleChoice(fsrs.Rating.good),
-                        child: Text(context.l10n.ratingGood),
-                      ),
-                      FilledButton(
-                        onPressed: () => _handleChoice(fsrs.Rating.hard),
-                        child: Text(context.l10n.ratingHard),
-                      ),
-                      FilledButton(
-                        onPressed: () => _handleChoice(fsrs.Rating.again),
-                        child: Text(context.l10n.ratingAgain),
-                      ),
-                    ],
-                  ),
-                ),
+              ),
+              // Keep content above and reserve the bottom third for actions.
               Spacer(),
-              ],
-            ),
+              Center(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    FilledButton(
+                      onPressed: () => _handleChoice(fsrs.Rating.easy),
+                      child: Text(context.l10n.ratingEasy),
+                    ),
+                    FilledButton(
+                      onPressed: () => _handleChoice(fsrs.Rating.good),
+                      child: Text(context.l10n.ratingGood),
+                    ),
+                    FilledButton(
+                      onPressed: () => _handleChoice(fsrs.Rating.hard),
+                      child: Text(context.l10n.ratingHard),
+                    ),
+                    FilledButton(
+                      onPressed: () => _handleChoice(fsrs.Rating.again),
+                      child: Text(context.l10n.ratingAgain),
+                    ),
+                  ],
+                ),
+              ),
+              Spacer(),
+            ],
           ),
         ),
       ),
@@ -137,11 +171,30 @@ class _LearningPageState extends State<LearningPage> {
       language: widget.learningLanguage,
     );
 
-    if (mounted) {
-      setState(() {
-        _currentWord = nextWord;
-        _heroTag = 'word_${_currentWord!.originalWord}';
-      });
+    if (!mounted) return;
+
+    final nextLearnedCount = _learnedCount < _totalCount
+        ? _learnedCount + 1
+        : _learnedCount;
+    if (nextLearnedCount >= _totalCount) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => LearningSummarizePage(
+            wordsUnknown: nextWord,
+            wordsLearned: nextLearnedCount,
+            wordsReviewed: 0,
+            wordsToReview: 0,
+            heroTag: 'word_${nextWord.originalWord}',
+          ),
+        ),
+      );
+      return;
     }
+
+    setState(() {
+      _learnedCount = nextLearnedCount;
+      _currentWord = nextWord;
+      _heroTag = 'word_${nextWord.originalWord}';
+    });
   }
 }
