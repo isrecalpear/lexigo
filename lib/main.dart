@@ -16,7 +16,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:navigation_rail_m3e/navigation_rail_m3e.dart';
 
 // Project imports:
-import 'datas/orm/words.dart';
+import 'datas/orm/word_dao.dart';
 import 'datas/word.dart';
 import 'l10n/app_localizations.dart';
 import 'pages/my_page.dart';
