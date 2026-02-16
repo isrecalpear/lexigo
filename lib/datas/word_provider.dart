@@ -99,7 +99,7 @@ class WordProvider {
         );
       case LanguageCode.en:
         return Word(
-          originalWord: "love",
+          originalWord: "Love",
           translation: "爱",
           originalExample: "I love you.",
           exampleTranslation: "我爱你。",
