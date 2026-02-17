@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:fsrs/fsrs.dart' as fsrs;
 
 // Project imports:
-import 'package:lexigo/datas/orm/word_dao.dart';
+import 'package:lexigo/datas/orm/word_repository.dart';
 import 'package:lexigo/datas/word.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
 import 'package:lexigo/utils/app_logger.dart';
@@ -85,8 +85,8 @@ class _WordAddPageState extends State<WordAddPage> {
             : _bookIdController.text.trim(),
       );
 
-      final dao = await WordDao.open();
-      await dao.insertWords(_languageCode, [word]);
+      final repo = await WordRepository.open();
+      await repo.insertWords(_languageCode, [word]);
       AppLogger.info('Word saved successfully: ${word.originalWord}');
 
       if (mounted) {

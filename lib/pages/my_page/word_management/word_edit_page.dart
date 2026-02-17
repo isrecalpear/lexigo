@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:fsrs/fsrs.dart' as fsrs;
 
 // Project imports:
-import 'package:lexigo/datas/orm/word_dao.dart';
+import 'package:lexigo/datas/orm/word_repository.dart';
 import 'package:lexigo/datas/word.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
 import 'package:lexigo/utils/app_logger.dart';
@@ -95,8 +95,8 @@ class _WordEditPageState extends State<WordEditPage> {
             : _bookIdController.text.trim(),
       );
 
-      final dao = await WordDao.open();
-      await dao.updateWord(widget.word.sourceLanguageCode, updated);
+      final repo = await WordRepository.open();
+      await repo.updateWord(widget.word.sourceLanguageCode, updated);
       AppLogger.info('Word updated successfully: ${updated.originalWord}');
 
       if (!mounted) return;

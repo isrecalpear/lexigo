@@ -7,15 +7,104 @@ import 'package:lexigo/datas/word.dart';
 import 'package:lexigo/utils/app_logger.dart';
 import 'database.dart';
 
-class WordDao {
-  WordDao._(this._db);
+class WordRepository {
+  WordRepository._(this._db);
 
   final sqlite.Database _db;
 
   /// Opens a connection to the word database.
-  static Future<WordDao> open() async {
+  static Future<WordRepository> open() async {
     final db = await Database.getInstance();
-    return WordDao._(db);
+    return WordRepository._(db);
+  }
+
+  /// FSRS v5 algorithm parameters (from FSRS community defaults).
+  static const List<double> _schedulerParameters = [
+    0.212,
+    1.2931,
+    2.3065,
+    8.2956,
+    6.4133,
+    0.8334,
+    3.0194,
+    0.001,
+    1.8722,
+    0.1666,
+    0.796,
+    1.4835,
+    0.0614,
+    0.2629,
+    1.6483,
+    0.6014,
+    1.8729,
+    0.5425,
+    0.0912,
+    0.0658,
+    0.1542,
+  ];
+
+  /// Target retention rate for scheduling (0.9 = 90%).
+  static const double _schedulerDesiredRetention = 0.9;
+
+  /// Initial learning delays for new cards (1 min, then 10 min).
+  static const List<Duration> _schedulerLearningSteps = [
+    Duration(minutes: 1),
+    Duration(minutes: 10),
+  ];
+
+  /// Delays for cards being relearned after a failure (10 min).
+  static const List<Duration> _schedulerRelearningSteps = [
+    Duration(minutes: 10),
+  ];
+
+  /// Maximum interval (in days) between reviews to prevent forgotten cards.
+  static const int _schedulerMaximumInterval = 36500;
+
+  /// Whether to add randomization to scheduling.
+  static const bool _schedulerEnableFuzzing = true;
+
+  /// Shared FSRS scheduler instance with configured parameters.
+  static final Scheduler scheduler = Scheduler(
+    parameters: _schedulerParameters,
+    desiredRetention: _schedulerDesiredRetention,
+    learningSteps: _schedulerLearningSteps,
+    relearningSteps: _schedulerRelearningSteps,
+    maximumInterval: _schedulerMaximumInterval,
+    enableFuzzing: _schedulerEnableFuzzing,
+  );
+
+  /// Returns a fallback word for the specified language when database is empty.
+  static Word _fallbackWordFor(LanguageCode language) {
+    switch (language) {
+      case LanguageCode.ru:
+        return Word(
+          originalWord: "\u043B\u044E\u0431\u0438\u0442\u044C",
+          translation: "\u7231",
+          originalExample:
+              "\u042F \u043B\u044E\u0431\u043B\u044E \u0442\u0435\u0431\u044F.",
+          exampleTranslation: "\u6211\u7231\u4F60\u3002",
+          sourceLanguageCode: LanguageCode.ru,
+          card: Card.create(),
+        );
+      case LanguageCode.ko:
+        return Word(
+          originalWord: "\uC0AC\uB791\uD558\uB2E4",
+          translation: "\u7231",
+          originalExample: "\uC0AC\uB791\uD574\uC694.",
+          exampleTranslation: "\u6211\u7231\u4F60\u3002",
+          sourceLanguageCode: LanguageCode.ko,
+          card: Card.create(),
+        );
+      case LanguageCode.en:
+        return Word(
+          originalWord: "Love",
+          translation: "\u7231",
+          originalExample: "I love you.",
+          exampleTranslation: "\u6211\u7231\u4F60\u3002",
+          sourceLanguageCode: LanguageCode.en,
+          card: Card.create(),
+        );
+    }
   }
 
   /// Inserts a batch of words for the specified language.
@@ -172,18 +261,6 @@ class WordDao {
     return total;
   }
 
-  /// Deletes all words in the specified language table.
-  /// Returns the number of deleted rows.
-  Future<int> deleteAll(LanguageCode language) async {
-    _ensureTable(language);
-    final tableName = _tableName(language);
-    _db.execute('DELETE FROM $tableName;');
-    final count = _changes();
-    AppLogger.info('Cleared word table: $tableName, deleted count: $count');
-    _refreshWordCount(language);
-    return count;
-  }
-
   /// Retrieves all words for the specified language.
   /// Supports optional ordering, limiting, and pagination.
   Future<List<Word>> getWords(
@@ -211,18 +288,19 @@ class WordDao {
     return result.map((row) => _fromRow(row, language)).toList();
   }
 
-  Future<Word?> getWordByCardId(LanguageCode language, int cardId) async {
+  Future<Word> getRandomWord(LanguageCode language) async {
     _ensureTable(language);
     final tableName = _tableName(language);
-    final result = _db.select(
-      'SELECT * FROM $tableName WHERE card_id = ? LIMIT 1;',
-      [cardId],
-    );
-    if (result.isEmpty) {
-      return null;
+    final result = _db.select('SELECT * FROM $tableName ORDER BY RANDOM() LIMIT 1;');
+    if (result.isNotEmpty) {
+      AppLogger.debug(
+        'Retrieved random word successfully: ${result.first['original_word']}',
+      );
+      return _fromRow(result.first, language);
+    }else{
+      AppLogger.warning('No words found for language: $language, returning fallback word');
+      return _fallbackWordFor(language);
     }
-    AppLogger.debug('Retrieved word successfully: cardId=$cardId');
-    return _fromRow(result.first, language);
   }
 
   /// Retrieves the next due review word for the specified language.
@@ -272,13 +350,51 @@ class WordDao {
     return result.map((row) => _fromRow(row, language)).toList();
   }
 
-  /// Retrieves a summary of all languages currently in the database.
-  Future<List<Map<String, Object?>>> getLanguageSummary() async {
-    final result = _db.select('SELECT * FROM language_tables;');
-    final columns = result.columnNames;
-    return result
-        .map((row) => {for (final col in columns) col: row[col]})
-        .toList();
+  /// Processes a word review with the given rating.
+  ///
+  /// Updates the FSRS card state based on the rating and saves to database.
+  /// Logs the scheduling result for debugging.
+  Future<void> reviewWord(Word word, Rating rating) async {
+    try {
+      final card_ = await word.card;
+      final (:card, :reviewLog) = scheduler.reviewCard(card_, rating);
+      AppLogger.info(
+        "Card rated ${reviewLog.rating} at ${reviewLog.reviewDateTime}",
+      );
+
+      final updatedWord = Word(
+        originalWord: word.originalWord,
+        translation: word.translation,
+        originalExample: word.originalExample,
+        exampleTranslation: word.exampleTranslation,
+        sourceLanguageCode: word.sourceLanguageCode,
+        card: Future.value(card),
+        unitID: word.unitID,
+        bookID: word.bookID,
+      );
+
+      await updateWord(word.sourceLanguageCode, updatedWord);
+
+      final due = card.due;
+      final timeDelta = due.difference(DateTime.now());
+      AppLogger.debug("Card due on $due");
+      AppLogger.debug("Card due in ${timeDelta.inSeconds} seconds");
+    } catch (e, stackTrace) {
+      AppLogger.error(
+        'Failed to review word',
+        error: e,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  Future<int> reviewWordsCount(LanguageCode language) async {
+    _ensureTable(language);
+    final tableName = _tableName(language);
+    final result = _db.select('SELECT COUNT(1) AS count FROM $tableName WHERE card_due <= ?;',
+      [DateTime.now().toUtc().millisecondsSinceEpoch],
+    );
+    return result.first['count'] as int;
   }
 
   /// Ensures the language table exists in the database.

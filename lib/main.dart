@@ -16,7 +16,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:navigation_rail_m3e/navigation_rail_m3e.dart';
 
 // Project imports:
-import 'datas/orm/word_dao.dart';
+import 'datas/orm/word_repository.dart';
 import 'datas/word.dart';
 import 'l10n/app_localizations.dart';
 import 'pages/my_page.dart';
@@ -573,8 +573,12 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     try {
-      final dao = await WordDao.open();
-      return await dao.searchWords(widget.learningLanguage, trimmed, limit: 20);
+      final repo = await WordRepository.open();
+      return await repo.searchWords(
+        widget.learningLanguage,
+        trimmed,
+        limit: 20,
+      );
     } catch (e, stackTrace) {
       AppLogger.error(
         'Failed to search words',

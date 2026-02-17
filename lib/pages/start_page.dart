@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 
 // Project imports:
 import 'package:lexigo/datas/word.dart';
-import 'package:lexigo/datas/word_provider.dart';
+import 'package:lexigo/datas/orm/word_repository.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
 import 'package:lexigo/pages/learning/learning_page.dart';
 import 'package:lexigo/pages/widgets/word_card.dart';
@@ -26,7 +26,6 @@ class StartPage extends StatefulWidget {
 
 /// State for StartPage that manages word loading and navigation.
 class _StartPageState extends State<StartPage> {
-  final WordProvider _wordProvider = WordProvider();
   Word? _currentWord;
   @override
   Widget build(BuildContext context) {
@@ -141,7 +140,8 @@ class _StartPageState extends State<StartPage> {
 
   /// Loads the next word from the database for the current language.
   Future<void> _loadNextWord() async {
-    final word = await _wordProvider.getWord(language: widget.learningLanguage);
+    final repo = await WordRepository.open();
+    final word = await repo.getRandomWord(widget.learningLanguage);
     if (!mounted) return;
     setState(() {
       _currentWord = word;

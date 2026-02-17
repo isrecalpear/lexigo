@@ -147,6 +147,9 @@ class AppLocalizations {
   String get familiarityReview => _t('familiarityReview');
   String get wordCardCorrect => _t('wordCardCorrect');
   String get wordCardMarkKnown => _t('wordCardMarkKnown');
+  String get wordCardMarkKnownTitle => _t('wordCardMarkKnownTitle');
+  String wordCardMarkKnownConfirm(String word) =>
+      _t('wordCardMarkKnownConfirm', {'word': word});
   String get learningSummary => _t('learningSummary');
   String get learningSummaryTitle => _t('learningSummaryTitle');
   String get learningSummaryNextLabel => _t('learningSummaryNextLabel');
@@ -281,6 +284,8 @@ const Map<String, Map<String, String>> _localizedValues = {
     'familiarityReview': 'Review',
     'wordCardCorrect': 'Correct',
     'wordCardMarkKnown': 'Mark as known',
+    'wordCardMarkKnownTitle': 'Mark as known?',
+    'wordCardMarkKnownConfirm': 'Confirm marking "{word}" as known.',
     'learningSummary':
         '{learned} words learned, {reviewed} reviewed, {toReview} to review',
     'learningSummaryTitle': 'Summary',
@@ -391,6 +396,8 @@ const Map<String, Map<String, String>> _localizedValues = {
     'familiarityReview': '熟悉',
     'wordCardCorrect': '纠错',
     'wordCardMarkKnown': '标记为熟知',
+    'wordCardMarkKnownTitle': '标记为熟知？',
+    'wordCardMarkKnownConfirm': '确认将 "{word}" 标记为熟知。',
     'learningSummary': '已学 {learned} 个，复习 {reviewed} 个，还剩 {toReview} 个',
     'learningSummaryTitle': '总结',
     'learningSummaryNextLabel': '接下来的是：',

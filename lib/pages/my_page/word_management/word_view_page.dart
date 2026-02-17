@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:fsrs/fsrs.dart' as fsrs;
 
 // Project imports:
-import 'package:lexigo/datas/orm/word_dao.dart';
+import 'package:lexigo/datas/orm/word_repository.dart';
 import 'package:lexigo/datas/word.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
 import 'package:lexigo/pages/my_page/word_management/word_add_page.dart';
@@ -48,8 +48,11 @@ class _WordViewPageState extends State<WordViewPage> {
     });
 
     try {
-      final dao = await WordDao.open();
-      final words = await dao.getWords(_languageCode, orderBy: 'card_due ASC');
+      final repo = await WordRepository.open();
+      final words = await repo.getWords(
+        _languageCode,
+        orderBy: 'card_due ASC',
+      );
 
       final result = <_WordWithCard>[];
       for (final word in words) {
@@ -119,8 +122,8 @@ class _WordViewPageState extends State<WordViewPage> {
     }
 
     try {
-      final dao = await WordDao.open();
-      await dao.deleteWordsByCardIds(_languageCode, [item.card.cardId]);
+      final repo = await WordRepository.open();
+      await repo.deleteWordsByCardIds(_languageCode, [item.card.cardId]);
       AppLogger.info('Deleted word successfully: ${item.word.originalWord}');
       await _loadWords();
       if (mounted) {

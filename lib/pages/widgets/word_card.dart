@@ -8,8 +8,9 @@ import 'package:flutter/material.dart';
 
 // Project imports:
 import 'package:lexigo/datas/word.dart';
-import 'package:lexigo/datas/word_provider.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
+import 'package:lexigo/pages/my_page/word_management/word_edit_page.dart';
+import 'package:lexigo/utils/app_logger.dart';
 
 /// Displays a single word card with bilingual content.
 class WordCard extends StatelessWidget {
@@ -119,17 +120,44 @@ class WordCard extends StatelessWidget {
     );
   }
 
-  /// Marks the word as known (implementation pending).
+  /// TODO: Marks the word as known (implementation pending).
   Future<void> signAsKnown(BuildContext context) async {
-    final updated = await WordProvider().signAsKnown(context, word);
-    if (updated != null) {
-      onUpdated?.call(updated);
-    }
+    if (!context.mounted) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(dialogContext.l10n.wordCardMarkKnownTitle),
+          content: Text(
+            dialogContext.l10n.wordCardMarkKnownConfirm(word.originalWord),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(dialogContext.l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(dialogContext.l10n.confirm),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed != true) return;
+    AppLogger.info('Marking as known: ${word.originalWord}');
   }
 
   /// Marks the word as wrong and opens the edit dialog.
   Future<void> signAsWrong(BuildContext context) async {
-    final updated = await WordProvider().signAsWrong(context, word);
+    final card = await word.card;
+    if (!context.mounted) return;
+    final updated = await Navigator.push<Word>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WordEditPage(word: word, card: card),
+      ),
+    );
     if (updated != null) {
       onUpdated?.call(updated);
     }

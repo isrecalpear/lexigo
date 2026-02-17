@@ -11,7 +11,7 @@ import 'package:fsrs/fsrs.dart' as fsrs;
 
 // Project imports:
 import 'package:lexigo/datas/word.dart';
-import 'package:lexigo/datas/word_provider.dart';
+import 'package:lexigo/datas/orm/word_repository.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
 import 'package:lexigo/pages/learning/learning_summarize.dart';
 import 'package:lexigo/pages/widgets/word_card.dart';
@@ -42,7 +42,6 @@ class LearningPage extends StatefulWidget {
 
 /// State for LearningPage that manages word progression and scheduling.
 class _LearningPageState extends State<LearningPage> {
-  final WordProvider _wordProvider = WordProvider();
   late String _heroTag;
   Word? _currentWord;
   int _learnedCount = 0;
@@ -166,16 +165,36 @@ class _LearningPageState extends State<LearningPage> {
   /// Handles user rating and loads the next word.
   Future<void> _handleChoice(fsrs.Rating rating) async {
     AppLogger.info('Learning Select: $rating - ${_currentWord?.originalWord}');
-    _wordProvider.reviewWord(_currentWord!, rating);
-    final nextWord = await _wordProvider.getWord(
-      language: widget.learningLanguage,
-    );
-
-    if (!mounted) return;
+    final repo = await WordRepository.open();
+    repo.reviewWord(_currentWord!, rating);
+    final nextWord = await repo.getReviewWord(widget.learningLanguage);
 
     final nextLearnedCount = _learnedCount < _totalCount
         ? _learnedCount + 1
         : _learnedCount;
+
+    if (nextWord == null) {
+      final Word wordUnknown = await repo.getRandomWord(
+        widget.learningLanguage,
+      );
+      AppLogger.info('No more words to review, finishing session');
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => LearningSummarizePage(
+            wordsUnknown: wordUnknown,
+            wordsLearned: nextLearnedCount,
+            wordsReviewed: 0,
+            wordsToReview: 0,
+            heroTag: 'word_${_currentWord?.originalWord}',
+          ),
+        ),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+
     if (nextLearnedCount >= _totalCount) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(

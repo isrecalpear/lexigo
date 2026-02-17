@@ -12,7 +12,7 @@ import 'package:fsrs/fsrs.dart' as fsrs;
 import 'package:sqlite3/sqlite3.dart' as sqlite;
 
 // Project imports:
-import 'package:lexigo/datas/orm/word_dao.dart';
+import 'package:lexigo/datas/orm/word_repository.dart';
 import 'package:lexigo/datas/word.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
 import 'package:lexigo/pages/my_page/word_management/word_add_page.dart';
@@ -161,8 +161,8 @@ class WordManagement extends StatelessWidget {
         throw Exception('No data found');
       }
 
-      final dao = await WordDao.open();
-      final existing = await dao.getWords(language);
+      final repo = await WordRepository.open();
+      final existing = await repo.getWords(language);
       final existingKeys = existing
           .map((word) => '${word.originalWord}||${word.bookID}||${word.unitID}')
           .toSet();
@@ -211,7 +211,7 @@ class WordManagement extends StatelessWidget {
         seenKeys.add(key);
       }
 
-      await dao.insertWords(language, words);
+      await repo.insertWords(language, words);
       AppLogger.info(
         'Import completed: ${words.length} words, skipped: $skipped words',
       );
