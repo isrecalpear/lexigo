@@ -5,6 +5,7 @@ import 'package:sqlite3/sqlite3.dart' as sqlite;
 // Project imports:
 import 'package:lexigo/datas/word.dart';
 import 'package:lexigo/utils/app_logger.dart';
+import 'fallback_word.dart';
 import 'database.dart';
 
 class WordRepository {
@@ -72,40 +73,6 @@ class WordRepository {
     maximumInterval: _schedulerMaximumInterval,
     enableFuzzing: _schedulerEnableFuzzing,
   );
-
-  /// Returns a fallback word for the specified language when database is empty.
-  static Word _fallbackWordFor(LanguageCode language) {
-    switch (language) {
-      case LanguageCode.ru:
-        return Word(
-          originalWord: "\u043B\u044E\u0431\u0438\u0442\u044C",
-          translation: "\u7231",
-          originalExample:
-              "\u042F \u043B\u044E\u0431\u043B\u044E \u0442\u0435\u0431\u044F.",
-          exampleTranslation: "\u6211\u7231\u4F60\u3002",
-          sourceLanguageCode: LanguageCode.ru,
-          card: Card.create(),
-        );
-      case LanguageCode.ko:
-        return Word(
-          originalWord: "\uC0AC\uB791\uD558\uB2E4",
-          translation: "\u7231",
-          originalExample: "\uC0AC\uB791\uD574\uC694.",
-          exampleTranslation: "\u6211\u7231\u4F60\u3002",
-          sourceLanguageCode: LanguageCode.ko,
-          card: Card.create(),
-        );
-      case LanguageCode.en:
-        return Word(
-          originalWord: "Love",
-          translation: "\u7231",
-          originalExample: "I love you.",
-          exampleTranslation: "\u6211\u7231\u4F60\u3002",
-          sourceLanguageCode: LanguageCode.en,
-          card: Card.create(),
-        );
-    }
-  }
 
   /// Inserts a batch of words for the specified language.
   /// Handles duplicates by updating existing entries based on card_id.
@@ -291,15 +258,19 @@ class WordRepository {
   Future<Word> getRandomWord(LanguageCode language) async {
     _ensureTable(language);
     final tableName = _tableName(language);
-    final result = _db.select('SELECT * FROM $tableName ORDER BY RANDOM() LIMIT 1;');
+    final result = _db.select(
+      'SELECT * FROM $tableName ORDER BY RANDOM() LIMIT 1;',
+    );
     if (result.isNotEmpty) {
       AppLogger.debug(
         'Retrieved random word successfully: ${result.first['original_word']}',
       );
       return _fromRow(result.first, language);
-    }else{
-      AppLogger.warning('No words found for language: $language, returning fallback word');
-      return _fallbackWordFor(language);
+    } else {
+      AppLogger.warning(
+        'No words found for language: $language, returning fallback word',
+      );
+      return fallbackWordFor(language);
     }
   }
 
@@ -391,7 +362,8 @@ class WordRepository {
   Future<int> reviewWordsCount(LanguageCode language) async {
     _ensureTable(language);
     final tableName = _tableName(language);
-    final result = _db.select('SELECT COUNT(1) AS count FROM $tableName WHERE card_due <= ?;',
+    final result = _db.select(
+      'SELECT COUNT(1) AS count FROM $tableName WHERE card_due <= ?;',
       [DateTime.now().toUtc().millisecondsSinceEpoch],
     );
     return result.first['count'] as int;

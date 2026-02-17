@@ -49,10 +49,7 @@ class _WordViewPageState extends State<WordViewPage> {
 
     try {
       final repo = await WordRepository.open();
-      final words = await repo.getWords(
-        _languageCode,
-        orderBy: 'card_due ASC',
-      );
+      final words = await repo.getWords(_languageCode, orderBy: 'card_due ASC');
 
       final result = <_WordWithCard>[];
       for (final word in words) {

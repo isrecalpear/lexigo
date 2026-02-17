@@ -171,6 +171,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
+    LanguageCode learningLanguage = _language ?? LanguageCode.en;
     if (Platform.isIOS) {
       AppLogger.warning(
         'iOS don\'t support dynamic color, using fallback color scheme',
@@ -194,7 +195,7 @@ class _MyAppState extends State<MyApp> {
         home: MyHomePage(
           locale: _locale,
           onLearningLanguageChanged: _setLearningLanguage,
-          learningLanguage: _language ?? LanguageCode.en,
+          learningLanguage: learningLanguage,
           onLocaleChanged: _setLocale,
           themeMode: _themeMode,
           onThemeModeChanged: _setThemeMode,
@@ -221,7 +222,7 @@ class _MyAppState extends State<MyApp> {
             home: MyHomePage(
               locale: _locale,
               onLearningLanguageChanged: _setLearningLanguage,
-              learningLanguage: _language ?? LanguageCode.en,
+              learningLanguage: learningLanguage,
               onLocaleChanged: _setLocale,
               themeMode: _themeMode,
               onThemeModeChanged: _setThemeMode,
@@ -480,15 +481,33 @@ class _MyHomePageState extends State<MyHomePage> {
 
   /// Opens the learning language selection dialog.
   Future<void> _openLearningLanguagePicker() async {
+    final List<LanguageCode> languageOptions = List<LanguageCode>.from(
+      LanguageCode.values,
+    );
+    final LanguageCode currentLanguage = widget.learningLanguage;
+    languageOptions.sort(
+      (a, b) => a == currentLanguage
+          ? -1
+          : b == currentLanguage
+          ? 1
+          : a.index.compareTo(b.index),
+    );
+
     final LanguageCode? selected = await showDialog<LanguageCode>(
       context: context,
       builder: (context) {
         return SimpleDialog(
           title: Text(context.l10n.selectLanguageTitle),
-          children: LanguageCode.values
+          children: languageOptions
               .map(
-                (item) => SimpleDialogOption(
-                  onPressed: () => Navigator.pop(context, item),
+                (item) => RadioMenuButton(
+                  value: item,
+                  groupValue: currentLanguage,
+                  onChanged: (value) {
+                    if (value != null) {
+                      Navigator.pop(context, value);
+                    }
+                  },
                   child: Text(item.name),
                 ),
               )
