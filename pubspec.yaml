@@ -40,7 +40,6 @@ dependencies:
   m3e_design: ^0.2.1
   material_color_utilities: ^0.13.0
   dynamic_color: ^1.8.1
-  split_button_m3e: ^0.2.1
   logger: ^2.5.0
   path_provider: ^2.1.5
   intl: ^0.20.1
@@ -51,10 +50,8 @@ dependencies:
   file_selector: ^1.1.0
   permission_handler: ^12.0.1
   yaml: ^3.1.2
-  navigation_rail_m3e: ^0.3.5
   vibration: ^3.1.6
   progress_indicator_m3e: ^0.1.1
-  navigation_bar_m3e: ^0.1.1
 
 dev_dependencies:
   flutter_test:
