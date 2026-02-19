@@ -419,11 +419,10 @@ class _MyHomePageState extends State<MyHomePage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        if (!useRail)
-                          Text(
-                            context.l10n.appTitle,
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
+                        Text(
+                          context.l10n.appTitle,
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
                         const Spacer(),
                         IconButton(
                           onPressed: _openLearningLanguagePicker,
