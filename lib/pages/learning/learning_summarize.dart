@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
 import 'package:lexigo/datas/word.dart';
-import 'package:lexigo/pages/learning/learning_page.dart';
+import 'package:lexigo/pages/learning/learn.dart';
 import 'package:lexigo/pages/widgets/word_card.dart';
 
 class LearningSummarizePage extends StatefulWidget {

@@ -15,8 +15,8 @@ import 'package:sqlite3/sqlite3.dart' as sqlite;
 import 'package:lexigo/datas/orm/word_repository.dart';
 import 'package:lexigo/datas/word.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
-import 'package:lexigo/pages/my_page/word_management/word_add_page.dart';
-import 'package:lexigo/pages/my_page/word_management/word_view_page.dart';
+import 'package:lexigo/pages/my_page/word_management/word_add.dart';
+import 'package:lexigo/pages/my_page/word_management/word_view.dart';
 import 'package:lexigo/utils/app_logger.dart';
 import 'package:lexigo/utils/permission_manager.dart';
 

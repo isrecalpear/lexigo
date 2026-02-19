@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 // Project imports:
 import 'package:lexigo/datas/word.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
-import 'package:lexigo/pages/my_page/word_management/word_edit_page.dart';
+import 'package:lexigo/pages/my_page/word_management/word_edit.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
 /// Displays a single word card with bilingual content.

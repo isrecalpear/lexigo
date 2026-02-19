@@ -12,8 +12,8 @@ import 'package:fsrs/fsrs.dart' as fsrs;
 import 'package:lexigo/datas/orm/word_repository.dart';
 import 'package:lexigo/datas/word.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
-import 'package:lexigo/pages/my_page/word_management/word_add_page.dart';
-import 'package:lexigo/pages/my_page/word_management/word_edit_page.dart';
+import 'package:lexigo/pages/my_page/word_management/word_add.dart';
+import 'package:lexigo/pages/my_page/word_management/word_edit.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
 /// Word list viewer and manager.

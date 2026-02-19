@@ -10,7 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:lexigo/datas/word.dart';
 import 'package:lexigo/datas/orm/word_repository.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
-import 'package:lexigo/pages/learning/learning_page.dart';
+import 'package:lexigo/pages/learning/learn.dart';
 import 'package:lexigo/pages/widgets/word_card.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
