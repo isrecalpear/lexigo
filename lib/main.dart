@@ -13,8 +13,6 @@ import 'package:flutter/material.dart';
 // Package imports:
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:navigation_bar_m3e/navigation_bar_m3e.dart';
-import 'package:navigation_rail_m3e/navigation_rail_m3e.dart';
 
 // Project imports:
 import 'datas/orm/word_repository.dart';
@@ -361,21 +359,21 @@ class _MyHomePageState extends State<MyHomePage> {
       backgroundColor: Theme.of(context).colorScheme.surface,
       bottomNavigationBar: useRail
           ? null
-          : NavigationBarM3E(
+          : NavigationBar(
               backgroundColor: Theme.of(context).colorScheme.surface,
               selectedIndex: _selectedIndex,
               destinations: [
-                NavigationDestinationM3E(
+                NavigationDestination(
                   icon: const Icon(Icons.abc_outlined),
                   selectedIcon: const Icon(Icons.abc),
                   label: context.l10n.tabStudy,
                 ),
-                NavigationDestinationM3E(
+                NavigationDestination(
                   icon: const Icon(Icons.calendar_month_outlined),
                   selectedIcon: const Icon(Icons.calendar_month),
                   label: context.l10n.tabRecords,
                 ),
-                NavigationDestinationM3E(
+                NavigationDestination(
                   icon: const Icon(Icons.person_outline),
                   selectedIcon: const Icon(Icons.person),
                   label: context.l10n.tabMe,
@@ -387,30 +385,25 @@ class _MyHomePageState extends State<MyHomePage> {
         children: [
           if (useRail)
             SafeArea(
-              child: NavigationRailM3E(
-                type: NavigationRailM3EType.alwaysCollapse,
+              child: NavigationRail(
+                labelType: NavigationRailLabelType.all,
                 selectedIndex: _selectedIndex,
                 onDestinationSelected: _onItemTapped,
-                onTypeChanged: (_) {},
-                sections: [
-                  NavigationRailM3ESection(
-                    destinations: [
-                      NavigationRailM3EDestination(
-                        icon: const Icon(Icons.abc_outlined),
-                        selectedIcon: const Icon(Icons.abc),
-                        label: context.l10n.tabStudy,
-                      ),
-                      NavigationRailM3EDestination(
-                        icon: const Icon(Icons.calendar_month_outlined),
-                        selectedIcon: const Icon(Icons.calendar_month),
-                        label: context.l10n.tabRecords,
-                      ),
-                      NavigationRailM3EDestination(
-                        icon: const Icon(Icons.person_outline),
-                        selectedIcon: const Icon(Icons.person),
-                        label: context.l10n.tabMe,
-                      ),
-                    ],
+                destinations: [
+                  NavigationRailDestination(
+                    icon: const Icon(Icons.abc_outlined),
+                    selectedIcon: const Icon(Icons.abc),
+                    label: Text(context.l10n.tabStudy),
+                  ),
+                  NavigationRailDestination(
+                    icon: const Icon(Icons.calendar_month_outlined),
+                    selectedIcon: const Icon(Icons.calendar_month),
+                    label: Text(context.l10n.tabRecords),
+                  ),
+                  NavigationRailDestination(
+                    icon: const Icon(Icons.person_outline),
+                    selectedIcon: const Icon(Icons.person),
+                    label: Text(context.l10n.tabMe),
                   ),
                 ],
               ),

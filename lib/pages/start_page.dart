@@ -42,7 +42,7 @@ class _StartPageState extends State<StartPage> {
                 Center(
                   child: Text(
                     context.l10n.startPrompt,
-                    style: const TextStyle(fontSize: 24),
+                    style: Theme.of(context).textTheme.headlineLarge,
                   ),
                 ),
                 Builder(

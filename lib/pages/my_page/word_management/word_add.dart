@@ -208,7 +208,7 @@ class _WordAddPageState extends State<WordAddPage> {
                 ),
               ),
               const SizedBox(height: 24),
-              ElevatedButton(
+              FilledButton(
                 onPressed: _isSaving ? null : _saveWord,
                 child: _isSaving
                     ? const SizedBox(
