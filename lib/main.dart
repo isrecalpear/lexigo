@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 // Package imports:
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:navigation_bar_m3e/navigation_bar_m3e.dart';
 import 'package:navigation_rail_m3e/navigation_rail_m3e.dart';
 
 // Project imports:
@@ -358,13 +359,36 @@ class _MyHomePageState extends State<MyHomePage> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
+      bottomNavigationBar: useRail
+          ? null
+          : NavigationBarM3E(
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              selectedIndex: _selectedIndex,
+              destinations: [
+                NavigationDestinationM3E(
+                  icon: const Icon(Icons.abc_outlined),
+                  selectedIcon: const Icon(Icons.abc),
+                  label: context.l10n.tabStudy,
+                ),
+                NavigationDestinationM3E(
+                  icon: const Icon(Icons.calendar_month_outlined),
+                  selectedIcon: const Icon(Icons.calendar_month),
+                  label: context.l10n.tabRecords,
+                ),
+                NavigationDestinationM3E(
+                  icon: const Icon(Icons.person_outline),
+                  selectedIcon: const Icon(Icons.person),
+                  label: context.l10n.tabMe,
+                ),
+              ],
+              onDestinationSelected: _onItemTapped,
+            ),
       body: Row(
         children: [
           if (useRail)
             SafeArea(
               child: NavigationRailM3E(
-                type: NavigationRailM3EType.expanded,
-                modality: NavigationRailM3EModality.standard,
+                type: NavigationRailM3EType.alwaysCollapse,
                 selectedIndex: _selectedIndex,
                 onDestinationSelected: _onItemTapped,
                 onTypeChanged: (_) {},
@@ -446,30 +470,6 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ],
       ),
-      bottomNavigationBar: useRail
-          ? null
-          : BottomNavigationBar(
-              backgroundColor: Theme.of(context).colorScheme.surface,
-              currentIndex: _selectedIndex,
-              items: [
-                BottomNavigationBarItem(
-                  icon: const Icon(Icons.abc_outlined),
-                  label: context.l10n.tabStudy,
-                  activeIcon: const Icon(Icons.abc),
-                ),
-                BottomNavigationBarItem(
-                  icon: const Icon(Icons.calendar_month_outlined),
-                  label: context.l10n.tabRecords,
-                  activeIcon: const Icon(Icons.calendar_month),
-                ),
-                BottomNavigationBarItem(
-                  icon: const Icon(Icons.person_outline),
-                  label: context.l10n.tabMe,
-                  activeIcon: const Icon(Icons.person),
-                ),
-              ],
-              onTap: _onItemTapped,
-            ),
     );
   }
 

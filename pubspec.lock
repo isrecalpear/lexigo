@@ -413,6 +413,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.17.4"
+  navigation_bar_m3e:
+    dependency: "direct main"
+    description:
+      name: navigation_bar_m3e
+      sha256: "20d0ce28c783fd7b530e542e1e62c9edc402028303af08667fcbfd89162c83b2"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.1.1"
   navigation_rail_m3e:
     dependency: "direct main"
     description:
