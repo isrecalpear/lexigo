@@ -10,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 // Project imports:
 import 'package:lexigo/l10n/app_localizations.dart';
 import 'package:lexigo/utils/app_logger.dart';
+import 'package:lexigo/utils/device_info.dart';
 
 /// Page for viewing application logs.
 
@@ -79,7 +80,8 @@ class _LogViewPageState extends State<LogViewPage> {
 
     // Linux system may not support file sharing, so we can show a message instead
     // TODO: Implement Linux-specific sharing if needed
-    if (Platform.isLinux) {
+    final deviceInfo = DeviceInfoManager();
+    if (!deviceInfo.supportsFileSharing) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(context.l10n.logShareNotSupported)),
       );
@@ -131,7 +133,7 @@ class _LogViewPageState extends State<LogViewPage> {
             onPressed: _loading ? null : _loadLog,
             icon: const Icon(Icons.refresh),
           ),
-          if (!Platform.isLinux)
+          if (DeviceInfoManager().supportsFileSharing)
             IconButton(
               onPressed: _shareLog,
               icon: const Icon(Icons.share_outlined),

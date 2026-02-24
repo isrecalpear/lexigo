@@ -5,7 +5,6 @@
 
 // Dart imports:
 import 'dart:async';
-import 'dart:io';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
@@ -22,6 +21,7 @@ import 'pages/my_page.dart';
 import 'pages/records_page.dart';
 import 'pages/start_page.dart';
 import 'utils/app_logger.dart';
+import 'utils/device_info.dart';
 import 'utils/settings.dart';
 
 /// Observes navigation events and logs route changes for debugging.
@@ -171,9 +171,11 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     LanguageCode learningLanguage = _language ?? LanguageCode.en;
-    if (Platform.isIOS) {
+    final deviceInfo = DeviceInfoManager();
+
+    if (!deviceInfo.supportsDynamicColor) {
       AppLogger.warning(
-        'iOS don\'t support dynamic color, using fallback color scheme',
+        'Current platform don\'t support dynamic color, using fallback color scheme',
       );
       ColorScheme colorScheme = ColorScheme.fromSeed(
         seedColor: _colorSeed ?? Colors.pink.shade200,
@@ -303,6 +305,7 @@ class MyHomePage extends StatefulWidget {
 /// State for MyHomePage that manages page navigation and search.
 class _MyHomePageState extends State<MyHomePage> {
   final PageController _pageController = PageController();
+  final DeviceInfoManager _deviceInfoManager = DeviceInfoManager();
   int _selectedIndex = 0;
 
   static const double _landscapeAspectRatioThreshold = 1.2;
@@ -326,6 +329,15 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     AppLogger.info('Main page initialized');
+    _initializeDeviceInfo();
+  }
+
+  /// Initializes device information.
+  Future<void> _initializeDeviceInfo() async {
+    await _deviceInfoManager.initialize();
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   /// Cleans up search debounce timer on widget disposal.
@@ -387,6 +399,7 @@ class _MyHomePageState extends State<MyHomePage> {
             SafeArea(
               child: NavigationRail(
                 labelType: NavigationRailLabelType.all,
+                groupAlignment: _deviceInfoManager.isPadDevice() ? -1.0 : 0.0,
                 selectedIndex: _selectedIndex,
                 onDestinationSelected: _onItemTapped,
                 destinations: [

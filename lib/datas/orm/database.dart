@@ -12,6 +12,7 @@ import 'package:sqlite3/sqlite3.dart' as sqlite;
 
 // Project imports:
 import 'package:lexigo/utils/app_logger.dart';
+import 'package:lexigo/utils/device_info.dart';
 
 /// Database singleton that manages SQLite connection and schema.
 class Database {
@@ -114,7 +115,8 @@ class Database {
   /// On Android, uses application documents directory.
   /// On other platforms, uses application support directory.
   static Future<File> _getDatabaseFile() async {
-    final Directory appDocDir = Platform.isAndroid
+    final deviceInfo = DeviceInfoManager();
+    final Directory appDocDir = deviceInfo.isAndroid
         ? await getApplicationDocumentsDirectory()
         : await getApplicationSupportDirectory();
     final String dbPath = '${appDocDir.path}/database.db';
