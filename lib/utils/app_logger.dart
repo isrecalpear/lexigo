@@ -2,6 +2,7 @@
 ///
 /// Logs to daily files with automatic cleanup of old logs (7-day retention).
 /// Prevents log files from exceeding 5MB.
+library;
 
 // Dart imports:
 import 'dart:io';

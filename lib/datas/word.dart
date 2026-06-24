@@ -3,6 +3,7 @@
 /// This file defines the core Word model and supported language codes.
 /// Words contain bilingual content with examples and are associated with
 /// FSRS spaced repetition scheduling.
+library;
 
 // Package imports:
 import 'package:fsrs/fsrs.dart';

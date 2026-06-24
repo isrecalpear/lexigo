@@ -1,4 +1,5 @@
 /// Records/statistics page (planned feature).
+library;
 
 // Flutter imports:
 import 'package:flutter/material.dart';

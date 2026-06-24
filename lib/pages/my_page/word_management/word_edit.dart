@@ -1,6 +1,7 @@
 /// Page for editing an existing word.
 ///
 /// Allows modifying all word fields and updating the word in the database.
+library;
 
 // Flutter imports:
 import 'package:flutter/material.dart';

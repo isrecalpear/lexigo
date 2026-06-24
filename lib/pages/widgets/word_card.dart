@@ -2,6 +2,7 @@
 ///
 /// Displays original word, translation, example sentences with translations,
 /// and provides a menu for marking words as correct or known.
+library;
 
 // Flutter imports:
 import 'package:flutter/material.dart';

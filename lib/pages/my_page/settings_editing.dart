@@ -2,6 +2,7 @@
 ///
 /// Allows users to customize UI language, theme mode (light/dark/system),
 /// and theme color seed.
+library;
 
 // Flutter imports:
 import 'package:flutter/material.dart';

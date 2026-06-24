@@ -2,6 +2,7 @@
 ///
 /// Sets up error handling, logging, and the root Material application with
 /// support for dynamic colors, localization, and theme customization.
+library;
 
 // Dart imports:
 import 'dart:async';

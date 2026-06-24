@@ -1,6 +1,7 @@
 /// Settings page with menu for word and app configuration management.
 ///
 /// Provides access to word management, settings editing, logs, and app info.
+library;
 
 // Flutter imports:
 import 'package:flutter/material.dart';

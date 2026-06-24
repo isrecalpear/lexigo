@@ -2,6 +2,7 @@
 ///
 /// Displays words one at a time with four rating options (Again, Hard, Good, Easy).
 /// Updates FSRS scheduling based on ratings and loads the next word.
+library;
 
 // Flutter imports:
 import 'package:flutter/material.dart';

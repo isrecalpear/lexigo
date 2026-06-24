@@ -2,6 +2,7 @@
 ///
 /// This file handles database setup, singleton instance management,
 /// and ensures the schema with proper indexes for word storage by language.
+library;
 
 // Dart imports:
 import 'dart:io';

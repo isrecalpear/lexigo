@@ -2,6 +2,7 @@
 ///
 /// Supports English and Chinese with a fallback to English.
 /// See _localizedValues map at the bottom for all translated strings.
+library;
 
 // Flutter imports:
 import 'package:flutter/foundation.dart';

@@ -2,6 +2,7 @@
 ///
 /// Handles requesting storage permissions on Android.
 /// iOS and macOS don't require explicit storage permissions.
+library;
 
 // Package imports:
 import 'package:permission_handler/permission_handler.dart';

@@ -3,6 +3,7 @@
 /// This file manages all user preferences including learning language,
 /// FSRS scheduler settings, UI locale, theme, and color scheme.
 /// Settings are persisted to disk in YAML format.
+library;
 
 // Dart imports:
 import 'dart:io';

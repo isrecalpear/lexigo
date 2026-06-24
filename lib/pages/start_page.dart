@@ -2,6 +2,7 @@
 ///
 /// Shows the current word with "Next" button to browse and a "Start" button
 /// to begin the interactive learning session for the selected language.
+library;
 
 // Flutter imports:
 import 'package:flutter/material.dart';

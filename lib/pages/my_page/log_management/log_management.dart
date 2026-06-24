@@ -1,6 +1,7 @@
 /// Log file management interface.
 ///
 /// Provides options to view logs, clear logs, and share logs.
+library;
 
 // Flutter imports:
 import 'package:flutter/material.dart';

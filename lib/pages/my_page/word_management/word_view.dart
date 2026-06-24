@@ -1,6 +1,7 @@
 /// Page for viewing and managing existing words in a language.
 ///
 /// Displays words in a list with buttons to add, edit, or delete words.
+library;
 
 // Flutter imports:
 import 'package:flutter/material.dart';

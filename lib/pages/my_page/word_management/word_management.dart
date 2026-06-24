@@ -2,6 +2,7 @@
 ///
 /// Provides options to manage words through import/export, add new words,
 /// and view the word database.
+library;
 
 // Flutter imports:
 import 'package:flutter/material.dart';

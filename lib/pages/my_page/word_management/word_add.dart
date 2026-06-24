@@ -1,6 +1,7 @@
 /// Page for adding a new word to the database.
 ///
 /// Provides form fields for word, translation, examples, unit ID, and book ID.
+library;
 
 // Flutter imports:
 import 'package:flutter/material.dart';
