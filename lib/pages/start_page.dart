@@ -55,15 +55,18 @@ class _StartPageState extends State<StartPage> {
                       );
                     }
                     final tag = 'word_${_currentWord!.originalWord}';
-                    return Hero(
-                      tag: tag,
-                      child: WordCard(
-                        word: _currentWord!,
-                        onUpdated: (updated) {
-                          setState(() {
-                            _currentWord = updated;
-                          });
-                        },
+                    return GestureDetector(
+                      onHorizontalDragEnd: _onSwipeWordCard,
+                      child: Hero(
+                        tag: tag,
+                        child: WordCard(
+                          word: _currentWord!,
+                          onUpdated: (updated) {
+                            setState(() {
+                              _currentWord = updated;
+                            });
+                          },
+                        ),
                       ),
                     );
                   },
@@ -147,5 +150,11 @@ class _StartPageState extends State<StartPage> {
     setState(() {
       _currentWord = word;
     });
+  }
+
+  Future<void> _onSwipeWordCard(DragEndDetails details) async {
+    if (details.velocity.pixelsPerSecond.dx < 0) {
+      _loadNextWord();
+    }
   }
 }
