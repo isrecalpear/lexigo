@@ -33,11 +33,13 @@ class DeviceInfoManager {
   /// For other platforms, returns false.
   Future<bool> _checkIsPadDevice() async {
     if (Platform.isIOS) {
-      return DeviceInfoPlugin().iosInfo.then((info) =>
-          info.model.toLowerCase().contains('ipad'));
+      return DeviceInfoPlugin().iosInfo.then(
+        (info) => info.model.toLowerCase().contains('ipad'),
+      );
     } else if (Platform.isAndroid) {
-      return DeviceInfoPlugin().androidInfo.then((info) =>
-          info.systemFeatures.contains('android.hardware.type.tablet'));
+      return DeviceInfoPlugin().androidInfo.then(
+        (info) => info.systemFeatures.contains('android.hardware.type.tablet'),
+      );
     } else {
       return Future.value(false);
     }
@@ -73,7 +75,8 @@ class DeviceInfoManager {
   bool get isApple => Platform.isIOS || Platform.isMacOS;
 
   /// Returns true if running on a desktop platform (macOS, Linux, Windows).
-  bool get isDesktop => Platform.isMacOS || Platform.isLinux || Platform.isWindows;
+  bool get isDesktop =>
+      Platform.isMacOS || Platform.isLinux || Platform.isWindows;
 
   /// Returns true if running on a mobile platform (iOS or Android).
   bool get isMobile => Platform.isIOS || Platform.isAndroid;
