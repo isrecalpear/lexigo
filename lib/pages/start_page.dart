@@ -9,17 +9,25 @@ import 'package:flutter/material.dart';
 
 // Project imports:
 import 'package:lexigo/datas/word.dart';
-import 'package:lexigo/datas/orm/word_repository.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
 import 'package:lexigo/pages/learning/learn.dart';
 import 'package:lexigo/pages/widgets/word_card.dart';
+import 'package:lexigo/providers/word_provider.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
 /// Widget that displays a single word and allows starting learning.
 class StartPage extends StatefulWidget {
-  const StartPage({super.key, required this.learningLanguage});
+  const StartPage({
+    super.key,
+    required this.learningLanguage,
+    required this.wordProvider,
+  });
 
+  /// The currently selected learning language.
   final LanguageCode learningLanguage;
+
+  /// Centralized word state shared across the learning flow.
+  final WordProvider wordProvider;
 
   @override
   State<StartPage> createState() => _StartPageState();
@@ -27,9 +35,29 @@ class StartPage extends StatefulWidget {
 
 /// State for StartPage that manages word loading and navigation.
 class _StartPageState extends State<StartPage> {
-  Word? _currentWord;
+  @override
+  void initState() {
+    super.initState();
+    AppLogger.info('Initializing start page');
+    widget.wordProvider.addListener(_onWordChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.wordProvider.removeListener(_onWordChanged);
+    super.dispose();
+  }
+
+  void _onWordChanged() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final word = widget.wordProvider.currentWord;
+
     return Scaffold(
       body: SafeArea(
         left: false,
@@ -48,23 +76,20 @@ class _StartPageState extends State<StartPage> {
                 ),
                 Builder(
                   builder: (context) {
-                    if (_currentWord == null) {
+                    if (word == null) {
                       return const SizedBox(
                         height: 160,
                         child: Center(child: CircularProgressIndicator()),
                       );
                     }
-                    final tag = 'word_${_currentWord!.originalWord}';
                     return GestureDetector(
                       onHorizontalDragEnd: _onSwipeWordCard,
                       child: Hero(
-                        tag: tag,
+                        tag: widget.wordProvider.heroTag,
                         child: WordCard(
-                          word: _currentWord!,
+                          word: word,
                           onUpdated: (updated) {
-                            setState(() {
-                              _currentWord = updated;
-                            });
+                            widget.wordProvider.updateWord(updated);
                           },
                         ),
                       ),
@@ -94,67 +119,36 @@ class _StartPageState extends State<StartPage> {
     );
   }
 
-  /// Handles next button press.
+  /// Loads the next random word via the provider.
   void _next() {
-    _loadNextWord();
+    widget.wordProvider.loadRandomWord();
   }
 
   /// Starts the interactive learning session.
   void _startLearning() {
-    if (_currentWord == null) return;
-    final word = _currentWord!;
+    final word = widget.wordProvider.currentWord;
+    if (word == null) return;
     AppLogger.info('Start learning word: ${word.originalWord}');
-    final tag = 'word_${word.originalWord}';
     Navigator.of(context)
         .push<Word?>(
           MaterialPageRoute(
             builder: (context) => LearningPage(
               word: word,
-              heroTag: tag,
               learningLanguage: widget.learningLanguage,
+              wordProvider: widget.wordProvider,
             ),
           ),
         )
         .then((returned) {
           if (returned != null) {
-            setState(() {
-              _currentWord = returned;
-            });
+            widget.wordProvider.updateWord(returned);
           }
         });
   }
 
-  @override
-  void initState() {
-    super.initState();
-    AppLogger.info('Initializing start page');
-    _loadNextWord();
-  }
-
-  @override
-  void didUpdateWidget(covariant StartPage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.learningLanguage != widget.learningLanguage) {
-      setState(() {
-        _currentWord = null;
-      });
-      _loadNextWord();
-    }
-  }
-
-  /// Loads the next word from the database for the current language.
-  Future<void> _loadNextWord() async {
-    final repo = await WordRepository.open();
-    final word = await repo.getRandomWord(widget.learningLanguage);
-    if (!mounted) return;
-    setState(() {
-      _currentWord = word;
-    });
-  }
-
   Future<void> _onSwipeWordCard(DragEndDetails details) async {
     if (details.velocity.pixelsPerSecond.dx < 0) {
-      _loadNextWord();
+      _next();
     }
   }
 }

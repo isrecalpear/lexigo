@@ -21,6 +21,7 @@ import 'l10n/app_localizations.dart';
 import 'pages/my_page.dart';
 import 'pages/records_page.dart';
 import 'pages/start_page.dart';
+import 'providers/word_provider.dart';
 import 'utils/app_logger.dart';
 import 'utils/device_info.dart';
 import 'utils/settings.dart';
@@ -120,6 +121,7 @@ class MyApp extends StatefulWidget {
 /// State for MyApp that handles settings loading and persistence.
 class _MyAppState extends State<MyApp> {
   late final SettingsStore _settingsStore;
+  late final WordProvider _wordProvider;
   Locale? _locale;
   ThemeMode _themeMode = ThemeMode.system;
   Color? _colorSeed;
@@ -129,6 +131,7 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     _settingsStore = SettingsStore(Settings.defaults());
+    _wordProvider = WordProvider(_settingsStore);
     _loadSettings();
   }
 
@@ -144,6 +147,7 @@ class _MyAppState extends State<MyApp> {
       _themeMode = settings.themeMode;
       _colorSeed = settings.colorSeed;
     });
+    unawaited(_wordProvider.loadRandomWord());
   }
 
   void _setLocale(Locale? locale) {
@@ -167,6 +171,7 @@ class _MyAppState extends State<MyApp> {
     );
     _settingsStore.updateSettings(updated);
     unawaited(_settingsStore.saveSettings());
+    unawaited(_wordProvider.loadRandomWord());
   }
 
   @override
@@ -203,6 +208,7 @@ class _MyAppState extends State<MyApp> {
           onThemeModeChanged: _setThemeMode,
           colorSeed: _colorSeed,
           onColorSeedChanged: _setColorSeed,
+          wordProvider: _wordProvider,
         ),
       );
     } else {
@@ -230,6 +236,7 @@ class _MyAppState extends State<MyApp> {
               onThemeModeChanged: _setThemeMode,
               colorSeed: _colorSeed,
               onColorSeedChanged: _setColorSeed,
+              wordProvider: _wordProvider,
             ),
           );
         },
@@ -273,6 +280,7 @@ class MyHomePage extends StatefulWidget {
     required this.onThemeModeChanged,
     required this.colorSeed,
     required this.onColorSeedChanged,
+    required this.wordProvider,
   });
 
   /// Currently selected learning language.
@@ -298,6 +306,9 @@ class MyHomePage extends StatefulWidget {
 
   /// Callback when color seed is changed.
   final ValueChanged<Color?> onColorSeedChanged;
+
+  /// Centralized word state provider shared across learning-flow pages.
+  final WordProvider wordProvider;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -356,7 +367,10 @@ class _MyHomePageState extends State<MyHomePage> {
     final bool useRail =
         size.width / size.height >= _landscapeAspectRatioThreshold;
     final List<Widget> pages = [
-      StartPage(learningLanguage: widget.learningLanguage),
+      StartPage(
+        learningLanguage: widget.learningLanguage,
+        wordProvider: widget.wordProvider,
+      ),
       const RecordsPicker(),
       SettingsPage(
         locale: widget.locale,

@@ -3,6 +3,7 @@ import 'package:lexigo/l10n/app_localizations.dart';
 import 'package:lexigo/datas/word.dart';
 import 'package:lexigo/pages/learning/learn.dart';
 import 'package:lexigo/pages/widgets/word_card.dart';
+import 'package:lexigo/providers/word_provider.dart';
 
 class LearningSummarizePage extends StatefulWidget {
   const LearningSummarizePage({
@@ -11,7 +12,7 @@ class LearningSummarizePage extends StatefulWidget {
     required this.wordsLearned,
     required this.wordsReviewed,
     required this.wordsToReview,
-    required this.heroTag,
+    required this.wordProvider,
   });
 
   final Word wordsUnknown;
@@ -19,26 +20,36 @@ class LearningSummarizePage extends StatefulWidget {
   final int wordsReviewed;
   final int wordsToReview;
 
-  /// Hero animation tag for word card transition.
-  final String heroTag;
+  /// Centralized word state shared across the learning flow.
+  final WordProvider wordProvider;
 
   @override
   State<LearningSummarizePage> createState() => _LearningSummarizePageState();
 }
 
 class _LearningSummarizePageState extends State<LearningSummarizePage> {
-  late Word _nextWord;
-  late String _heroTag;
-
   @override
   void initState() {
     super.initState();
-    _nextWord = widget.wordsUnknown;
-    _heroTag = widget.heroTag;
+    widget.wordProvider.addListener(_onWordChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.wordProvider.removeListener(_onWordChanged);
+    super.dispose();
+  }
+
+  void _onWordChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final word = widget.wordProvider.currentWord;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context).learningSummaryTitle),
@@ -70,7 +81,7 @@ class _LearningSummarizePageState extends State<LearningSummarizePage> {
             ),
             const SizedBox(height: 8),
             Hero(
-              tag: _heroTag,
+              tag: widget.wordProvider.heroTag,
               flightShuttleBuilder:
                   (context, animation, direction, fromContext, toContext) {
                     return Material(
@@ -78,15 +89,17 @@ class _LearningSummarizePageState extends State<LearningSummarizePage> {
                       child: toContext.widget,
                     );
                   },
-              child: WordCard(
-                word: _nextWord,
-                onUpdated: (updated) {
-                  setState(() {
-                    _nextWord = updated;
-                    _heroTag = 'word_${updated.originalWord}';
-                  });
-                },
-              ),
+              child: word == null
+                  ? const SizedBox(
+                      height: 160,
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  : WordCard(
+                      word: word,
+                      onUpdated: (updated) {
+                        widget.wordProvider.updateWord(updated);
+                      },
+                    ),
             ),
             const SizedBox(height: 24),
             Row(
@@ -105,12 +118,13 @@ class _LearningSummarizePageState extends State<LearningSummarizePage> {
                 Expanded(
                   child: FilledButton(
                     onPressed: () {
+                      if (word == null) return;
                       Navigator.of(context).pushReplacement(
                         MaterialPageRoute(
                           builder: (context) => LearningPage(
-                            word: _nextWord,
-                            heroTag: _heroTag,
-                            learningLanguage: _nextWord.sourceLanguageCode,
+                            word: word,
+                            learningLanguage: word.sourceLanguageCode,
+                            wordProvider: widget.wordProvider,
                           ),
                         ),
                       );
