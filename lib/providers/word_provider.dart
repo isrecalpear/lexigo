@@ -31,13 +31,6 @@ class WordProvider extends ChangeNotifier {
   String get heroTag =>
       _currentWord != null ? 'word_${_currentWord!.originalWord}' : '';
 
-  final SettingsStore _settingsStore;
-
-  /// Creates a [WordProvider] that reads the learning language from the given
-  /// [settingsStore]. The caller is responsible for keeping the same
-  /// [SettingsStore] instance in sync with user preferences.
-  WordProvider(this._settingsStore);
-
   /// Replaces the current word and notifies listeners.
   void updateWord(Word word) {
     _currentWord = word;
@@ -48,7 +41,7 @@ class WordProvider extends ChangeNotifier {
   /// Loads a random word from the repository for the given [language] and
   /// notifies listeners.
   Future<void> loadRandomWord([LanguageCode? language]) async {
-    final Settings settings = _settingsStore.settings;
+    final Settings settings = SettingsStore.instance.settings;
     final repo = await WordRepository.open();
     final word = await repo.getRandomWord(
       language ?? settings.learningLanguage,

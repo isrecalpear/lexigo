@@ -176,8 +176,10 @@ class Settings {
 class SettingsStore extends ChangeNotifier {
   Settings _settings;
 
-  /// Initialize with initial settings.
-  SettingsStore(this._settings);
+  SettingsStore._(this._settings);
+
+  /// The singleton instance of [SettingsStore].
+  static final SettingsStore instance = SettingsStore._(Settings.defaults());
 
   /// Get the current settings.
   Settings get settings => _settings;

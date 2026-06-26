@@ -120,7 +120,6 @@ class MyApp extends StatefulWidget {
 
 /// State for MyApp that handles settings loading and persistence.
 class _MyAppState extends State<MyApp> {
-  late final SettingsStore _settingsStore;
   late final WordProvider _wordProvider;
   Locale? _locale;
   ThemeMode _themeMode = ThemeMode.system;
@@ -130,14 +129,13 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    _settingsStore = SettingsStore(Settings.defaults());
-    _wordProvider = WordProvider(_settingsStore);
+    _wordProvider = WordProvider();
     _loadSettings();
   }
 
   Future<void> _loadSettings() async {
-    await _settingsStore.loadSettings();
-    final Settings settings = _settingsStore.settings;
+    await SettingsStore.instance.loadSettings();
+    final Settings settings = SettingsStore.instance.settings;
     if (!mounted) {
       return;
     }
@@ -154,23 +152,23 @@ class _MyAppState extends State<MyApp> {
     setState(() {
       _locale = locale;
     });
-    final Settings updated = _settingsStore.settings.copyWith(
+    final Settings updated = SettingsStore.instance.settings.copyWith(
       locale: locale,
       localeSet: true,
     );
-    _settingsStore.updateSettings(updated);
-    unawaited(_settingsStore.saveSettings());
+    SettingsStore.instance.updateSettings(updated);
+    unawaited(SettingsStore.instance.saveSettings());
   }
 
   void _setLearningLanguage(LanguageCode language) {
     setState(() {
       _language = language;
     });
-    final Settings updated = _settingsStore.settings.copyWith(
+    final Settings updated = SettingsStore.instance.settings.copyWith(
       learningLanguage: language,
     );
-    _settingsStore.updateSettings(updated);
-    unawaited(_settingsStore.saveSettings());
+    SettingsStore.instance.updateSettings(updated);
+    unawaited(SettingsStore.instance.saveSettings());
     unawaited(_wordProvider.loadRandomWord());
   }
 
@@ -249,9 +247,11 @@ class _MyAppState extends State<MyApp> {
     setState(() {
       _themeMode = mode;
     });
-    final Settings updated = _settingsStore.settings.copyWith(themeMode: mode);
-    _settingsStore.updateSettings(updated);
-    unawaited(_settingsStore.saveSettings());
+    final Settings updated = SettingsStore.instance.settings.copyWith(
+      themeMode: mode,
+    );
+    SettingsStore.instance.updateSettings(updated);
+    unawaited(SettingsStore.instance.saveSettings());
   }
 
   /// Updates the color seed and persists it.
@@ -259,9 +259,11 @@ class _MyAppState extends State<MyApp> {
     setState(() {
       _colorSeed = seed;
     });
-    final Settings updated = _settingsStore.settings.copyWith(colorSeed: seed);
-    _settingsStore.updateSettings(updated);
-    unawaited(_settingsStore.saveSettings());
+    final Settings updated = SettingsStore.instance.settings.copyWith(
+      colorSeed: seed,
+    );
+    SettingsStore.instance.updateSettings(updated);
+    unawaited(SettingsStore.instance.saveSettings());
   }
 }
 
