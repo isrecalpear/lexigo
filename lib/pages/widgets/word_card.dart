@@ -14,17 +14,38 @@ import 'package:lexigo/pages/my_page/word_management/word_edit.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
 /// Displays a single word card with bilingual content.
-class WordCard extends StatelessWidget {
+class WordCard extends StatefulWidget {
   static const String _menuCorrect = 'correct';
   static const String _menuKnown = 'known';
 
-  const WordCard({super.key, required this.word, this.onUpdated});
+  const WordCard({
+    super.key,
+    required this.word,
+    this.onUpdated,
+    this.maskTranslation = false,
+  });
 
   /// The word to display.
   final Word word;
 
   /// Callback when word is updated (e.g., after editing).
   final ValueChanged<Word>? onUpdated;
+
+  /// Set if the translation is masked.
+  final bool maskTranslation;
+
+  @override
+  State<WordCard> createState() => _WordCardState();
+}
+
+class _WordCardState extends State<WordCard> {
+  late bool _maskTranslation;
+
+  @override
+  void initState() {
+    super.initState();
+    _maskTranslation = widget.maskTranslation;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +70,7 @@ class WordCard extends StatelessWidget {
                     Row(
                       children: [
                         Text(
-                          word.originalWord,
+                          widget.word.originalWord,
                           style: Theme.of(context).textTheme.headlineLarge
                               ?.copyWith(
                                 color: Theme.of(
@@ -61,19 +82,19 @@ class WordCard extends StatelessWidget {
                         const Spacer(),
                         PopupMenuButton<String>(
                           onSelected: (value) {
-                            if (value == _menuCorrect) {
+                            if (value == WordCard._menuCorrect) {
                               signAsWrong(context);
-                            } else if (value == _menuKnown) {
+                            } else if (value == WordCard._menuKnown) {
                               signAsKnown(context);
                             }
                           },
                           itemBuilder: (context) => [
                             PopupMenuItem(
-                              value: _menuCorrect,
+                              value: WordCard._menuCorrect,
                               child: Text(context.l10n.wordCardCorrect),
                             ),
                             PopupMenuItem(
-                              value: _menuKnown,
+                              value: WordCard._menuKnown,
                               child: Text(context.l10n.wordCardMarkKnown),
                             ),
                           ],
@@ -87,7 +108,7 @@ class WordCard extends StatelessWidget {
                       ],
                     ),
                     Text(
-                      word.translation,
+                      _maskTranslation ? "***" : widget.word.translation,
                       style: Theme.of(context).textTheme.headlineMedium
                           ?.copyWith(
                             color: Theme.of(
@@ -98,14 +119,14 @@ class WordCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      word.originalExample,
+                      widget.word.originalExample,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context).colorScheme.onPrimaryContainer,
                       ),
                       textAlign: TextAlign.left,
                     ),
                     Text(
-                      word.exampleTranslation,
+                      _maskTranslation ? "***" : widget.word.exampleTranslation,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context).colorScheme.onPrimaryContainer,
                       ),
@@ -130,7 +151,9 @@ class WordCard extends StatelessWidget {
         return AlertDialog(
           title: Text(dialogContext.l10n.wordCardMarkKnownTitle),
           content: Text(
-            dialogContext.l10n.wordCardMarkKnownConfirm(word.originalWord),
+            dialogContext.l10n.wordCardMarkKnownConfirm(
+              widget.word.originalWord,
+            ),
           ),
           actions: [
             TextButton(
@@ -146,21 +169,33 @@ class WordCard extends StatelessWidget {
       },
     );
     if (confirmed != true) return;
-    AppLogger.info('Marking as known: ${word.originalWord}');
+    AppLogger.info('Marking as known: ${widget.word.originalWord}');
   }
 
   /// Marks the word as wrong and opens the edit dialog.
   Future<void> signAsWrong(BuildContext context) async {
-    final card = await word.card;
+    final card = await widget.word.card;
     if (!context.mounted) return;
     final updated = await Navigator.push<Word>(
       context,
       MaterialPageRoute(
-        builder: (context) => WordEditPage(word: word, card: card),
+        builder: (context) => WordEditPage(word: widget.word, card: card),
       ),
     );
     if (updated != null) {
-      onUpdated?.call(updated);
+      widget.onUpdated?.call(updated);
     }
+  }
+
+  void setTranslationMasked() {
+    setState(() {
+      _maskTranslation = true;
+    });
+  }
+
+  void setTranslationUnmasked() {
+    setState(() {
+      _maskTranslation = false;
+    });
   }
 }

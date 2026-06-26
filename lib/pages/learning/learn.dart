@@ -128,6 +128,7 @@ class _LearningPageState extends State<LearningPage> {
                             _heroTag = 'word_${updated.originalWord}';
                           });
                         },
+                        maskTranslation: true,
                       ),
               ),
               // Keep content above and reserve the bottom third for actions.
