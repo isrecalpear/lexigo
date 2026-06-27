@@ -16,6 +16,7 @@ import 'package:lexigo/l10n/app_localizations.dart';
 import 'package:lexigo/pages/my_page/word_management/word_add.dart';
 import 'package:lexigo/pages/my_page/word_management/word_edit.dart';
 import 'package:lexigo/utils/app_logger.dart';
+import 'package:lexigo/utils/settings.dart';
 
 /// Word list viewer and manager.
 class WordViewPage extends StatefulWidget {
@@ -26,7 +27,7 @@ class WordViewPage extends StatefulWidget {
 }
 
 class _WordViewPageState extends State<WordViewPage> {
-  LanguageCode _languageCode = LanguageCode.ko;
+  LanguageCode _languageCode = SettingsStore.instance.settings.learningLanguage;
   bool _isLoading = false;
   List<_WordWithCard> _words = [];
 
