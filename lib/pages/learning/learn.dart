@@ -45,6 +45,7 @@ class LearningPage extends StatefulWidget {
 /// State for LearningPage that manages word progression and scheduling.
 class _LearningPageState extends State<LearningPage> {
   int _learnedCount = 0;
+  /// TODO: Make session length configurable in settings (e.g., 5/10/15/20 words per session)
   static const int _totalCount = 10;
 
   @override
@@ -185,6 +186,9 @@ class _LearningPageState extends State<LearningPage> {
       AppLogger.info('No more words to review, finishing session');
       if (!mounted) return;
       widget.wordProvider.updateWord(wordUnknown);
+      // TODO: Track and pass actual wordsReviewed and wordsToReview counts
+      // instead of hardcoded zeros. Query WordRepository.reviewWordsCount()
+      // before and during the session.
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (context) => LearningSummarizePage(
@@ -204,6 +208,7 @@ class _LearningPageState extends State<LearningPage> {
     widget.wordProvider.updateWord(nextWord);
 
     if (nextLearnedCount >= _totalCount) {
+      // TODO: Track actual wordsReviewed and wordsToReview counts (see above)
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (context) => LearningSummarizePage(

@@ -31,6 +31,9 @@ class WordProvider extends ChangeNotifier {
   String get heroTag =>
       _currentWord != null ? 'word_${_currentWord!.originalWord}' : '';
 
+  /// Shortcut to the current [Settings] instance.
+  Settings get _settings => SettingsStore.instance.settings;
+
   /// Replaces the current word and notifies listeners.
   void updateWord(Word word) {
     _currentWord = word;
@@ -38,16 +41,29 @@ class WordProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Loads a random word from the repository for the given [language] and
-  /// notifies listeners.
-  Future<void> loadRandomWord([LanguageCode? language]) async {
-    final Settings settings = SettingsStore.instance.settings;
+  /// Loads a random word from the repository and notifies listeners.
+  Future<void> loadRandomWord() async {
     final repo = await WordRepository.open();
-    final word = await repo.getRandomWord(
-      language ?? settings.learningLanguage,
-    );
+    final word = await repo.getRandomWord(_settings.learningLanguage,);
     _currentWord = word;
     AppLogger.debug('WordProvider loaded random word: ${word.originalWord}');
+    notifyListeners();
+  }
+
+  /// Loads the next word due for review based on FSRS scheduling.
+  ///
+  /// TODO: Implement actual review word loading logic:
+  /// - Query the database for the next due review card
+  /// - Update _currentWord with the result
+  /// - Handle case when no review cards are available (return to start page)
+  Future<void> nextReviewWord() async {
+    // TODO: Replace with actual review word loading
+    // final repo = await WordRepository.open();
+    // final word = await repo.getReviewWord(_settings.learningLanguage);
+    // if (word != null) {
+    //   _currentWord = word;
+    //   AppLogger.debug('WordProvider loaded review word: ${word.originalWord}');
+    // }
     notifyListeners();
   }
 }

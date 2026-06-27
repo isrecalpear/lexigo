@@ -5,6 +5,11 @@ import 'package:lexigo/pages/learning/learn.dart';
 import 'package:lexigo/pages/widgets/word_card.dart';
 import 'package:lexigo/providers/word_provider.dart';
 
+/// Summary page displayed after completing a learning session.
+///
+/// TODO: Consider refactoring [wordsUnknown] from a single Word to a List<Word>
+/// to properly display all words the user struggled with, rather than just
+/// one sample word.
 class LearningSummarizePage extends StatefulWidget {
   const LearningSummarizePage({
     super.key,
@@ -15,6 +20,8 @@ class LearningSummarizePage extends StatefulWidget {
     required this.wordProvider,
   });
 
+  /// TODO: This should likely be List<Word> to show all unknown words,
+  /// not just a single word. Currently only displays one sample word.
   final Word wordsUnknown;
   final int wordsLearned;
   final int wordsReviewed;

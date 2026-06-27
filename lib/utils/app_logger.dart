@@ -167,6 +167,11 @@ class AppLogger {
     _logger?.f(message, error: error, stackTrace: stackTrace);
   }
 
+  /// Returns the base directory for log storage.
+  ///
+  /// TODO: Restore platform-specific directory selection for Android.
+  /// Android should use getApplicationDocumentsDirectory() for user-accessible logs,
+  /// while iOS/macOS should use getApplicationSupportDirectory() for private storage.
   static Future<Directory> _getLogBaseDirectory() async {
     /* 
     return Platform.isAndroid

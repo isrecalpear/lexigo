@@ -48,6 +48,10 @@ class DeviceInfoManager {
   /// Returns whether the device is a tablet using cached value.
   ///
   /// This is a synchronous method that returns the cached result from initialization.
+  ///
+  /// TODO: Consider implementing a fallback for window size-based tablet detection
+  /// on platforms where device_info_plus can't determine form factor (e.g.,
+  /// macOS, Windows, Linux). Check MediaQuery.size to detect large screens.
   bool isPadDevice() {
     return _cachedIsPadDevice;
   }

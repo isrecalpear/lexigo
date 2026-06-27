@@ -242,6 +242,14 @@ class WordManagement extends StatelessWidget {
     if (!context.mounted) return;
     final LanguageCode? selected = await _selectLanguage(context);
     if (selected == null) return;
+
+    // TODO: Implement word export functionality:
+    // - Export words to a new SQLite database file
+    // - Allow user to choose save location via file_selector
+    // - Include all columns: original_word, translation, original_example,
+    //   example_translation, unit_id, book_id
+    // - Show success/failure snackbar
+    AppLogger.warning('Word export not yet implemented for language: ${selected.name}');
   }
 
   Future<LanguageCode?> _selectLanguage(BuildContext context) async {

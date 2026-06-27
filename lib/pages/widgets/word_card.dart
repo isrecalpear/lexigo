@@ -142,7 +142,12 @@ class _WordCardState extends State<WordCard> {
     );
   }
 
-  /// TODO: Marks the word as known (implementation pending).
+  /// Marks the word as known in FSRS scheduling.
+  ///
+  /// TODO: Complete the implementation:
+  /// - Mark the card as known by reviewing with Rating.easy
+  /// - Update the database via WordRepository.reviewWord()
+  /// - Trigger UI refresh via onUpdated callback
   Future<void> signAsKnown(BuildContext context) async {
     if (!context.mounted) return;
     final confirmed = await showDialog<bool>(
@@ -170,6 +175,11 @@ class _WordCardState extends State<WordCard> {
     );
     if (confirmed != true) return;
     AppLogger.info('Marking as known: ${widget.word.originalWord}');
+    // TODO: Actually mark the word as known in the database
+    // final repo = await WordRepository.open();
+    // await repo.reviewWord(widget.word, Rating.easy);
+    // final updatedWord = ...;
+    // widget.onUpdated?.call(updatedWord);
   }
 
   /// Marks the word as wrong and opens the edit dialog.
