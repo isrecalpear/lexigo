@@ -57,6 +57,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.19.1"
+  convert:
+    dependency: transitive
+    description:
+      name: convert
+      sha256: b30acd5944035672bc15c6b7a8b47d773e41e2f17de064350988c5d02adb1c68
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "3.1.2"
   cross_file:
     dependency: "direct main"
     description:
@@ -97,6 +105,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "7.0.3"
+  drift:
+    dependency: "direct main"
+    description:
+      name: drift
+      sha256: "6cc0b623c0e83f7080524d8396e9301b1d78b9c66a4fdceeb0f798211303254c"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "2.34.0"
   dynamic_color:
     dependency: "direct main"
     description:
