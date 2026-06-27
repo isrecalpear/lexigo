@@ -99,6 +99,7 @@ class _LearningSummarizePageState extends State<LearningSummarizePage> {
                       onUpdated: (updated) {
                         widget.wordProvider.updateWord(updated);
                       },
+                      maskTranslation: true,
                     ),
             ),
             const SizedBox(height: 24),

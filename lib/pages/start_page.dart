@@ -48,12 +48,6 @@ class _StartPageState extends State<StartPage> {
     super.dispose();
   }
 
-  void _onWordChanged() {
-    if (mounted) {
-      setState(() {});
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final word = widget.wordProvider.currentWord;
@@ -119,15 +113,12 @@ class _StartPageState extends State<StartPage> {
     );
   }
 
-  /// Loads the next random word via the provider.
-  void _next() {
-    widget.wordProvider.loadRandomWord();
-  }
-
-  /// Starts the interactive learning session.
-  void _startLearning() {
+  /// Starts the interactive learning session with a random word.
+  Future<void> _startLearning() async {
+    await widget.wordProvider.loadRandomWord();
     final word = widget.wordProvider.currentWord;
     if (word == null) return;
+    if (!mounted) return;
     AppLogger.info('Start learning word: ${word.originalWord}');
     Navigator.of(context)
         .push<Word?>(
@@ -149,6 +140,17 @@ class _StartPageState extends State<StartPage> {
   Future<void> _onSwipeWordCard(DragEndDetails details) async {
     if (details.velocity.pixelsPerSecond.dx < 0) {
       _next();
+    }
+  }
+
+  /// Loads the next random word via the provider.
+  void _next() {
+    widget.wordProvider.loadRandomWord();
+  }
+
+  void _onWordChanged() {
+    if (mounted) {
+      setState(() {});
     }
   }
 }
