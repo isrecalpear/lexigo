@@ -72,7 +72,7 @@ class WordManager {
   Future<void> insertWord(Word word) async {
     AppLogger.info('Inserting word: ${word.originalWord}');
     final now = DateTime.now();
-    final companion = await _wordToCompanion(word, updatedAt: now);
+    final companion = await wordToCompanion(word, updatedAt: now);
     await _database.into(_database.wordTable).insert(companion);
     AppLogger.info('Inserted word successfully: ${word.originalWord}');
   }
@@ -82,7 +82,7 @@ class WordManager {
     final now = DateTime.now();
     final companions = <WordTableCompanion>[];
     for (final word in words) {
-      companions.add(await _wordToCompanion(word, updatedAt: now));
+      companions.add(await wordToCompanion(word, updatedAt: now));
     }
     await _database.batch((batch) {
       batch.insertAll(
@@ -96,7 +96,7 @@ class WordManager {
 
   Future<void> updateWord(Word word) async {
     AppLogger.info('Updating word: ${word.originalWord}');
-    final companion = await _wordToCompanion(word, updatedAt: DateTime.now());
+    final companion = await wordToCompanion(word, updatedAt: DateTime.now());
     _database.update(_database.wordTable)
       ..where((t) => t.cardId.equals(companion.cardId.value))
       ..write(companion);
@@ -107,7 +107,7 @@ class WordManager {
     AppLogger.info('Start to update multiple words');
     final updatedAt = DateTime.now();
     for (final word in words) {
-      final companion = await _wordToCompanion(word, updatedAt: updatedAt);
+      final companion = await wordToCompanion(word, updatedAt: updatedAt);
       _database.update(_database.wordTable)
         ..where((t) => t.cardId.equals(companion.cardId.value))
         ..write(companion);
@@ -270,7 +270,7 @@ class WordManager {
 
   Future<void> insertReviewLog(ReviewLog reviewLog) async {
     AppLogger.info('Start to insert review log ${reviewLog.cardId}');
-    final companion = _reviewLogToCompanion(reviewLog);
+    final companion = reviewLogToCompanion(reviewLog);
     await _database
         .into(_database.wordLearningHistoryTable)
         .insert(companion, mode: InsertMode.insertOrReplace);
@@ -281,7 +281,7 @@ class WordManager {
     AppLogger.info('Start to insert ${reviewLogs.length} review logs');
     final companions = <WordLearningHistoryTableCompanion>[];
     for (final reviewLog in reviewLogs) {
-      companions.add(_reviewLogToCompanion(reviewLog));
+      companions.add(reviewLogToCompanion(reviewLog));
     }
     await _database.batch((batch) {
       batch.insertAll(
@@ -333,7 +333,7 @@ class WordManager {
     return count;
   }
 
-  Future<WordTableCompanion> _wordToCompanion(
+  Future<WordTableCompanion> wordToCompanion(
     Word word, {
     DateTime? createdAt,
     required DateTime updatedAt,
@@ -386,7 +386,7 @@ class WordManager {
     return word;
   }
 
-  WordLearningHistoryTableCompanion _reviewLogToCompanion(ReviewLog reviewLog) {
+  WordLearningHistoryTableCompanion reviewLogToCompanion(ReviewLog reviewLog) {
     return WordLearningHistoryTableCompanion(
       cardId: Value(reviewLog.cardId),
       rating: Value(reviewLog.rating),
