@@ -214,9 +214,6 @@ class SettingsStore extends ChangeNotifier {
 
       Locale? locale = _parseLocale(yamlMap['locale']?.toString());
 
-      // TODO: Fix theme mode deserialization — the serialized value is
-      // 'ThemeMode.light' but Dart's toString() gives 'ThemeMode.light'.
-      // Also consider handling raw enum names for forward compatibility.
       ThemeMode? themeMode;
       if (yamlMap['themeMode'] == 'ThemeMode.light') {
         themeMode = ThemeMode.light;
