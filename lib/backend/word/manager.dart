@@ -270,12 +270,7 @@ class WordManager {
 
   Future<void> insertReviewLog(ReviewLog reviewLog) async {
     AppLogger.info('Start to insert review log ${reviewLog.cardId}');
-    final companion = WordLearningHistoryTableCompanion(
-      cardId: Value(reviewLog.cardId),
-      rating: Value(reviewLog.rating),
-      reviewDateTime: Value(reviewLog.reviewDateTime),
-      reviewDuration: Value(reviewLog.reviewDuration),
-    );
+    final companion = _reviewLogToCompanion(reviewLog);
     await _database
         .into(_database.wordLearningHistoryTable)
         .insert(companion, mode: InsertMode.insertOrReplace);
@@ -285,15 +280,8 @@ class WordManager {
   Future<void> insertReviewLogs(Iterable<ReviewLog> reviewLogs) async {
     AppLogger.info('Start to insert ${reviewLogs.length} review logs');
     final companions = <WordLearningHistoryTableCompanion>[];
-    for (final log in reviewLogs) {
-      companions.add(
-        WordLearningHistoryTableCompanion(
-          cardId: Value(log.cardId),
-          rating: Value(log.rating),
-          reviewDateTime: Value(log.reviewDateTime),
-          reviewDuration: Value(log.reviewDuration),
-        ),
-      );
+    for (final reviewLog in reviewLogs) {
+      companions.add(_reviewLogToCompanion(reviewLog));
     }
     await _database.batch((batch) {
       batch.insertAll(
@@ -303,6 +291,25 @@ class WordManager {
       );
     });
     AppLogger.info('Inserted ${reviewLogs.length} review logs successfully');
+  }
+
+  Future<List<ReviewLog>> getReviewLogs([Word? word]) async {
+    late List<WordLearningHistoryTableData> learningHistoryRows;
+    if (word != null) {
+      final card = await word.card;
+      learningHistoryRows = await (_database.select(
+        _database.wordLearningHistoryTable,
+      )..where((t) => t.cardId.equals(card.cardId))).get();
+    } else {
+      learningHistoryRows = await _database
+          .select(_database.wordLearningHistoryTable)
+          .get();
+    }
+    final reviewLogs = <ReviewLog>[];
+    for (final row in learningHistoryRows) {
+      reviewLogs.add(_tableDataToReviewLog(row));
+    }
+    return reviewLogs;
   }
 
   Future<int> reviewPendingWordsCount([LanguageCode? languageCode]) async {
@@ -377,5 +384,23 @@ class WordManager {
       bookID: wordTableData.bookId,
     );
     return word;
+  }
+
+  WordLearningHistoryTableCompanion _reviewLogToCompanion(ReviewLog reviewLog) {
+    return WordLearningHistoryTableCompanion(
+      cardId: Value(reviewLog.cardId),
+      rating: Value(reviewLog.rating),
+      reviewDateTime: Value(reviewLog.reviewDateTime),
+      reviewDuration: Value(reviewLog.reviewDuration),
+    );
+  }
+
+  ReviewLog _tableDataToReviewLog(WordLearningHistoryTableData tableData) {
+    return (ReviewLog(
+      cardId: tableData.cardId,
+      rating: tableData.rating,
+      reviewDateTime: tableData.reviewDateTime,
+      reviewDuration: tableData.reviewDuration,
+    ));
   }
 }
