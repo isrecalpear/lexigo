@@ -13,7 +13,16 @@ part 'interface.g.dart';
 
 @DriftDatabase(tables: [WordTable, WordLearningHistoryTable])
 class Database extends _$Database {
-  Database([QueryExecutor? executor]) : super(executor ?? _initConnection());
+  Database._([QueryExecutor? executor]) : super(executor ?? _initConnection());
+
+  static Database? _instance;
+
+  factory Database([QueryExecutor? executor]) {
+    _instance ??= Database._(executor ?? _initConnection());
+    return _instance!;
+  }
+
+  Database.external(QueryExecutor executor) : this._(executor);
 
   @override
   int get schemaVersion => 1;
