@@ -10,8 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:fsrs/fsrs.dart' as fsrs;
 
 // Project imports:
-import 'package:lexigo/datas/orm/word_repository.dart';
-import 'package:lexigo/datas/word.dart';
+import 'package:lexigo/backend/word/manager.dart';
+import 'package:lexigo/backend/word.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
 import 'package:lexigo/pages/my_page/word_management/word_add.dart';
 import 'package:lexigo/pages/my_page/word_management/word_edit.dart';
@@ -30,6 +30,7 @@ class _WordViewPageState extends State<WordViewPage> {
   LanguageCode _languageCode = SettingsStore.instance.settings.learningLanguage;
   bool _isLoading = false;
   List<_WordWithCard> _words = [];
+  final _wordManager = WordManager();
 
   @override
   void initState() {
@@ -50,8 +51,7 @@ class _WordViewPageState extends State<WordViewPage> {
     });
 
     try {
-      final repo = await WordRepository.open();
-      final words = await repo.getWords(_languageCode, orderBy: 'card_due ASC');
+      final words = await _wordManager.getWords(_languageCode);
 
       final result = <_WordWithCard>[];
       for (final word in words) {
@@ -121,8 +121,7 @@ class _WordViewPageState extends State<WordViewPage> {
     }
 
     try {
-      final repo = await WordRepository.open();
-      await repo.deleteWordsByCardIds(_languageCode, [item.card.cardId]);
+      await _wordManager.deleteWordsByCardId([item.card.cardId]);
       AppLogger.info('Deleted word successfully: ${item.word.originalWord}');
       await _loadWords();
       if (mounted) {
@@ -234,7 +233,7 @@ class _WordViewPageState extends State<WordViewPage> {
 
                           return ListTile(
                             title: Text(item.word.originalWord),
-                            subtitle: Text(item.word.translation),
+                            subtitle: Text(item.word.originalTranslation),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [

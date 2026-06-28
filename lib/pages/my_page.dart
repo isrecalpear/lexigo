@@ -47,7 +47,7 @@ class SettingsPage extends StatelessWidget {
               AppLogger.info('Opening word management page');
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const WordManagement()),
+                MaterialPageRoute(builder: (context) => WordManagement()),
               );
             },
           ),

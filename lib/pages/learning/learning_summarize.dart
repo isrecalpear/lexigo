@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
-import 'package:lexigo/datas/word.dart';
+import 'package:lexigo/backend/word.dart';
 import 'package:lexigo/pages/learning/learn.dart';
 import 'package:lexigo/pages/widgets/word_card.dart';
-import 'package:lexigo/providers/word_provider.dart';
+import 'package:lexigo/backend/word/global_provider.dart';
 
 /// Summary page displayed after completing a learning session.
-///
-/// TODO: Consider refactoring [wordsUnknown] from a single Word to a List<Word>
-/// to properly display all words the user struggled with, rather than just
-/// one sample word.
+
 class LearningSummarizePage extends StatefulWidget {
   const LearningSummarizePage({
     super.key,
@@ -20,8 +17,6 @@ class LearningSummarizePage extends StatefulWidget {
     required this.wordProvider,
   });
 
-  /// TODO: This should likely be List<Word> to show all unknown words,
-  /// not just a single word. Currently only displays one sample word.
   final Word wordsUnknown;
   final int wordsLearned;
   final int wordsReviewed;
@@ -56,6 +51,12 @@ class _LearningSummarizePageState extends State<LearningSummarizePage> {
   @override
   Widget build(BuildContext context) {
     final word = widget.wordProvider.currentWord;
+    final noMoreWordsToLearn =
+        word == null || widget.wordProvider.isFallbackWord;
+    if (word == null) {
+      widget.wordProvider.setFallbackWord();
+    }
+    Word displayWord = widget.wordProvider.currentWord!;
 
     return Scaffold(
       appBar: AppBar(
@@ -96,18 +97,13 @@ class _LearningSummarizePageState extends State<LearningSummarizePage> {
                       child: toContext.widget,
                     );
                   },
-              child: word == null
-                  ? const SizedBox(
-                      height: 160,
-                      child: Center(child: CircularProgressIndicator()),
-                    )
-                  : WordCard(
-                      word: word,
-                      onUpdated: (updated) {
-                        widget.wordProvider.updateWord(updated);
-                      },
-                      maskTranslation: true,
-                    ),
+              child: WordCard(
+                word: displayWord,
+                onUpdated: (updated) {
+                  widget.wordProvider.updateWord(updated);
+                },
+                maskTranslation: !noMoreWordsToLearn,
+              ),
             ),
             const SizedBox(height: 24),
             Row(
@@ -122,26 +118,27 @@ class _LearningSummarizePageState extends State<LearningSummarizePage> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: () {
-                      if (word == null) return;
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(
-                          builder: (context) => LearningPage(
-                            word: word,
-                            learningLanguage: word.sourceLanguageCode,
-                            wordProvider: widget.wordProvider,
+                if (!noMoreWordsToLearn) ...[
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () {
+                        Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                            builder: (context) => LearningPage(
+                              word: word,
+                              learningLanguage: word.sourceLanguageCode,
+                              wordProvider: widget.wordProvider,
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                    child: Text(
-                      AppLocalizations.of(context).learningSummaryNextGroup,
+                        );
+                      },
+                      child: Text(
+                        AppLocalizations.of(context).learningSummaryNextGroup,
+                      ),
                     ),
                   ),
-                ),
+                ],
               ],
             ),
           ],

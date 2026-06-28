@@ -8,11 +8,11 @@ library;
 import 'package:flutter/material.dart';
 
 // Project imports:
-import 'package:lexigo/datas/word.dart';
+import 'package:lexigo/backend/word.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
 import 'package:lexigo/pages/learning/learn.dart';
 import 'package:lexigo/pages/widgets/word_card.dart';
-import 'package:lexigo/providers/word_provider.dart';
+import 'package:lexigo/backend/word/global_provider.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
 /// Widget that displays a single word and allows starting learning.
@@ -50,7 +50,10 @@ class _StartPageState extends State<StartPage> {
 
   @override
   Widget build(BuildContext context) {
-    final word = widget.wordProvider.currentWord;
+    if (widget.wordProvider.currentWord == null) {
+      widget.wordProvider.setFallbackWord();
+    }
+    Word displayWord = widget.wordProvider.currentWord!;
 
     return Scaffold(
       body: SafeArea(
@@ -70,18 +73,12 @@ class _StartPageState extends State<StartPage> {
                 ),
                 Builder(
                   builder: (context) {
-                    if (word == null) {
-                      return const SizedBox(
-                        height: 160,
-                        child: Center(child: CircularProgressIndicator()),
-                      );
-                    }
                     return GestureDetector(
                       onHorizontalDragEnd: _onSwipeWordCard,
                       child: Hero(
                         tag: widget.wordProvider.heroTag,
                         child: WordCard(
-                          word: word,
+                          word: displayWord,
                           onUpdated: (updated) {
                             widget.wordProvider.updateWord(updated);
                           },

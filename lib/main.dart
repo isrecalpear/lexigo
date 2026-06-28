@@ -15,13 +15,13 @@ import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 // Project imports:
-import 'datas/orm/word_repository.dart';
-import 'datas/word.dart';
+import 'package:lexigo/backend/word/manager.dart';
+import 'backend/word.dart';
 import 'l10n/app_localizations.dart';
 import 'pages/my_page.dart';
 import 'pages/records_page.dart';
 import 'pages/start_page.dart';
-import 'providers/word_provider.dart';
+import 'package:lexigo/backend/word/global_provider.dart';
 import 'utils/app_logger.dart';
 import 'utils/device_info.dart';
 import 'utils/settings.dart';
@@ -339,6 +339,8 @@ class _MyHomePageState extends State<MyHomePage> {
   /// Cached last search results.
   Iterable<Widget> _lastOptions = <Widget>[];
 
+  final _wordManager = WordManager();
+
   @override
   void initState() {
     super.initState();
@@ -568,7 +570,7 @@ class _MyHomePageState extends State<MyHomePage> {
         .map(
           (word) => ListTile(
             title: Text(word.originalWord),
-            subtitle: Text(word.translation),
+            subtitle: Text(word.originalTranslation),
             onTap: () {
               controller.closeView(word.originalWord);
             },
@@ -614,12 +616,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     try {
-      final repo = await WordRepository.open();
-      return await repo.searchWords(
-        widget.learningLanguage,
-        trimmed,
-        limit: 20,
-      );
+      return await _wordManager.searchWords(widget.learningLanguage, trimmed);
     } catch (e, stackTrace) {
       AppLogger.error(
         'Failed to search words',

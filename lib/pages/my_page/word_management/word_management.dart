@@ -13,8 +13,8 @@ import 'package:fsrs/fsrs.dart' as fsrs;
 import 'package:sqlite3/sqlite3.dart' as sqlite;
 
 // Project imports:
-import 'package:lexigo/datas/orm/word_repository.dart';
-import 'package:lexigo/datas/word.dart';
+import 'package:lexigo/backend/word/manager.dart';
+import 'package:lexigo/backend/word.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
 import 'package:lexigo/pages/my_page/word_management/word_add.dart';
 import 'package:lexigo/pages/my_page/word_management/word_view.dart';
@@ -23,7 +23,8 @@ import 'package:lexigo/utils/permission_manager.dart';
 
 /// Word management menu page.
 class WordManagement extends StatelessWidget {
-  const WordManagement({super.key});
+  final _wordManager = WordManager();
+  WordManagement({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -161,9 +162,7 @@ class WordManagement extends StatelessWidget {
       if (rows.isEmpty) {
         throw Exception('No data found');
       }
-
-      final repo = await WordRepository.open();
-      final existing = await repo.getWords(language);
+      final existing = await _wordManager.getWords(language);
       final existingKeys = existing
           .map((word) => '${word.originalWord}||${word.bookID}||${word.unitID}')
           .toSet();
@@ -200,8 +199,8 @@ class WordManagement extends StatelessWidget {
         words.add(
           Word(
             originalWord: originalWord,
-            translation: translation,
-            originalExample: originalExample,
+            originalTranslation: translation,
+            exampleSentence: originalExample,
             exampleTranslation: exampleTranslation,
             sourceLanguageCode: language,
             card: card,
@@ -211,8 +210,7 @@ class WordManagement extends StatelessWidget {
         );
         seenKeys.add(key);
       }
-
-      await repo.insertWords(language, words);
+      await _wordManager.insertWords(words);
       AppLogger.info(
         'Import completed: ${words.length} words, skipped: $skipped words',
       );
@@ -249,7 +247,9 @@ class WordManagement extends StatelessWidget {
     // - Include all columns: original_word, translation, original_example,
     //   example_translation, unit_id, book_id
     // - Show success/failure snackbar
-    AppLogger.warning('Word export not yet implemented for language: ${selected.name}');
+    AppLogger.warning(
+      'Word export not yet implemented for language: ${selected.name}',
+    );
   }
 
   Future<LanguageCode?> _selectLanguage(BuildContext context) async {

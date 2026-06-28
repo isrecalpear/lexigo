@@ -10,8 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:fsrs/fsrs.dart' as fsrs;
 
 // Project imports:
-import 'package:lexigo/datas/orm/word_repository.dart';
-import 'package:lexigo/datas/word.dart';
+import 'package:lexigo/backend/word/manager.dart';
+import 'package:lexigo/backend/word.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
@@ -37,6 +37,8 @@ class _WordAddPageState extends State<WordAddPage> {
 
   late LanguageCode _languageCode = widget.languageCode ?? LanguageCode.en;
   bool _isSaving = false;
+
+  final _wordManager = WordManager();
 
   @override
   void initState() {
@@ -73,8 +75,8 @@ class _WordAddPageState extends State<WordAddPage> {
       final card = fsrs.Card.create();
       final word = Word(
         originalWord: _originalWordController.text.trim(),
-        translation: _translationController.text.trim(),
-        originalExample: _originalExampleController.text.trim(),
+        originalTranslation: _translationController.text.trim(),
+        exampleSentence: _originalExampleController.text.trim(),
         exampleTranslation: _exampleTranslationController.text.trim(),
         sourceLanguageCode: _languageCode,
         card: card,
@@ -86,8 +88,7 @@ class _WordAddPageState extends State<WordAddPage> {
             : _bookIdController.text.trim(),
       );
 
-      final repo = await WordRepository.open();
-      await repo.insertWords(_languageCode, [word]);
+      await _wordManager.insertWord(word);
       AppLogger.info('Word saved successfully: ${word.originalWord}');
 
       if (mounted) {

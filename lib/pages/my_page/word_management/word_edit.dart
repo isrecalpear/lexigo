@@ -10,8 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:fsrs/fsrs.dart' as fsrs;
 
 // Project imports:
-import 'package:lexigo/datas/orm/word_repository.dart';
-import 'package:lexigo/datas/word.dart';
+import 'package:lexigo/backend/word/manager.dart';
+import 'package:lexigo/backend/word.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
@@ -38,6 +38,8 @@ class _WordEditPageState extends State<WordEditPage> {
 
   bool _isSaving = false;
 
+  final _wordManager = WordManager();
+
   @override
   void initState() {
     super.initState();
@@ -45,10 +47,10 @@ class _WordEditPageState extends State<WordEditPage> {
       text: widget.word.originalWord,
     );
     _translationController = TextEditingController(
-      text: widget.word.translation,
+      text: widget.word.originalTranslation,
     );
     _originalExampleController = TextEditingController(
-      text: widget.word.originalExample,
+      text: widget.word.exampleSentence,
     );
     _exampleTranslationController = TextEditingController(
       text: widget.word.exampleTranslation,
@@ -83,8 +85,8 @@ class _WordEditPageState extends State<WordEditPage> {
     try {
       final updated = Word(
         originalWord: _originalWordController.text.trim(),
-        translation: _translationController.text.trim(),
-        originalExample: _originalExampleController.text.trim(),
+        originalTranslation: _translationController.text.trim(),
+        exampleSentence: _originalExampleController.text.trim(),
         exampleTranslation: _exampleTranslationController.text.trim(),
         sourceLanguageCode: widget.word.sourceLanguageCode,
         card: Future.value(widget.card),
@@ -96,8 +98,7 @@ class _WordEditPageState extends State<WordEditPage> {
             : _bookIdController.text.trim(),
       );
 
-      final repo = await WordRepository.open();
-      await repo.updateWord(widget.word.sourceLanguageCode, updated);
+      await _wordManager.updateWord(updated);
       AppLogger.info('Word updated successfully: ${updated.originalWord}');
 
       if (!mounted) return;

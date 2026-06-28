@@ -16,7 +16,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:yaml/yaml.dart' as yaml;
 
 // Project imports:
-import 'package:lexigo/datas/word.dart';
+import 'package:lexigo/backend/word.dart';
 
 /// Immutable settings configuration.
 ///

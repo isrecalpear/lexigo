@@ -8,7 +8,7 @@ library;
 import 'package:flutter/material.dart';
 
 // Project imports:
-import 'package:lexigo/datas/word.dart';
+import 'package:lexigo/backend/word.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
 import 'package:lexigo/pages/my_page/word_management/word_edit.dart';
 import 'package:lexigo/utils/app_logger.dart';
@@ -108,7 +108,9 @@ class _WordCardState extends State<WordCard> {
                       ],
                     ),
                     Text(
-                      _maskTranslation ? "***" : widget.word.translation,
+                      _maskTranslation
+                          ? "***"
+                          : widget.word.originalTranslation,
                       style: Theme.of(context).textTheme.headlineMedium
                           ?.copyWith(
                             color: Theme.of(
@@ -119,7 +121,7 @@ class _WordCardState extends State<WordCard> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      widget.word.originalExample,
+                      widget.word.exampleSentence,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context).colorScheme.onPrimaryContainer,
                       ),

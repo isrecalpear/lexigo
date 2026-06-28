@@ -32,10 +32,10 @@ class Word {
   final String originalWord;
 
   /// The translation of the word (typically in Chinese).
-  final String translation;
+  final String originalTranslation;
 
   /// Example sentence containing the word in the source language.
-  final String originalExample;
+  final String exampleSentence;
 
   /// Translation of the example sentence (typically in Chinese).
   final String exampleTranslation;
@@ -61,8 +61,8 @@ class Word {
   /// to organize words into specific curriculum units and source books.
   Word({
     required this.originalWord,
-    required this.translation,
-    required this.originalExample,
+    required this.originalTranslation,
+    required this.exampleSentence,
     required this.exampleTranslation,
     required this.sourceLanguageCode,
     required this.card,
