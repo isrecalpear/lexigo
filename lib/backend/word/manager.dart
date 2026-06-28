@@ -170,7 +170,11 @@ class WordManager {
     AppLogger.info('Getting random word for $languageCode');
     final result =
         await (_database.select(_database.wordTable)
-              ..where((t) => t.languageCode.equals(languageCode.name)))
+              ..where((t) => t.languageCode.equals(languageCode.name))
+              ..orderBy([
+                (t) => OrderingTerm(expression: CustomExpression('RANDOM()')),
+              ])
+              ..limit(1))
             .getSingleOrNull();
     if (result == null) {
       AppLogger.info('No random word found for $languageCode');
@@ -247,7 +251,7 @@ class WordManager {
     final (:card, :reviewLog) = scheduler.reviewCard(
       card_,
       rating,
-      reviewDateTime: DateTime.now(),
+      reviewDateTime: DateTime.now().toUtc(),
     );
     final updatedWord = Word(
       originalWord: word.originalWord,
