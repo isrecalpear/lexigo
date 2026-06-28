@@ -39,4 +39,9 @@ class WordLearningHistoryTable extends Table {
   late final rating = intEnum<Rating>()();
   late final reviewDateTime = dateTime()();
   late final reviewDuration = integer().nullable()();
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+    {cardId, reviewDateTime},
+  ];
 }
