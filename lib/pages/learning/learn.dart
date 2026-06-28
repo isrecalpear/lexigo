@@ -48,6 +48,8 @@ class _LearningPageState extends State<LearningPage> {
   /// TODO: Make session length configurable in settings (e.g., 5/10/15/20 words per session)
   static const int _totalCount = 10;
 
+  DateTime _reviewStartTime = DateTime.now();
+
   /// Prevents duplicate navigation when [_onWordChanged] and [_handleChoice]
   /// both detect an empty word state.
   bool _isNavigating = false;
@@ -71,7 +73,7 @@ class _LearningPageState extends State<LearningPage> {
       _navigateToSummarizeOnNull();
       return;
     }
-    setState(() {});
+    setState(() => _reviewStartTime = DateTime.now());
   }
 
   /// Navigates to the summary page when [WordProvider.currentWord] becomes
@@ -210,9 +212,11 @@ class _LearningPageState extends State<LearningPage> {
   Future<void> _handleChoice(fsrs.Rating rating) async {
     final currentWord = widget.wordProvider.currentWord;
     AppLogger.info('Learning Select: $rating - ${currentWord?.originalWord}');
-
+    final reviewDuration = DateTime.now()
+        .difference(_reviewStartTime)
+        .inMilliseconds;
     if (currentWord != null) {
-      await widget.wordProvider.reviewWord(currentWord, rating);
+      await widget.wordProvider.reviewWord(currentWord, rating, reviewDuration);
     }
 
     await widget.wordProvider.nextReviewWord();

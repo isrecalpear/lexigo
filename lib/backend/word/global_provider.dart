@@ -44,8 +44,8 @@ class WordProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> reviewWord(Word word, Rating rating) async {
-    await _wordManager.reviewWord(word, rating);
+  Future<void> reviewWord(Word word, Rating rating, int? reviewDuration) async {
+    await _wordManager.reviewWord(word, rating, reviewDuration);
   }
 
   void setFallbackWord() {

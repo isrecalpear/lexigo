@@ -246,12 +246,13 @@ class WordManager {
     return words;
   }
 
-  Future<void> reviewWord(Word word, Rating rating) async {
+  Future<void> reviewWord(Word word, Rating rating, int? reviewDuration) async {
     final card_ = await word.card;
     final (:card, :reviewLog) = scheduler.reviewCard(
       card_,
       rating,
       reviewDateTime: DateTime.now().toUtc(),
+      reviewDuration: reviewDuration,
     );
     final updatedWord = Word(
       originalWord: word.originalWord,
