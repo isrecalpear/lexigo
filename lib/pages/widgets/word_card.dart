@@ -80,6 +80,13 @@ class _WordCardState extends State<WordCard> {
                           textAlign: TextAlign.left,
                         ),
                         const Spacer(),
+                        if (widget.word.card.lastReview == null)
+                          Icon(
+                            Icons.fiber_new,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onPrimaryContainer,
+                          ),
                         PopupMenuButton<String>(
                           onSelected: (value) {
                             if (value == WordCard._menuCorrect) {
