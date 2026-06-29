@@ -1,0 +1,190 @@
+{
+  "@@locale": "zh",
+  "appTitle": "背了么 - LexiGo",
+  "tabStudy": "背",
+  "tabRecords": "记录",
+  "tabMe": "我的",
+  "language": "语言",
+  "languageSystem": "跟随系统",
+  "languageChinese": "中文",
+  "languageEnglish": "English",
+  "startPrompt": "你认识吗？",
+  "next": "下一个",
+  "startLearning": "开始学习",
+  "learningTitle": "学习",
+  "ratingEasy": "简单",
+  "ratingGood": "还行",
+  "ratingHard": "困难",
+  "ratingAgain": "忘记",
+  "settingsWordManagement": "单词管理",
+  "settingsWordManagementSubtitle": "查看与维护单词数据",
+  "settingsEditSettings": "编辑设置",
+  "settingsEditSettingsSubtitle": "编辑应用设置",
+  "settingsLanguage": "语言",
+  "settingsTheme": "主题",
+  "settingsThemeColor": "主题色",
+  "themeSystem": "跟随系统",
+  "themeLight": "浅色",
+  "themeDark": "深色",
+  "themeColorAuto": "自动",
+  "themeColorPick": "选择颜色",
+  "themeColorPickerTitle": "选择主题色",
+  "themeColorHue": "色相",
+  "themeColorSaturation": "饱和度",
+  "themeColorBrightness": "亮度",
+  "themeColorHexLabel": "十六进制颜色",
+  "themeColorHexHint": "#RRGGBB 或 #AARRGGBB",
+  "themeColorHexInvalid": "无效的颜色值",
+  "settingsLogManagement": "日志管理",
+  "settingsLogManagementSubtitle": "查看和管理应用日志",
+  "settingsAbout": "关于",
+  "settingsAboutSubtitle": "背了么 - LexiGo",
+  "wordManagementTitle": "单词管理",
+  "wordListTitle": "查看单词",
+  "wordListSubtitle": "查看单词清单",
+  "importWordListTitle": "导入单词清单",
+  "importWordListSubtitle": "从外部文件导入单词清单",
+  "exportWordListTitle": "导出单词清单",
+  "exportWordListSubtitle": "将单词清单导出到外部文件",
+  "exportFailedNoFolder": "导出失败！未找到下载文件夹",
+  "exportFailedUserDismiss": "导出失败！用户取消操作",
+  "exportFailedUnavailable": "导出失败！不支持的操作",
+  "exportSuccess": "导出成功，文件在 {filePath}",
+  "@exportSuccess": {
+    "placeholders": {
+      "filePath": {}
+    }
+  },
+  "exportFailed": "导出失败: {error}",
+  "@exportFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "addWordTitle": "添加单词",
+  "addWordSubtitle": "手动添加单词到数据库",
+  "selectLanguageTitle": "选择语言",
+  "cancel": "取消",
+  "confirm": "确定",
+  "importSuccess": "导入成功: {count} 条，跳过: {skipped} 条",
+  "@importSuccess": {
+    "placeholders": {
+      "count": {},
+      "skipped": {}
+    }
+  },
+  "importFailed": "导入失败: {error}",
+  "@importFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "addWordPageTitle": "添加单词",
+  "editWordPageTitle": "编辑单词",
+  "fieldLanguage": "语言",
+  "fieldOriginal": "原文",
+  "fieldTranslation": "翻译",
+  "fieldOriginalExample": "原文例句",
+  "fieldExampleTranslation": "例句翻译",
+  "fieldUnitId": "单元ID",
+  "fieldBookId": "书籍ID",
+  "save": "保存",
+  "required": "必填",
+  "addSuccess": "添加成功",
+  "addFailed": "添加失败: {error}",
+  "@addFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "editSuccess": "修改成功",
+  "editFailed": "修改失败: {error}",
+  "@editFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "logManagementTitle": "日志管理",
+  "logClearConfirmTitle": "确认清除",
+  "logClearConfirmContent": "确定要清除所有日志吗？此操作不可恢复。",
+  "logCleared": "日志已清除",
+  "clearFailed": "清除失败: {error}",
+  "@clearFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "logSizeTitle": "日志大小",
+  "logViewTitle": "日志查看",
+  "logViewSubtitle": "查看最新日志",
+  "logPathNotFound": "未找到日志路径",
+  "logEmpty": "暂无日志",
+  "logReadFailed": "读取日志失败: {error}",
+  "@logReadFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "logShareNotSupported": "Linux 系统不支持分享日志",
+  "logFileNotFound": "未找到日志文件",
+  "logShareSuccess": "日志分享成功",
+  "logShareFailed": "分享日志失败: {error}",
+  "@logShareFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "logAboutTitle": "关于日志",
+  "logAboutSubtitle": "日志文件保存在应用数据目录，最多保留7天，超过后自动删除旧日志。",
+  "refreshInfo": "刷新信息",
+  "clearLogs": "清除日志",
+  "recordsBuilding": "开发中...",
+  "wordViewTitle": "单词清单",
+  "wordViewEmpty": "暂无单词",
+  "edit": "编辑",
+  "delete": "删除",
+  "deleteWordTitle": "删除单词",
+  "deleteWordConfirm": "确定删除 {word} 吗？",
+  "@deleteWordConfirm": {
+    "placeholders": {
+      "word": {}
+    }
+  },
+  "deleteSuccess": "删除成功",
+  "deleteFailed": "删除失败: {error}",
+  "@deleteFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "loadFailed": "加载失败: {error}",
+  "@loadFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "familiarityLearning": "生疏",
+  "familiarityRelearning": "不熟",
+  "familiarityReview": "熟悉",
+  "wordCardCorrect": "纠错",
+  "wordCardMarkKnown": "标记为熟知",
+  "wordCardMarkKnownTitle": "标记为熟知？",
+  "wordCardMarkKnownConfirm": "确认将 \"{word}\" 标记为熟知。",
+  "@wordCardMarkKnownConfirm": {
+    "placeholders": {
+      "word": {}
+    }
+  },
+  "learningSummary": "已学 {learned} 个，复习 {reviewed} 个，还剩 {toReview} 个",
+  "@learningSummary": {
+    "placeholders": {
+      "learned": {},
+      "reviewed": {},
+      "toReview": {}
+    }
+  },
+  "learningSummaryTitle": "总结",
+  "learningSummaryNextLabel": "接下来的是：",
+  "learningSummaryEnd": "结束学习",
+  "learningSummaryNextGroup": "下一组单词"
+}

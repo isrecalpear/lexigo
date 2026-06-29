@@ -71,13 +71,15 @@ class _SettingsEditingPageState extends State<SettingsEditingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.settingsEditSettings)),
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context)!.settingsEditSettings),
+      ),
       body: SafeArea(
         child: ListView(
           children: [
             ListTile(
               leading: const Icon(Icons.language),
-              title: Text(context.l10n.settingsLanguage),
+              title: Text(AppLocalizations.of(context)!.settingsLanguage),
               subtitle: Text(_currentLanguageLabel(context)),
               trailing: const Icon(Icons.chevron_right),
               onTap: _openLanguagePicker,
@@ -85,7 +87,7 @@ class _SettingsEditingPageState extends State<SettingsEditingPage> {
             const Divider(),
             ListTile(
               leading: const Icon(Icons.brightness_6_outlined),
-              title: Text(context.l10n.settingsTheme),
+              title: Text(AppLocalizations.of(context)!.settingsTheme),
               subtitle: Text(_currentThemeLabel(context)),
               trailing: const Icon(Icons.chevron_right),
               onTap: _openThemePicker,
@@ -93,7 +95,7 @@ class _SettingsEditingPageState extends State<SettingsEditingPage> {
             const Divider(),
             ListTile(
               leading: const Icon(Icons.color_lens_outlined),
-              title: Text(context.l10n.settingsThemeColor),
+              title: Text(AppLocalizations.of(context)!.settingsThemeColor),
               subtitle: Text(_currentColorLabel(context)),
               trailing: _buildColorPreview(),
               onTap: _openColorPicker,
@@ -114,29 +116,29 @@ class _SettingsEditingPageState extends State<SettingsEditingPage> {
   String _currentLanguageLabel(BuildContext context) {
     switch (_selectedLanguage) {
       case 'system':
-        return context.l10n.languageSystem;
+        return AppLocalizations.of(context)!.languageSystem;
       case 'zh':
-        return context.l10n.languageChinese;
+        return AppLocalizations.of(context)!.languageChinese;
       case 'en':
       default:
-        return context.l10n.languageEnglish;
+        return AppLocalizations.of(context)!.languageEnglish;
     }
   }
 
   String _currentThemeLabel(BuildContext context) {
     switch (_selectedThemeMode) {
       case ThemeMode.light:
-        return context.l10n.themeLight;
+        return AppLocalizations.of(context)!.themeLight;
       case ThemeMode.dark:
-        return context.l10n.themeDark;
+        return AppLocalizations.of(context)!.themeDark;
       case ThemeMode.system:
-        return context.l10n.themeSystem;
+        return AppLocalizations.of(context)!.themeSystem;
     }
   }
 
   String _currentColorLabel(BuildContext context) {
     if (_useAutoColor) {
-      return context.l10n.themeColorAuto;
+      return AppLocalizations.of(context)!.themeColorAuto;
     }
 
     final int rgb = _customColor.toARGB32() & 0xFFFFFF;
@@ -222,19 +224,19 @@ class _SettingsEditingPageState extends State<SettingsEditingPage> {
       context: context,
       builder: (context) {
         return SimpleDialog(
-          title: Text(context.l10n.language),
+          title: Text(AppLocalizations.of(context)!.language),
           children: [
             SimpleDialogOption(
               onPressed: () => Navigator.pop(context, 'system'),
-              child: Text(context.l10n.languageSystem),
+              child: Text(AppLocalizations.of(context)!.languageSystem),
             ),
             SimpleDialogOption(
               onPressed: () => Navigator.pop(context, 'en'),
-              child: Text(context.l10n.languageEnglish),
+              child: Text(AppLocalizations.of(context)!.languageEnglish),
             ),
             SimpleDialogOption(
               onPressed: () => Navigator.pop(context, 'zh'),
-              child: Text(context.l10n.languageChinese),
+              child: Text(AppLocalizations.of(context)!.languageChinese),
             ),
           ],
         );
@@ -248,19 +250,19 @@ class _SettingsEditingPageState extends State<SettingsEditingPage> {
       context: context,
       builder: (context) {
         return SimpleDialog(
-          title: Text(context.l10n.settingsTheme),
+          title: Text(AppLocalizations.of(context)!.settingsTheme),
           children: [
             SimpleDialogOption(
               onPressed: () => Navigator.pop(context, ThemeMode.system),
-              child: Text(context.l10n.themeSystem),
+              child: Text(AppLocalizations.of(context)!.themeSystem),
             ),
             SimpleDialogOption(
               onPressed: () => Navigator.pop(context, ThemeMode.light),
-              child: Text(context.l10n.themeLight),
+              child: Text(AppLocalizations.of(context)!.themeLight),
             ),
             SimpleDialogOption(
               onPressed: () => Navigator.pop(context, ThemeMode.dark),
-              child: Text(context.l10n.themeDark),
+              child: Text(AppLocalizations.of(context)!.themeDark),
             ),
           ],
         );
@@ -289,13 +291,13 @@ class _SettingsEditingPageState extends State<SettingsEditingPage> {
                 ? Theme.of(context).colorScheme.primary
                 : hsv.toColor();
             return AlertDialog(
-              title: Text(context.l10n.themeColorPickerTitle),
+              title: Text(AppLocalizations.of(context)!.themeColorPickerTitle),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   SwitchListTile.adaptive(
                     contentPadding: EdgeInsets.zero,
-                    title: Text(context.l10n.themeColorAuto),
+                    title: Text(AppLocalizations.of(context)!.themeColorAuto),
                     value: useAuto,
                     onChanged: (value) => setState(() {
                       useAuto = value;
@@ -316,11 +318,13 @@ class _SettingsEditingPageState extends State<SettingsEditingPage> {
                   TextField(
                     controller: hexController,
                     decoration: InputDecoration(
-                      labelText: context.l10n.themeColorHexLabel,
-                      hintText: context.l10n.themeColorHexHint,
+                      labelText: AppLocalizations.of(
+                        context,
+                      )!.themeColorHexLabel,
+                      hintText: AppLocalizations.of(context)!.themeColorHexHint,
                       errorText: isHexValid
                           ? null
-                          : context.l10n.themeColorHexInvalid,
+                          : AppLocalizations.of(context)!.themeColorHexInvalid,
                     ),
                     autocorrect: false,
                     enableSuggestions: false,
@@ -345,7 +349,7 @@ class _SettingsEditingPageState extends State<SettingsEditingPage> {
                   ),
                   const SizedBox(height: 16),
                   _buildSlider(
-                    context.l10n.themeColorHue,
+                    AppLocalizations.of(context)!.themeColorHue,
                     hsv.hue,
                     0,
                     360,
@@ -358,7 +362,7 @@ class _SettingsEditingPageState extends State<SettingsEditingPage> {
                           }),
                   ),
                   _buildSlider(
-                    context.l10n.themeColorSaturation,
+                    AppLocalizations.of(context)!.themeColorSaturation,
                     hsv.saturation,
                     0,
                     1,
@@ -371,7 +375,7 @@ class _SettingsEditingPageState extends State<SettingsEditingPage> {
                           }),
                   ),
                   _buildSlider(
-                    context.l10n.themeColorBrightness,
+                    AppLocalizations.of(context)!.themeColorBrightness,
                     hsv.value,
                     0,
                     1,
@@ -388,7 +392,7 @@ class _SettingsEditingPageState extends State<SettingsEditingPage> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text(context.l10n.cancel),
+                  child: Text(AppLocalizations.of(context)!.cancel),
                 ),
                 FilledButton(
                   onPressed: (useAuto || isHexValid)
@@ -399,7 +403,7 @@ class _SettingsEditingPageState extends State<SettingsEditingPage> {
                               : _ColorSelection.custom(preview),
                         )
                       : null,
-                  child: Text(context.l10n.confirm),
+                  child: Text(AppLocalizations.of(context)!.confirm),
                 ),
               ],
             );

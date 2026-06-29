@@ -35,13 +35,15 @@ class WordManagement extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.wordManagementTitle)),
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context)!.wordManagementTitle),
+      ),
       body: ListView(
         children: [
           ListTile(
             leading: const Icon(Icons.list_alt_outlined),
-            title: Text(context.l10n.wordListTitle),
-            subtitle: Text(context.l10n.wordListSubtitle),
+            title: Text(AppLocalizations.of(context)!.wordListTitle),
+            subtitle: Text(AppLocalizations.of(context)!.wordListSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               AppLogger.info('Opening word list page');
@@ -54,8 +56,10 @@ class WordManagement extends StatelessWidget {
           const Divider(),
           ListTile(
             leading: const Icon(Icons.download_outlined),
-            title: Text(context.l10n.importWordListTitle),
-            subtitle: Text(context.l10n.importWordListSubtitle),
+            title: Text(AppLocalizations.of(context)!.importWordListTitle),
+            subtitle: Text(
+              AppLocalizations.of(context)!.importWordListSubtitle,
+            ),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               AppLogger.info('Selecting file to import word list');
@@ -64,8 +68,10 @@ class WordManagement extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.save_outlined),
-            title: Text(context.l10n.exportWordListTitle),
-            subtitle: Text(context.l10n.exportWordListSubtitle),
+            title: Text(AppLocalizations.of(context)!.exportWordListTitle),
+            subtitle: Text(
+              AppLocalizations.of(context)!.exportWordListSubtitle,
+            ),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               AppLogger.info('Selecting file to export word list');
@@ -75,8 +81,8 @@ class WordManagement extends StatelessWidget {
           const Divider(),
           ListTile(
             leading: const Icon(Icons.add_circle_outline),
-            title: Text(context.l10n.addWordTitle),
-            subtitle: Text(context.l10n.addWordSubtitle),
+            title: Text(AppLocalizations.of(context)!.addWordTitle),
+            subtitle: Text(AppLocalizations.of(context)!.addWordSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               AppLogger.info('Opening add word page');
@@ -171,14 +177,20 @@ class WordManagement extends StatelessWidget {
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.importSuccess(words.length, 0))),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.importSuccess(words.length, 0),
+            ),
+          ),
         );
       }
     } catch (e) {
       AppLogger.error('Import failed: $e');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.importFailed('$e'))),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.importFailed('$e')),
+          ),
         );
       }
     } finally {
@@ -249,14 +261,22 @@ class WordManagement extends StatelessWidget {
         if (result.status == ShareResultStatus.dismissed) {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(context.l10n.exportFailedUserDismiss)),
+              SnackBar(
+                content: Text(
+                  AppLocalizations.of(context)!.exportFailedUserDismiss,
+                ),
+              ),
             );
           }
           return;
         } else if (result.status == ShareResultStatus.unavailable) {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(context.l10n.exportFailedUnavailable)),
+              SnackBar(
+                content: Text(
+                  AppLocalizations.of(context)!.exportFailedUnavailable,
+                ),
+              ),
             );
           }
           return;
@@ -278,7 +298,11 @@ class WordManagement extends StatelessWidget {
         if (dict == null) {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(context.l10n.exportFailedNoFolder)),
+              SnackBar(
+                content: Text(
+                  AppLocalizations.of(context)!.exportFailedNoFolder,
+                ),
+              ),
             );
           }
           return;
@@ -290,14 +314,20 @@ class WordManagement extends StatelessWidget {
       AppLogger.info('Export success, file at: ${targetFile.path}');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.exportSuccess(targetFile.path))),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.exportSuccess(targetFile.path),
+            ),
+          ),
         );
       }
     } catch (e) {
       AppLogger.error('Export failed: $e');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.exportFailed('$e'))),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.exportFailed('$e')),
+          ),
         );
       }
     }
@@ -311,7 +341,7 @@ class WordManagement extends StatelessWidget {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text(context.l10n.selectLanguageTitle),
+              title: Text(AppLocalizations.of(context)!.selectLanguageTitle),
               content: DropdownButton<LanguageCode>(
                 value: selected,
                 items: LanguageCode.values
@@ -330,11 +360,11 @@ class WordManagement extends StatelessWidget {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext),
-                  child: Text(context.l10n.cancel),
+                  child: Text(AppLocalizations.of(context)!.cancel),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext, selected),
-                  child: Text(context.l10n.confirm),
+                  child: Text(AppLocalizations.of(context)!.confirm),
                 ),
               ],
             );

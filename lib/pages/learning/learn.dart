@@ -120,7 +120,9 @@ class _LearningPageState extends State<LearningPage> {
         Navigator.pop(context, widget.wordProvider.currentWord);
       },
       child: Scaffold(
-        appBar: AppBar(title: Text(context.l10n.learningTitle)),
+        appBar: AppBar(
+          title: Text(AppLocalizations.of(context)!.learningTitle),
+        ),
         body: SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -183,19 +185,19 @@ class _LearningPageState extends State<LearningPage> {
                   children: [
                     FilledButton(
                       onPressed: () => _handleChoice(fsrs.Rating.easy),
-                      child: Text(context.l10n.ratingEasy),
+                      child: Text(AppLocalizations.of(context)!.ratingEasy),
                     ),
                     FilledButton(
                       onPressed: () => _handleChoice(fsrs.Rating.good),
-                      child: Text(context.l10n.ratingGood),
+                      child: Text(AppLocalizations.of(context)!.ratingGood),
                     ),
                     FilledButton(
                       onPressed: () => _handleChoice(fsrs.Rating.hard),
-                      child: Text(context.l10n.ratingHard),
+                      child: Text(AppLocalizations.of(context)!.ratingHard),
                     ),
                     FilledButton(
                       onPressed: () => _handleChoice(fsrs.Rating.again),
-                      child: Text(context.l10n.ratingAgain),
+                      child: Text(AppLocalizations.of(context)!.ratingAgain),
                     ),
                   ],
                 ),

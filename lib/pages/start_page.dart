@@ -67,7 +67,7 @@ class _StartPageState extends State<StartPage> {
               children: [
                 Center(
                   child: Text(
-                    context.l10n.startPrompt,
+                    AppLocalizations.of(context)!.startPrompt,
                     style: Theme.of(context).textTheme.headlineLarge,
                   ),
                 ),
@@ -95,7 +95,7 @@ class _StartPageState extends State<StartPage> {
                       vertical: 14,
                     ),
                   ),
-                  child: Text(context.l10n.next),
+                  child: Text(AppLocalizations.of(context)!.next),
                 ),
               ],
             ),
@@ -103,7 +103,7 @@ class _StartPageState extends State<StartPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        label: Text(context.l10n.startLearning),
+        label: Text(AppLocalizations.of(context)!.startLearning),
         icon: const Icon(Icons.play_arrow),
         onPressed: _startLearning,
       ),

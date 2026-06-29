@@ -1,0 +1,190 @@
+{
+  "@@locale": "en",
+  "appTitle": "LexiGo - Flashcards",
+  "tabStudy": "Study",
+  "tabRecords": "Records",
+  "tabMe": "Me",
+  "language": "Language",
+  "languageSystem": "System",
+  "languageChinese": "中文",
+  "languageEnglish": "English",
+  "startPrompt": "Do you know it?",
+  "next": "Next",
+  "startLearning": "Start",
+  "learningTitle": "Learn",
+  "ratingEasy": "Easy",
+  "ratingGood": "Good",
+  "ratingHard": "Hard",
+  "ratingAgain": "Again",
+  "settingsWordManagement": "Word management",
+  "settingsWordManagementSubtitle": "View and maintain words",
+  "settingsEditSettings": "Edit settings",
+  "settingsEditSettingsSubtitle": "Edit app settings",
+  "settingsLanguage": "Language",
+  "settingsTheme": "Theme",
+  "settingsThemeColor": "Theme color",
+  "themeSystem": "System",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "themeColorAuto": "Auto",
+  "themeColorPick": "Choose color",
+  "themeColorPickerTitle": "Pick theme color",
+  "themeColorHue": "Hue",
+  "themeColorSaturation": "Saturation",
+  "themeColorBrightness": "Brightness",
+  "themeColorHexLabel": "Hex color",
+  "themeColorHexHint": "#RRGGBB or #AARRGGBB",
+  "themeColorHexInvalid": "Invalid hex color",
+  "settingsLogManagement": "Log management",
+  "settingsLogManagementSubtitle": "View and manage logs",
+  "settingsAbout": "About",
+  "settingsAboutSubtitle": "LexiGo - Flashcards",
+  "wordManagementTitle": "Word management",
+  "wordListTitle": "Word list",
+  "wordListSubtitle": "View word list",
+  "importWordListTitle": "Import word list",
+  "importWordListSubtitle": "Import from external file",
+  "exportWordListTitle": "Export word list",
+  "exportWordListSubtitle": "Export to external file",
+  "exportFailedNoFolder": "Export failed, download folder not found.",
+  "exportFailedUserDismiss": "Export failed, user dismissed.",
+  "exportFailedUnavailable": "Export failed, unavailable method.",
+  "exportSuccess": "Export success, file at {filePath}.",
+  "@exportSuccess": {
+    "placeholders": {
+      "filePath": {}
+    }
+  },
+  "exportFailed": "Export failed: {error}.",
+  "@exportFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "addWordTitle": "Add word",
+  "addWordSubtitle": "Add a word to database",
+  "selectLanguageTitle": "Select language",
+  "cancel": "Cancel",
+  "confirm": "Confirm",
+  "importSuccess": "Imported {count} items, skipped {skipped}.",
+  "@importSuccess": {
+    "placeholders": {
+      "count": {},
+      "skipped": {}
+    }
+  },
+  "importFailed": "Import failed: {error}.",
+  "@importFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "addWordPageTitle": "Add word",
+  "editWordPageTitle": "Edit word",
+  "fieldLanguage": "Language",
+  "fieldOriginal": "Original",
+  "fieldTranslation": "Translation",
+  "fieldOriginalExample": "Example",
+  "fieldExampleTranslation": "Example translation",
+  "fieldUnitId": "Unit ID",
+  "fieldBookId": "Book ID",
+  "save": "Save",
+  "required": "Required",
+  "addSuccess": "Added successfully",
+  "addFailed": "Add failed: {error}.",
+  "@addFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "editSuccess": "Updated successfully",
+  "editFailed": "Update failed: {error}.",
+  "@editFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "logManagementTitle": "Log management",
+  "logClearConfirmTitle": "Confirm clear",
+  "logClearConfirmContent": "Clear all logs? This action cannot be undone.",
+  "logCleared": "Logs cleared",
+  "clearFailed": "Clear failed: {error}.",
+  "@clearFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "logSizeTitle": "Log size",
+  "logViewTitle": "View logs",
+  "logViewSubtitle": "View latest logs",
+  "logPathNotFound": "Log file path not found",
+  "logEmpty": "No logs",
+  "logReadFailed": "Failed to read logs: {error}.",
+  "@logReadFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "logShareNotSupported": "Log sharing is not supported on Linux",
+  "logFileNotFound": "Log file not found",
+  "logShareSuccess": "Log shared successfully",
+  "logShareFailed": "Failed to share log: {error}.",
+  "@logShareFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "logAboutTitle": "About logs",
+  "logAboutSubtitle": "Logs are stored in app data and kept for 7 days, older logs are removed automatically.",
+  "refreshInfo": "Refresh",
+  "clearLogs": "Clear logs",
+  "recordsBuilding": "Coming soon...",
+  "wordViewTitle": "Word list",
+  "wordViewEmpty": "No words",
+  "edit": "Edit",
+  "delete": "Delete",
+  "deleteWordTitle": "Delete word",
+  "deleteWordConfirm": "Delete {word}?",
+  "@deleteWordConfirm": {
+    "placeholders": {
+      "word": {}
+    }
+  },
+  "deleteSuccess": "Deleted",
+  "deleteFailed": "Delete failed: {error}.",
+  "@deleteFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "loadFailed": "Load failed: {error}.",
+  "@loadFailed": {
+    "placeholders": {
+      "error": {}
+    }
+  },
+  "familiarityLearning": "New",
+  "familiarityRelearning": "Relearning",
+  "familiarityReview": "Review",
+  "wordCardCorrect": "Correct",
+  "wordCardMarkKnown": "Mark as known",
+  "wordCardMarkKnownTitle": "Mark as known?",
+  "wordCardMarkKnownConfirm": "Confirm marking \"{word}\" as known.",
+  "@wordCardMarkKnownConfirm": {
+    "placeholders": {
+      "word": {}
+    }
+  },
+  "learningSummary": "{learned} words learned, {reviewed} reviewed, {toReview} to review",
+  "@learningSummary": {
+    "placeholders": {
+      "learned": {},
+      "reviewed": {},
+      "toReview": {}
+    }
+  },
+  "learningSummaryTitle": "Summary",
+  "learningSummaryNextLabel": "Next word:",
+  "learningSummaryEnd": "End learning",
+  "learningSummaryNextGroup": "Next set"
+}

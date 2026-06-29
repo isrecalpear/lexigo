@@ -102,9 +102,9 @@ class _WordEditPageState extends State<WordEditPage> {
       AppLogger.info('Word updated successfully: ${updated.originalWord}');
 
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(context.l10n.editSuccess)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.editSuccess)),
+      );
       Navigator.pop<Word>(context, updated);
     } catch (e, stackTrace) {
       AppLogger.error(
@@ -113,9 +113,9 @@ class _WordEditPageState extends State<WordEditPage> {
         stackTrace: stackTrace,
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(context.l10n.editFailed('$e'))));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.editFailed('$e'))),
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -127,7 +127,7 @@ class _WordEditPageState extends State<WordEditPage> {
 
   String? _requiredValidator(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return context.l10n.required;
+      return AppLocalizations.of(context)!.required;
     }
     return null;
   }
@@ -135,7 +135,9 @@ class _WordEditPageState extends State<WordEditPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.editWordPageTitle)),
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context)!.editWordPageTitle),
+      ),
       body: SafeArea(
         child: Form(
           key: _formKey,
@@ -145,7 +147,7 @@ class _WordEditPageState extends State<WordEditPage> {
               TextFormField(
                 controller: _originalWordController,
                 decoration: InputDecoration(
-                  labelText: context.l10n.fieldOriginal,
+                  labelText: AppLocalizations.of(context)!.fieldOriginal,
                   border: const OutlineInputBorder(),
                 ),
                 validator: _requiredValidator,
@@ -154,7 +156,7 @@ class _WordEditPageState extends State<WordEditPage> {
               TextFormField(
                 controller: _translationController,
                 decoration: InputDecoration(
-                  labelText: context.l10n.fieldTranslation,
+                  labelText: AppLocalizations.of(context)!.fieldTranslation,
                   border: const OutlineInputBorder(),
                 ),
                 validator: _requiredValidator,
@@ -163,7 +165,7 @@ class _WordEditPageState extends State<WordEditPage> {
               TextFormField(
                 controller: _originalExampleController,
                 decoration: InputDecoration(
-                  labelText: context.l10n.fieldOriginalExample,
+                  labelText: AppLocalizations.of(context)!.fieldOriginalExample,
                   border: const OutlineInputBorder(),
                 ),
                 validator: _requiredValidator,
@@ -173,7 +175,9 @@ class _WordEditPageState extends State<WordEditPage> {
               TextFormField(
                 controller: _exampleTranslationController,
                 decoration: InputDecoration(
-                  labelText: context.l10n.fieldExampleTranslation,
+                  labelText: AppLocalizations.of(
+                    context,
+                  )!.fieldExampleTranslation,
                   border: const OutlineInputBorder(),
                 ),
                 validator: _requiredValidator,
@@ -183,7 +187,7 @@ class _WordEditPageState extends State<WordEditPage> {
               TextFormField(
                 controller: _unitIdController,
                 decoration: InputDecoration(
-                  labelText: context.l10n.fieldUnitId,
+                  labelText: AppLocalizations.of(context)!.fieldUnitId,
                   border: const OutlineInputBorder(),
                 ),
               ),
@@ -191,7 +195,7 @@ class _WordEditPageState extends State<WordEditPage> {
               TextFormField(
                 controller: _bookIdController,
                 decoration: InputDecoration(
-                  labelText: context.l10n.fieldBookId,
+                  labelText: AppLocalizations.of(context)!.fieldBookId,
                   border: const OutlineInputBorder(),
                 ),
               ),
@@ -204,7 +208,7 @@ class _WordEditPageState extends State<WordEditPage> {
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : Text(context.l10n.save),
+                    : Text(AppLocalizations.of(context)!.save),
               ),
             ],
           ),

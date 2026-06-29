@@ -45,7 +45,7 @@ class _LogViewPageState extends State<LogViewPage> {
       if (path == null) {
         setState(() {
           _content = '';
-          _error = context.l10n.logPathNotFound;
+          _error = AppLocalizations.of(context)!.logPathNotFound;
           _loading = false;
         });
         return;
@@ -55,7 +55,7 @@ class _LogViewPageState extends State<LogViewPage> {
       if (!await file.exists()) {
         setState(() {
           _content = '';
-          _error = context.l10n.logEmpty;
+          _error = AppLocalizations.of(context)!.logEmpty;
           _loading = false;
         });
         return;
@@ -69,7 +69,7 @@ class _LogViewPageState extends State<LogViewPage> {
     } catch (e) {
       setState(() {
         _content = '';
-        _error = context.l10n.logReadFailed('$e');
+        _error = AppLocalizations.of(context)!.logReadFailed('$e');
         _loading = false;
       });
     }
@@ -83,7 +83,9 @@ class _LogViewPageState extends State<LogViewPage> {
     final deviceInfo = DeviceInfoManager();
     if (!deviceInfo.supportsFileSharing) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.logShareNotSupported)),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.logShareNotSupported),
+        ),
       );
       AppLogger.warning('Log sharing is not supported on Linux');
       return;
@@ -94,9 +96,11 @@ class _LogViewPageState extends State<LogViewPage> {
       if (!mounted) return;
 
       if (path == null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(context.l10n.logFileNotFound)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.logFileNotFound),
+          ),
+        );
         AppLogger.warning('Failed to share log: log file not found');
         return;
       }
@@ -108,16 +112,20 @@ class _LogViewPageState extends State<LogViewPage> {
       if (!mounted) return;
 
       if (result.status == ShareResultStatus.success) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(context.l10n.logShareSuccess)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.logShareSuccess),
+          ),
+        );
         AppLogger.info('Log shared successfully');
       }
     } catch (e) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(context.l10n.logShareFailed('$e'))),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.logShareFailed('$e')),
+        ),
       );
       AppLogger.error('Failed to share log', error: e);
     }
@@ -127,7 +135,7 @@ class _LogViewPageState extends State<LogViewPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.l10n.logViewTitle),
+        title: Text(AppLocalizations.of(context)!.logViewTitle),
         actions: [
           IconButton(
             onPressed: _loading ? null : _loadLog,
@@ -159,7 +167,11 @@ class _LogViewPageState extends State<LogViewPage> {
                       child: _error != null
                           ? Center(child: Text(_error!))
                           : _content.isEmpty
-                          ? Center(child: Text(context.l10n.logEmpty))
+                          ? Center(
+                              child: Text(
+                                AppLocalizations.of(context)!.logEmpty,
+                              ),
+                            )
                           : SingleChildScrollView(
                               child: SelectableText(
                                 _content,

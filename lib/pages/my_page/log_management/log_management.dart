@@ -49,16 +49,16 @@ class _LogManagementPageState extends State<LogManagementPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(context.l10n.logClearConfirmTitle),
-        content: Text(context.l10n.logClearConfirmContent),
+        title: Text(AppLocalizations.of(context)!.logClearConfirmTitle),
+        content: Text(AppLocalizations.of(context)!.logClearConfirmContent),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text(context.l10n.cancel),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text(context.l10n.confirm),
+            child: Text(AppLocalizations.of(context)!.confirm),
           ),
         ],
       ),
@@ -68,16 +68,18 @@ class _LogManagementPageState extends State<LogManagementPage> {
       try {
         await AppLogger.clearAllLogs();
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(context.l10n.logCleared)));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.logCleared)),
+          );
           await _loadLogInfo();
         }
       } catch (e) {
         AppLogger.error('Failed to clear logs', error: e);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.clearFailed('$e'))),
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.clearFailed('$e')),
+            ),
           );
         }
       }
@@ -87,20 +89,22 @@ class _LogManagementPageState extends State<LogManagementPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.logManagementTitle)),
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context)!.logManagementTitle),
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               children: [
                 ListTile(
                   leading: const Icon(Icons.description_outlined),
-                  title: Text(context.l10n.logSizeTitle),
+                  title: Text(AppLocalizations.of(context)!.logSizeTitle),
                   subtitle: Text('${_logSize.toStringAsFixed(2)} MB'),
                 ),
                 ListTile(
                   leading: const Icon(Icons.article_outlined),
-                  title: Text(context.l10n.logViewTitle),
-                  subtitle: Text(context.l10n.logViewSubtitle),
+                  title: Text(AppLocalizations.of(context)!.logViewTitle),
+                  subtitle: Text(AppLocalizations.of(context)!.logViewSubtitle),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
                     AppLogger.info('Opening log view page');
@@ -114,8 +118,10 @@ class _LogManagementPageState extends State<LogManagementPage> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.info_outline),
-                  title: Text(context.l10n.logAboutTitle),
-                  subtitle: Text(context.l10n.logAboutSubtitle),
+                  title: Text(AppLocalizations.of(context)!.logAboutTitle),
+                  subtitle: Text(
+                    AppLocalizations.of(context)!.logAboutSubtitle,
+                  ),
                 ),
                 Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -125,13 +131,13 @@ class _LogManagementPageState extends State<LogManagementPage> {
                       FilledButton.icon(
                         onPressed: _loadLogInfo,
                         icon: const Icon(Icons.refresh),
-                        label: Text(context.l10n.refreshInfo),
+                        label: Text(AppLocalizations.of(context)!.refreshInfo),
                       ),
                       const SizedBox(height: 8),
                       OutlinedButton.icon(
                         onPressed: _logSize > 0 ? _clearLogs : null,
                         icon: const Icon(Icons.delete_outline),
-                        label: Text(context.l10n.clearLogs),
+                        label: Text(AppLocalizations.of(context)!.clearLogs),
                       ),
                     ],
                   ),

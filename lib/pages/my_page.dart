@@ -40,8 +40,10 @@ class SettingsPage extends StatelessWidget {
         children: [
           ListTile(
             leading: const Icon(Icons.menu_book_outlined),
-            title: Text(context.l10n.settingsWordManagement),
-            subtitle: Text(context.l10n.settingsWordManagementSubtitle),
+            title: Text(AppLocalizations.of(context)!.settingsWordManagement),
+            subtitle: Text(
+              AppLocalizations.of(context)!.settingsWordManagementSubtitle,
+            ),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               AppLogger.info('Opening word management page');
@@ -54,8 +56,10 @@ class SettingsPage extends StatelessWidget {
           const Divider(),
           ListTile(
             leading: const Icon(Icons.settings_outlined),
-            title: Text(context.l10n.settingsEditSettings),
-            subtitle: Text(context.l10n.settingsEditSettingsSubtitle),
+            title: Text(AppLocalizations.of(context)!.settingsEditSettings),
+            subtitle: Text(
+              AppLocalizations.of(context)!.settingsEditSettingsSubtitle,
+            ),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               AppLogger.info('Opening settings editing page');
@@ -77,8 +81,10 @@ class SettingsPage extends StatelessWidget {
           const Divider(),
           ListTile(
             leading: const Icon(Icons.description_outlined),
-            title: Text(context.l10n.settingsLogManagement),
-            subtitle: Text(context.l10n.settingsLogManagementSubtitle),
+            title: Text(AppLocalizations.of(context)!.settingsLogManagement),
+            subtitle: Text(
+              AppLocalizations.of(context)!.settingsLogManagementSubtitle,
+            ),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               AppLogger.info('Opening log management page');
@@ -93,14 +99,14 @@ class SettingsPage extends StatelessWidget {
           const Divider(),
           ListTile(
             leading: const Icon(Icons.info_outline),
-            title: Text(context.l10n.settingsAbout),
-            subtitle: Text(context.l10n.settingsAboutSubtitle),
+            title: Text(AppLocalizations.of(context)!.settingsAbout),
+            subtitle: Text(AppLocalizations.of(context)!.settingsAboutSubtitle),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               AppLogger.info('Opening about page');
               showAboutDialog(
                 context: context,
-                applicationName: context.l10n.appTitle,
+                applicationName: AppLocalizations.of(context)!.appTitle,
                 applicationVersion: '1.0.0',
               );
             },

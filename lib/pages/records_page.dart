@@ -28,6 +28,8 @@ class _RecordsPickerState extends State<RecordsPicker> {
   @override
   Widget build(BuildContext context) {
     // TODO: Replace with actual statistics UI
-    return Scaffold(body: Center(child: Text(context.l10n.recordsBuilding)));
+    return Scaffold(
+      body: Center(child: Text(AppLocalizations.of(context)!.recordsBuilding)),
+    );
   }
 }

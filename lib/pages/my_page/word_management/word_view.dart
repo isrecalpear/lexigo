@@ -70,9 +70,9 @@ class _WordViewPageState extends State<WordViewPage> {
         stackTrace: stackTrace,
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(context.l10n.loadFailed('$e'))));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context)!.loadFailed('$e'))),
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -100,16 +100,20 @@ class _WordViewPageState extends State<WordViewPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(context.l10n.deleteWordTitle),
-          content: Text(context.l10n.deleteWordConfirm(item.word.originalWord)),
+          title: Text(AppLocalizations.of(context)!.deleteWordTitle),
+          content: Text(
+            AppLocalizations.of(
+              context,
+            )!.deleteWordConfirm(item.word.originalWord),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: Text(context.l10n.cancel),
+              child: Text(AppLocalizations.of(context)!.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
-              child: Text(context.l10n.delete),
+              child: Text(AppLocalizations.of(context)!.delete),
             ),
           ],
         );
@@ -125,9 +129,9 @@ class _WordViewPageState extends State<WordViewPage> {
       AppLogger.info('Deleted word successfully: ${item.word.originalWord}');
       await _loadWords();
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(context.l10n.deleteSuccess)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.deleteSuccess)),
+        );
       }
     } catch (e, stackTrace) {
       AppLogger.error(
@@ -137,7 +141,9 @@ class _WordViewPageState extends State<WordViewPage> {
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.deleteFailed('$e'))),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.deleteFailed('$e')),
+          ),
         );
       }
     }
@@ -146,11 +152,11 @@ class _WordViewPageState extends State<WordViewPage> {
   String _familiarityLabel(fsrs.Card card, BuildContext context) {
     switch (card.state) {
       case fsrs.State.learning:
-        return context.l10n.familiarityLearning;
+        return AppLocalizations.of(context)!.familiarityLearning;
       case fsrs.State.relearning:
-        return context.l10n.familiarityRelearning;
+        return AppLocalizations.of(context)!.familiarityRelearning;
       case fsrs.State.review:
-        return context.l10n.familiarityReview;
+        return AppLocalizations.of(context)!.familiarityReview;
     }
   }
 
@@ -169,7 +175,7 @@ class _WordViewPageState extends State<WordViewPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(context.l10n.wordViewTitle),
+        title: Text(AppLocalizations.of(context)!.wordViewTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -193,7 +199,7 @@ class _WordViewPageState extends State<WordViewPage> {
               child: DropdownButtonFormField<LanguageCode>(
                 initialValue: _languageCode,
                 decoration: InputDecoration(
-                  labelText: context.l10n.fieldLanguage,
+                  labelText: AppLocalizations.of(context)!.fieldLanguage,
                   border: const OutlineInputBorder(),
                 ),
                 items: LanguageCode.values
@@ -219,7 +225,11 @@ class _WordViewPageState extends State<WordViewPage> {
                 child: _isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : _words.isEmpty
-                    ? Center(child: Text(context.l10n.wordViewEmpty))
+                    ? Center(
+                        child: Text(
+                          AppLocalizations.of(context)!.wordViewEmpty,
+                        ),
+                      )
                     : ListView.separated(
                         itemCount: _words.length,
                         separatorBuilder: (_, _) => const Divider(height: 1),
@@ -259,11 +269,15 @@ class _WordViewPageState extends State<WordViewPage> {
                                   itemBuilder: (context) => [
                                     PopupMenuItem(
                                       value: 'edit',
-                                      child: Text(context.l10n.edit),
+                                      child: Text(
+                                        AppLocalizations.of(context)!.edit,
+                                      ),
                                     ),
                                     PopupMenuItem(
                                       value: 'delete',
-                                      child: Text(context.l10n.delete),
+                                      child: Text(
+                                        AppLocalizations.of(context)!.delete,
+                                      ),
                                     ),
                                   ],
                                 ),

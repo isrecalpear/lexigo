@@ -60,14 +60,14 @@ class _LearningSummarizePageState extends State<LearningSummarizePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context).learningSummaryTitle),
+        title: Text(AppLocalizations.of(context)!.learningSummaryTitle),
       ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           children: [
             Text(
-              AppLocalizations.of(context).learningSummaryTitle,
+              AppLocalizations.of(context)!.learningSummaryTitle,
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
@@ -75,16 +75,17 @@ class _LearningSummarizePageState extends State<LearningSummarizePage> {
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Text(
-                  AppLocalizations.of(context).learningSummary
-                      .replaceAll('{learned}', '${widget.wordsLearned}')
-                      .replaceAll('{reviewed}', '${widget.wordsReviewed}')
-                      .replaceAll('{toReview}', '${widget.wordsToReview}'),
+                  AppLocalizations.of(context)!.learningSummary(
+                    widget.wordsLearned,
+                    widget.wordsReviewed,
+                    widget.wordsToReview,
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: 16),
             Text(
-              AppLocalizations.of(context).learningSummaryNextLabel,
+              AppLocalizations.of(context)!.learningSummaryNextLabel,
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
@@ -114,7 +115,7 @@ class _LearningSummarizePageState extends State<LearningSummarizePage> {
                       Navigator.of(context).popUntil((route) => route.isFirst);
                     },
                     child: Text(
-                      AppLocalizations.of(context).learningSummaryEnd,
+                      AppLocalizations.of(context)!.learningSummaryEnd,
                     ),
                   ),
                 ),
@@ -134,7 +135,7 @@ class _LearningSummarizePageState extends State<LearningSummarizePage> {
                         );
                       },
                       child: Text(
-                        AppLocalizations.of(context).learningSummaryNextGroup,
+                        AppLocalizations.of(context)!.learningSummaryNextGroup,
                       ),
                     ),
                   ),

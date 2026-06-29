@@ -1,167 +1,786 @@
-/// Application localization strings for multi-language support.
-///
-/// Supports English and Chinese with a fallback to English.
-/// See _localizedValues map at the bottom for all translated strings.
-library;
+import 'dart:async';
 
-// Flutter imports:
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/intl.dart' as intl;
 
-/// Provides localized strings for the current locale.
-class AppLocalizations {
-  AppLocalizations(this.locale);
+import 'app_localizations_en.dart';
+import 'app_localizations_zh.dart';
 
-  final Locale locale;
+// ignore_for_file: type=lint
 
-  /// Supported locales (English and Chinese).
-  static const supportedLocales = <Locale>[Locale('en'), Locale('zh')];
+/// Callers can lookup localized strings with an instance of AppLocalizations
+/// returned by `AppLocalizations.of(context)`.
+///
+/// Applications need to include `AppLocalizations.delegate()` in their app's
+/// `localizationDelegates` list, and the locales they support in the app's
+/// `supportedLocales` list. For example:
+///
+/// ```dart
+/// import 'l10n/app_localizations.dart';
+///
+/// return MaterialApp(
+///   localizationsDelegates: AppLocalizations.localizationsDelegates,
+///   supportedLocales: AppLocalizations.supportedLocales,
+///   home: MyApplicationHome(),
+/// );
+/// ```
+///
+/// ## Update pubspec.yaml
+///
+/// Please make sure to update your pubspec.yaml to include the following
+/// packages:
+///
+/// ```yaml
+/// dependencies:
+///   # Internationalization support.
+///   flutter_localizations:
+///     sdk: flutter
+///   intl: any # Use the pinned version from flutter_localizations
+///
+///   # Rest of dependencies
+/// ```
+///
+/// ## iOS Applications
+///
+/// iOS applications define key application metadata, including supported
+/// locales, in an Info.plist file that is built into the application bundle.
+/// To configure the locales supported by your app, you’ll need to edit this
+/// file.
+///
+/// First, open your project’s ios/Runner.xcworkspace Xcode workspace file.
+/// Then, in the Project Navigator, open the Info.plist file under the Runner
+/// project’s Runner folder.
+///
+/// Next, select the Information Property List item, select Add Item from the
+/// Editor menu, then select Localizations from the pop-up menu.
+///
+/// Select and expand the newly-created Localizations item then, for each
+/// locale your application supports, add a new item and select the locale
+/// you wish to add from the pop-up menu in the Value field. This list should
+/// be consistent with the languages listed in the AppLocalizations.supportedLocales
+/// property.
+abstract class AppLocalizations {
+  AppLocalizations(String locale)
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
-  /// Gets the AppLocalizations instance from context.
-  static AppLocalizations of(BuildContext context) {
-    final value = Localizations.of<AppLocalizations>(context, AppLocalizations);
-    assert(value != null, 'No AppLocalizations found in context');
-    return value!;
+  final String localeName;
+
+  static AppLocalizations? of(BuildContext context) {
+    return Localizations.of<AppLocalizations>(context, AppLocalizations);
   }
 
   static const LocalizationsDelegate<AppLocalizations> delegate =
       _AppLocalizationsDelegate();
 
-  /// Retrieves a translated string by key with optional parameter substitution.
-  String _t(String key, [Map<String, String>? params]) {
-    final languageCode = locale.languageCode;
-    final value =
-        _localizedValues[languageCode]?[key] ?? _localizedValues['en']![key]!;
-    if (params == null || params.isEmpty) {
-      return value;
-    }
-    var result = value;
-    params.forEach((paramKey, paramValue) {
-      result = result.replaceAll('{$paramKey}', paramValue);
-    });
-    return result;
-  }
+  /// A list of this localizations delegate along with the default localizations
+  /// delegates.
+  ///
+  /// Returns a list of localizations delegates containing this delegate along with
+  /// GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate,
+  /// and GlobalWidgetsLocalizations.delegate.
+  ///
+  /// Additional delegates can be added by appending to this list in
+  /// MaterialApp. This list does not have to be used at all if a custom list
+  /// of delegates is preferred or required.
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
 
-  String get appTitle => _t('appTitle');
-  String get tabStudy => _t('tabStudy');
-  String get tabRecords => _t('tabRecords');
-  String get tabMe => _t('tabMe');
-  String get language => _t('language');
-  String get languageSystem => _t('languageSystem');
-  String get languageChinese => _t('languageChinese');
-  String get languageEnglish => _t('languageEnglish');
-  String get startPrompt => _t('startPrompt');
-  String get next => _t('next');
-  String get startLearning => _t('startLearning');
-  String get learningTitle => _t('learningTitle');
-  String get ratingEasy => _t('ratingEasy');
-  String get ratingGood => _t('ratingGood');
-  String get ratingHard => _t('ratingHard');
-  String get ratingAgain => _t('ratingAgain');
-  String get settingsWordManagement => _t('settingsWordManagement');
-  String get settingsWordManagementSubtitle =>
-      _t('settingsWordManagementSubtitle');
-  String get settingsEditSettings => _t('settingsEditSettings');
-  String get settingsEditSettingsSubtitle => _t('settingsEditSettingsSubtitle');
-  String get settingsLanguage => _t('settingsLanguage');
-  String get settingsTheme => _t('settingsTheme');
-  String get settingsThemeColor => _t('settingsThemeColor');
-  String get themeSystem => _t('themeSystem');
-  String get themeLight => _t('themeLight');
-  String get themeDark => _t('themeDark');
-  String get themeColorAuto => _t('themeColorAuto');
-  String get themeColorPick => _t('themeColorPick');
-  String get themeColorPickerTitle => _t('themeColorPickerTitle');
-  String get themeColorHue => _t('themeColorHue');
-  String get themeColorSaturation => _t('themeColorSaturation');
-  String get themeColorBrightness => _t('themeColorBrightness');
-  String get themeColorHexLabel => _t('themeColorHexLabel');
-  String get themeColorHexHint => _t('themeColorHexHint');
-  String get themeColorHexInvalid => _t('themeColorHexInvalid');
-  String get settingsLogManagement => _t('settingsLogManagement');
-  String get settingsLogManagementSubtitle =>
-      _t('settingsLogManagementSubtitle');
-  String get settingsAbout => _t('settingsAbout');
-  String get settingsAboutSubtitle => _t('settingsAboutSubtitle');
-  String get wordManagementTitle => _t('wordManagementTitle');
-  String get wordListTitle => _t('wordListTitle');
-  String get wordListSubtitle => _t('wordListSubtitle');
-  String get importWordListTitle => _t('importWordListTitle');
-  String get importWordListSubtitle => _t('importWordListSubtitle');
-  String get exportWordListTitle => _t('exportWordListTitle');
-  String get exportWordListSubtitle => _t('exportWordListSubtitle');
-  String get exportFailedNoFolder => _t('exportFailedNoFolder');
-  String get exportFailedUserDismiss => _t('exportFailedUserDismiss');
-  String get exportFailedUnavailable => _t('exportFailedUnavailable');
-  String exportSuccess(String filePath) =>
-      _t('exportSuccess', {'filePath': filePath});
-  String exportFailed(String error) => _t('exportFailed', {'error': error});
-  String get addWordTitle => _t('addWordTitle');
-  String get addWordSubtitle => _t('addWordSubtitle');
-  String get selectLanguageTitle => _t('selectLanguageTitle');
-  String get cancel => _t('cancel');
-  String get confirm => _t('confirm');
-  String importSuccess(int count, int skipped) =>
-      _t('importSuccess', {'count': '$count', 'skipped': '$skipped'});
-  String importFailed(String error) => _t('importFailed', {'error': error});
-  String get addWordPageTitle => _t('addWordPageTitle');
-  String get editWordPageTitle => _t('editWordPageTitle');
-  String get fieldLanguage => _t('fieldLanguage');
-  String get fieldOriginal => _t('fieldOriginal');
-  String get fieldTranslation => _t('fieldTranslation');
-  String get fieldOriginalExample => _t('fieldOriginalExample');
-  String get fieldExampleTranslation => _t('fieldExampleTranslation');
-  String get fieldUnitId => _t('fieldUnitId');
-  String get fieldBookId => _t('fieldBookId');
-  String get save => _t('save');
-  String get required => _t('required');
-  String get addSuccess => _t('addSuccess');
-  String addFailed(String error) => _t('addFailed', {'error': error});
-  String get editSuccess => _t('editSuccess');
-  String editFailed(String error) => _t('editFailed', {'error': error});
-  String get logManagementTitle => _t('logManagementTitle');
-  String get logClearConfirmTitle => _t('logClearConfirmTitle');
-  String get logClearConfirmContent => _t('logClearConfirmContent');
-  String get logCleared => _t('logCleared');
-  String clearFailed(String error) => _t('clearFailed', {'error': error});
-  String get logSizeTitle => _t('logSizeTitle');
-  String get logViewTitle => _t('logViewTitle');
-  String get logViewSubtitle => _t('logViewSubtitle');
-  String get logPathNotFound => _t('logPathNotFound');
-  String get logEmpty => _t('logEmpty');
-  String logReadFailed(String error) => _t('logReadFailed', {'error': error});
-  String get logShareNotSupported => _t('logShareNotSupported');
-  String get logFileNotFound => _t('logFileNotFound');
-  String get logShareSuccess => _t('logShareSuccess');
-  String logShareFailed(String error) => _t('logShareFailed', {'error': error});
-  String get logAboutTitle => _t('logAboutTitle');
-  String get logAboutSubtitle => _t('logAboutSubtitle');
-  String get refreshInfo => _t('refreshInfo');
-  String get clearLogs => _t('clearLogs');
-  String get recordsBuilding => _t('recordsBuilding');
-  String get wordViewTitle => _t('wordViewTitle');
-  String get wordViewEmpty => _t('wordViewEmpty');
-  String get edit => _t('edit');
-  String get delete => _t('delete');
-  String get deleteWordTitle => _t('deleteWordTitle');
-  String deleteWordConfirm(String word) =>
-      _t('deleteWordConfirm', {'word': word});
-  String get deleteSuccess => _t('deleteSuccess');
-  String deleteFailed(String error) => _t('deleteFailed', {'error': error});
-  String loadFailed(String error) => _t('loadFailed', {'error': error});
-  String get familiarityLearning => _t('familiarityLearning');
-  String get familiarityRelearning => _t('familiarityRelearning');
-  String get familiarityReview => _t('familiarityReview');
-  String get wordCardCorrect => _t('wordCardCorrect');
-  String get wordCardMarkKnown => _t('wordCardMarkKnown');
-  String get wordCardMarkKnownTitle => _t('wordCardMarkKnownTitle');
-  String wordCardMarkKnownConfirm(String word) =>
-      _t('wordCardMarkKnownConfirm', {'word': word});
-  String get learningSummary => _t('learningSummary');
-  String get learningSummaryTitle => _t('learningSummaryTitle');
-  String get learningSummaryNextLabel => _t('learningSummaryNextLabel');
-  String get learningSummaryEnd => _t('learningSummaryEnd');
-  String get learningSummaryNextGroup => _t('learningSummaryNextGroup');
+  /// A list of this localizations delegate's supported locales.
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('en'),
+    Locale('zh'),
+  ];
+
+  /// No description provided for @appTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'LexiGo - Flashcards'**
+  String get appTitle;
+
+  /// No description provided for @tabStudy.
+  ///
+  /// In en, this message translates to:
+  /// **'Study'**
+  String get tabStudy;
+
+  /// No description provided for @tabRecords.
+  ///
+  /// In en, this message translates to:
+  /// **'Records'**
+  String get tabRecords;
+
+  /// No description provided for @tabMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Me'**
+  String get tabMe;
+
+  /// No description provided for @language.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get language;
+
+  /// No description provided for @languageSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get languageSystem;
+
+  /// No description provided for @languageChinese.
+  ///
+  /// In en, this message translates to:
+  /// **'中文'**
+  String get languageChinese;
+
+  /// No description provided for @languageEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get languageEnglish;
+
+  /// No description provided for @startPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you know it?'**
+  String get startPrompt;
+
+  /// No description provided for @next.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get next;
+
+  /// No description provided for @startLearning.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get startLearning;
+
+  /// No description provided for @learningTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn'**
+  String get learningTitle;
+
+  /// No description provided for @ratingEasy.
+  ///
+  /// In en, this message translates to:
+  /// **'Easy'**
+  String get ratingEasy;
+
+  /// No description provided for @ratingGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Good'**
+  String get ratingGood;
+
+  /// No description provided for @ratingHard.
+  ///
+  /// In en, this message translates to:
+  /// **'Hard'**
+  String get ratingHard;
+
+  /// No description provided for @ratingAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Again'**
+  String get ratingAgain;
+
+  /// No description provided for @settingsWordManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'Word management'**
+  String get settingsWordManagement;
+
+  /// No description provided for @settingsWordManagementSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View and maintain words'**
+  String get settingsWordManagementSubtitle;
+
+  /// No description provided for @settingsEditSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit settings'**
+  String get settingsEditSettings;
+
+  /// No description provided for @settingsEditSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit app settings'**
+  String get settingsEditSettingsSubtitle;
+
+  /// No description provided for @settingsLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get settingsLanguage;
+
+  /// No description provided for @settingsTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get settingsTheme;
+
+  /// No description provided for @settingsThemeColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme color'**
+  String get settingsThemeColor;
+
+  /// No description provided for @themeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get themeSystem;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeLight;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeDark;
+
+  /// No description provided for @themeColorAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto'**
+  String get themeColorAuto;
+
+  /// No description provided for @themeColorPick.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose color'**
+  String get themeColorPick;
+
+  /// No description provided for @themeColorPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick theme color'**
+  String get themeColorPickerTitle;
+
+  /// No description provided for @themeColorHue.
+  ///
+  /// In en, this message translates to:
+  /// **'Hue'**
+  String get themeColorHue;
+
+  /// No description provided for @themeColorSaturation.
+  ///
+  /// In en, this message translates to:
+  /// **'Saturation'**
+  String get themeColorSaturation;
+
+  /// No description provided for @themeColorBrightness.
+  ///
+  /// In en, this message translates to:
+  /// **'Brightness'**
+  String get themeColorBrightness;
+
+  /// No description provided for @themeColorHexLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Hex color'**
+  String get themeColorHexLabel;
+
+  /// No description provided for @themeColorHexHint.
+  ///
+  /// In en, this message translates to:
+  /// **'#RRGGBB or #AARRGGBB'**
+  String get themeColorHexHint;
+
+  /// No description provided for @themeColorHexInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid hex color'**
+  String get themeColorHexInvalid;
+
+  /// No description provided for @settingsLogManagement.
+  ///
+  /// In en, this message translates to:
+  /// **'Log management'**
+  String get settingsLogManagement;
+
+  /// No description provided for @settingsLogManagementSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View and manage logs'**
+  String get settingsLogManagementSubtitle;
+
+  /// No description provided for @settingsAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get settingsAbout;
+
+  /// No description provided for @settingsAboutSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'LexiGo - Flashcards'**
+  String get settingsAboutSubtitle;
+
+  /// No description provided for @wordManagementTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Word management'**
+  String get wordManagementTitle;
+
+  /// No description provided for @wordListTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Word list'**
+  String get wordListTitle;
+
+  /// No description provided for @wordListSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View word list'**
+  String get wordListSubtitle;
+
+  /// No description provided for @importWordListTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import word list'**
+  String get importWordListTitle;
+
+  /// No description provided for @importWordListSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Import from external file'**
+  String get importWordListSubtitle;
+
+  /// No description provided for @exportWordListTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export word list'**
+  String get exportWordListTitle;
+
+  /// No description provided for @exportWordListSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Export to external file'**
+  String get exportWordListSubtitle;
+
+  /// No description provided for @exportFailedNoFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed, download folder not found.'**
+  String get exportFailedNoFolder;
+
+  /// No description provided for @exportFailedUserDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed, user dismissed.'**
+  String get exportFailedUserDismiss;
+
+  /// No description provided for @exportFailedUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed, unavailable method.'**
+  String get exportFailedUnavailable;
+
+  /// No description provided for @exportSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Export success, file at {filePath}.'**
+  String exportSuccess(Object filePath);
+
+  /// No description provided for @exportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Export failed: {error}.'**
+  String exportFailed(Object error);
+
+  /// No description provided for @addWordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add word'**
+  String get addWordTitle;
+
+  /// No description provided for @addWordSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a word to database'**
+  String get addWordSubtitle;
+
+  /// No description provided for @selectLanguageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select language'**
+  String get selectLanguageTitle;
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirm;
+
+  /// No description provided for @importSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Imported {count} items, skipped {skipped}.'**
+  String importSuccess(Object count, Object skipped);
+
+  /// No description provided for @importFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Import failed: {error}.'**
+  String importFailed(Object error);
+
+  /// No description provided for @addWordPageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add word'**
+  String get addWordPageTitle;
+
+  /// No description provided for @editWordPageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit word'**
+  String get editWordPageTitle;
+
+  /// No description provided for @fieldLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get fieldLanguage;
+
+  /// No description provided for @fieldOriginal.
+  ///
+  /// In en, this message translates to:
+  /// **'Original'**
+  String get fieldOriginal;
+
+  /// No description provided for @fieldTranslation.
+  ///
+  /// In en, this message translates to:
+  /// **'Translation'**
+  String get fieldTranslation;
+
+  /// No description provided for @fieldOriginalExample.
+  ///
+  /// In en, this message translates to:
+  /// **'Example'**
+  String get fieldOriginalExample;
+
+  /// No description provided for @fieldExampleTranslation.
+  ///
+  /// In en, this message translates to:
+  /// **'Example translation'**
+  String get fieldExampleTranslation;
+
+  /// No description provided for @fieldUnitId.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit ID'**
+  String get fieldUnitId;
+
+  /// No description provided for @fieldBookId.
+  ///
+  /// In en, this message translates to:
+  /// **'Book ID'**
+  String get fieldBookId;
+
+  /// No description provided for @save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get save;
+
+  /// No description provided for @required.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get required;
+
+  /// No description provided for @addSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Added successfully'**
+  String get addSuccess;
+
+  /// No description provided for @addFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Add failed: {error}.'**
+  String addFailed(Object error);
+
+  /// No description provided for @editSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated successfully'**
+  String get editSuccess;
+
+  /// No description provided for @editFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Update failed: {error}.'**
+  String editFailed(Object error);
+
+  /// No description provided for @logManagementTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log management'**
+  String get logManagementTitle;
+
+  /// No description provided for @logClearConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm clear'**
+  String get logClearConfirmTitle;
+
+  /// No description provided for @logClearConfirmContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all logs? This action cannot be undone.'**
+  String get logClearConfirmContent;
+
+  /// No description provided for @logCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Logs cleared'**
+  String get logCleared;
+
+  /// No description provided for @clearFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear failed: {error}.'**
+  String clearFailed(Object error);
+
+  /// No description provided for @logSizeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log size'**
+  String get logSizeTitle;
+
+  /// No description provided for @logViewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View logs'**
+  String get logViewTitle;
+
+  /// No description provided for @logViewSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'View latest logs'**
+  String get logViewSubtitle;
+
+  /// No description provided for @logPathNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Log file path not found'**
+  String get logPathNotFound;
+
+  /// No description provided for @logEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No logs'**
+  String get logEmpty;
+
+  /// No description provided for @logReadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to read logs: {error}.'**
+  String logReadFailed(Object error);
+
+  /// No description provided for @logShareNotSupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Log sharing is not supported on Linux'**
+  String get logShareNotSupported;
+
+  /// No description provided for @logFileNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Log file not found'**
+  String get logFileNotFound;
+
+  /// No description provided for @logShareSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Log shared successfully'**
+  String get logShareSuccess;
+
+  /// No description provided for @logShareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to share log: {error}.'**
+  String logShareFailed(Object error);
+
+  /// No description provided for @logAboutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'About logs'**
+  String get logAboutTitle;
+
+  /// No description provided for @logAboutSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Logs are stored in app data and kept for 7 days, older logs are removed automatically.'**
+  String get logAboutSubtitle;
+
+  /// No description provided for @refreshInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get refreshInfo;
+
+  /// No description provided for @clearLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear logs'**
+  String get clearLogs;
+
+  /// No description provided for @recordsBuilding.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming soon...'**
+  String get recordsBuilding;
+
+  /// No description provided for @wordViewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Word list'**
+  String get wordViewTitle;
+
+  /// No description provided for @wordViewEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No words'**
+  String get wordViewEmpty;
+
+  /// No description provided for @edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @deleteWordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete word'**
+  String get deleteWordTitle;
+
+  /// No description provided for @deleteWordConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {word}?'**
+  String deleteWordConfirm(Object word);
+
+  /// No description provided for @deleteSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted'**
+  String get deleteSuccess;
+
+  /// No description provided for @deleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete failed: {error}.'**
+  String deleteFailed(Object error);
+
+  /// No description provided for @loadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Load failed: {error}.'**
+  String loadFailed(Object error);
+
+  /// No description provided for @familiarityLearning.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get familiarityLearning;
+
+  /// No description provided for @familiarityRelearning.
+  ///
+  /// In en, this message translates to:
+  /// **'Relearning'**
+  String get familiarityRelearning;
+
+  /// No description provided for @familiarityReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get familiarityReview;
+
+  /// No description provided for @wordCardCorrect.
+  ///
+  /// In en, this message translates to:
+  /// **'Correct'**
+  String get wordCardCorrect;
+
+  /// No description provided for @wordCardMarkKnown.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as known'**
+  String get wordCardMarkKnown;
+
+  /// No description provided for @wordCardMarkKnownTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as known?'**
+  String get wordCardMarkKnownTitle;
+
+  /// No description provided for @wordCardMarkKnownConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm marking \"{word}\" as known.'**
+  String wordCardMarkKnownConfirm(Object word);
+
+  /// No description provided for @learningSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{learned} words learned, {reviewed} reviewed, {toReview} to review'**
+  String learningSummary(Object learned, Object reviewed, Object toReview);
+
+  /// No description provided for @learningSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary'**
+  String get learningSummaryTitle;
+
+  /// No description provided for @learningSummaryNextLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Next word:'**
+  String get learningSummaryNextLabel;
+
+  /// No description provided for @learningSummaryEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'End learning'**
+  String get learningSummaryEnd;
+
+  /// No description provided for @learningSummaryNextGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Next set'**
+  String get learningSummaryNextGroup;
 }
 
 class _AppLocalizationsDelegate
@@ -169,256 +788,31 @@ class _AppLocalizationsDelegate
   const _AppLocalizationsDelegate();
 
   @override
-  bool isSupported(Locale locale) => AppLocalizations.supportedLocales.any(
-    (supported) => supported.languageCode == locale.languageCode,
-  );
+  Future<AppLocalizations> load(Locale locale) {
+    return SynchronousFuture<AppLocalizations>(lookupAppLocalizations(locale));
+  }
 
   @override
-  Future<AppLocalizations> load(Locale locale) {
-    return SynchronousFuture<AppLocalizations>(AppLocalizations(locale));
-  }
+  bool isSupported(Locale locale) =>
+      <String>['en', 'zh'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
-extension AppLocalizationsExtension on BuildContext {
-  AppLocalizations get l10n => AppLocalizations.of(this);
-}
+AppLocalizations lookupAppLocalizations(Locale locale) {
+  // Lookup logic when only language code is specified.
+  switch (locale.languageCode) {
+    case 'en':
+      return AppLocalizationsEn();
+    case 'zh':
+      return AppLocalizationsZh();
+  }
 
-const Map<String, Map<String, String>> _localizedValues = {
-  'en': {
-    'appTitle': 'LexiGo - Flashcards',
-    'tabStudy': 'Study',
-    'tabRecords': 'Records',
-    'tabMe': 'Me',
-    'language': 'Language',
-    'languageSystem': 'System',
-    'languageChinese': '中文',
-    'languageEnglish': 'English',
-    'startPrompt': 'Do you know it?',
-    'next': 'Next',
-    'startLearning': 'Start',
-    'learningTitle': 'Learn',
-    'ratingEasy': 'Easy',
-    'ratingGood': 'Good',
-    'ratingHard': 'Hard',
-    'ratingAgain': 'Again',
-    'settingsWordManagement': 'Word management',
-    'settingsWordManagementSubtitle': 'View and maintain words',
-    'settingsEditSettings': 'Edit settings',
-    'settingsEditSettingsSubtitle': 'Edit app settings',
-    'settingsLanguage': 'Language',
-    'settingsTheme': 'Theme',
-    'settingsThemeColor': 'Theme color',
-    'themeSystem': 'System',
-    'themeLight': 'Light',
-    'themeDark': 'Dark',
-    'themeColorAuto': 'Auto',
-    'themeColorPick': 'Choose color',
-    'themeColorPickerTitle': 'Pick theme color',
-    'themeColorHue': 'Hue',
-    'themeColorSaturation': 'Saturation',
-    'themeColorBrightness': 'Brightness',
-    'themeColorHexLabel': 'Hex color',
-    'themeColorHexHint': '#RRGGBB or #AARRGGBB',
-    'themeColorHexInvalid': 'Invalid hex color',
-    'settingsLogManagement': 'Log management',
-    'settingsLogManagementSubtitle': 'View and manage logs',
-    'settingsAbout': 'About',
-    'settingsAboutSubtitle': 'LexiGo - Flashcards',
-    'wordManagementTitle': 'Word management',
-    'wordListTitle': 'Word list',
-    'wordListSubtitle': 'View word list',
-    'importWordListTitle': 'Import word list',
-    'importWordListSubtitle': 'Import from external file',
-    'exportWordListTitle': 'Export word list',
-    'exportWordListSubtitle': 'Export to external file',
-    'exportFailedNoFolder': 'Export failed, download folder not found.',
-    'exportFailedUserDismiss': 'Export failed, user dismissed.',
-    'exportFailedUnavailable': 'Export failed, unavailable method.',
-    'exportSuccess': 'Export success, file at {filePath}.',
-    'exportFailed': 'Export failed: {error}',
-    'addWordTitle': 'Add word',
-    'addWordSubtitle': 'Add a word to database',
-    'selectLanguageTitle': 'Select language',
-    'cancel': 'Cancel',
-    'confirm': 'Confirm',
-    'importSuccess': 'Imported {count} items, skipped {skipped}.',
-    'importFailed': 'Import failed: {error}',
-    'addWordPageTitle': 'Add word',
-    'editWordPageTitle': 'Edit word',
-    'fieldLanguage': 'Language',
-    'fieldOriginal': 'Original',
-    'fieldTranslation': 'Translation',
-    'fieldOriginalExample': 'Example',
-    'fieldExampleTranslation': 'Example translation',
-    'fieldUnitId': 'Unit ID',
-    'fieldBookId': 'Book ID',
-    'save': 'Save',
-    'required': 'Required',
-    'addSuccess': 'Added successfully',
-    'addFailed': 'Add failed: {error}',
-    'editSuccess': 'Updated successfully',
-    'editFailed': 'Update failed: {error}',
-    'logManagementTitle': 'Log management',
-    'logClearConfirmTitle': 'Confirm clear',
-    'logClearConfirmContent': 'Clear all logs? This action cannot be undone.',
-    'logCleared': 'Logs cleared',
-    'clearFailed': 'Clear failed: {error}',
-    'logSizeTitle': 'Log size',
-    'logViewTitle': 'View logs',
-    'logViewSubtitle': 'View latest logs',
-    'logPathNotFound': 'Log file path not found',
-    'logEmpty': 'No logs',
-    'logReadFailed': 'Failed to read logs: {error}',
-    'logShareNotSupported': 'Log sharing is not supported on Linux',
-    'logFileNotFound': 'Log file not found',
-    'logShareSuccess': 'Log shared successfully',
-    'logShareFailed': 'Failed to share log: {error}',
-    'logAboutTitle': 'About logs',
-    'logAboutSubtitle':
-        'Logs are stored in app data and kept for 7 days, older logs are removed automatically.',
-    'refreshInfo': 'Refresh',
-    'clearLogs': 'Clear logs',
-    'recordsBuilding': 'Coming soon...',
-    'wordViewTitle': 'Word list',
-    'wordViewEmpty': 'No words',
-    'edit': 'Edit',
-    'delete': 'Delete',
-    'deleteWordTitle': 'Delete word',
-    'deleteWordConfirm': 'Delete {word}?',
-    'deleteSuccess': 'Deleted',
-    'deleteFailed': 'Delete failed: {error}',
-    'loadFailed': 'Load failed: {error}',
-    'familiarityLearning': 'New',
-    'familiarityRelearning': 'Relearning',
-    'familiarityReview': 'Review',
-    'wordCardCorrect': 'Correct',
-    'wordCardMarkKnown': 'Mark as known',
-    'wordCardMarkKnownTitle': 'Mark as known?',
-    'wordCardMarkKnownConfirm': 'Confirm marking "{word}" as known.',
-    'learningSummary':
-        '{learned} words learned, {reviewed} reviewed, {toReview} to review',
-    'learningSummaryTitle': 'Summary',
-    'learningSummaryNextLabel': 'Next word:',
-    'learningSummaryEnd': 'End learning',
-    'learningSummaryNextGroup': 'Next set',
-  },
-  'zh': {
-    'appTitle': '背了么 - LexiGo',
-    'tabStudy': '背',
-    'tabRecords': '记录',
-    'tabMe': '我的',
-    'language': '语言',
-    'languageSystem': '跟随系统',
-    'languageChinese': '中文',
-    'languageEnglish': 'English',
-    'startPrompt': '你认识吗？',
-    'next': '下一个',
-    'startLearning': '开始学习',
-    'learningTitle': '学习',
-    'ratingEasy': '简单',
-    'ratingGood': '还行',
-    'ratingHard': '困难',
-    'ratingAgain': '忘记',
-    'settingsWordManagement': '单词管理',
-    'settingsWordManagementSubtitle': '查看与维护单词数据',
-    'settingsEditSettings': '编辑设置',
-    'settingsEditSettingsSubtitle': '编辑应用设置',
-    'settingsLanguage': '语言',
-    'settingsTheme': '主题',
-    'settingsThemeColor': '主题色',
-    'themeSystem': '跟随系统',
-    'themeLight': '浅色',
-    'themeDark': '深色',
-    'themeColorAuto': '自动',
-    'themeColorPick': '选择颜色',
-    'themeColorPickerTitle': '选择主题色',
-    'themeColorHue': '色相',
-    'themeColorSaturation': '饱和度',
-    'themeColorBrightness': '亮度',
-    'themeColorHexLabel': '十六进制颜色',
-    'themeColorHexHint': '#RRGGBB 或 #AARRGGBB',
-    'themeColorHexInvalid': '无效的颜色值',
-    'settingsLogManagement': '日志管理',
-    'settingsLogManagementSubtitle': '查看和管理应用日志',
-    'settingsAbout': '关于',
-    'settingsAboutSubtitle': '背了么 - LexiGo',
-    'wordManagementTitle': '单词管理',
-    'wordListTitle': '查看单词',
-    'wordListSubtitle': '查看单词清单',
-    'importWordListTitle': '导入单词清单',
-    'importWordListSubtitle': '从外部文件导入单词清单',
-    'exportWordListTitle': '导出单词清单',
-    'exportWordListSubtitle': '将单词清单导出到外部文件',
-    'exportFailedNoFolder': '导出失败！未找到下载文件夹',
-    'exportFailedUserDismiss': '导出失败！用户取消操作',
-    'exportFailedUnavailable': '导出失败！不支持的操作',
-    'exportSuccess': '导出成功，文件在 {filePath}',
-    'exportFailed': '导出失败: {error}',
-    'addWordTitle': '添加单词',
-    'addWordSubtitle': '手动添加单词到数据库',
-    'selectLanguageTitle': '选择语言',
-    'cancel': '取消',
-    'confirm': '确定',
-    'importSuccess': '导入成功: {count} 条，跳过: {skipped} 条',
-    'importFailed': '导入失败: {error}',
-    'addWordPageTitle': '添加单词',
-    'editWordPageTitle': '编辑单词',
-    'fieldLanguage': '语言',
-    'fieldOriginal': '原文',
-    'fieldTranslation': '翻译',
-    'fieldOriginalExample': '原文例句',
-    'fieldExampleTranslation': '例句翻译',
-    'fieldUnitId': '单元ID',
-    'fieldBookId': '书籍ID',
-    'save': '保存',
-    'required': '必填',
-    'addSuccess': '添加成功',
-    'addFailed': '添加失败: {error}',
-    'editSuccess': '修改成功',
-    'editFailed': '修改失败: {error}',
-    'logManagementTitle': '日志管理',
-    'logClearConfirmTitle': '确认清除',
-    'logClearConfirmContent': '确定要清除所有日志吗？此操作不可恢复。',
-    'logCleared': '日志已清除',
-    'clearFailed': '清除失败: {error}',
-    'logSizeTitle': '日志大小',
-    'logViewTitle': '日志查看',
-    'logViewSubtitle': '查看最新日志',
-    'logPathNotFound': '未找到日志路径',
-    'logEmpty': '暂无日志',
-    'logReadFailed': '读取日志失败: {error}',
-    'logShareNotSupported': 'Linux 系统不支持分享日志',
-    'logFileNotFound': '未找到日志文件',
-    'logShareSuccess': '日志分享成功',
-    'logShareFailed': '分享日志失败: {error}',
-    'logAboutTitle': '关于日志',
-    'logAboutSubtitle': '日志文件保存在应用数据目录，最多保留7天，超过后自动删除旧日志。',
-    'refreshInfo': '刷新信息',
-    'clearLogs': '清除日志',
-    'recordsBuilding': '开发中...',
-    'wordViewTitle': '单词清单',
-    'wordViewEmpty': '暂无单词',
-    'edit': '编辑',
-    'delete': '删除',
-    'deleteWordTitle': '删除单词',
-    'deleteWordConfirm': '确定删除 {word} 吗？',
-    'deleteSuccess': '删除成功',
-    'deleteFailed': '删除失败: {error}',
-    'loadFailed': '加载失败: {error}',
-    'familiarityLearning': '生疏',
-    'familiarityRelearning': '不熟',
-    'familiarityReview': '熟悉',
-    'wordCardCorrect': '纠错',
-    'wordCardMarkKnown': '标记为熟知',
-    'wordCardMarkKnownTitle': '标记为熟知？',
-    'wordCardMarkKnownConfirm': '确认将 "{word}" 标记为熟知。',
-    'learningSummary': '已学 {learned} 个，复习 {reviewed} 个，还剩 {toReview} 个',
-    'learningSummaryTitle': '总结',
-    'learningSummaryNextLabel': '接下来的是：',
-    'learningSummaryEnd': '结束学习',
-    'learningSummaryNextGroup': '下一组单词',
-  },
-};
+  throw FlutterError(
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
+}

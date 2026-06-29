@@ -91,11 +91,15 @@ class _WordCardState extends State<WordCard> {
                           itemBuilder: (context) => [
                             PopupMenuItem(
                               value: WordCard._menuCorrect,
-                              child: Text(context.l10n.wordCardCorrect),
+                              child: Text(
+                                AppLocalizations.of(context)!.wordCardCorrect,
+                              ),
                             ),
                             PopupMenuItem(
                               value: WordCard._menuKnown,
-                              child: Text(context.l10n.wordCardMarkKnown),
+                              child: Text(
+                                AppLocalizations.of(context)!.wordCardMarkKnown,
+                              ),
                             ),
                           ],
                           icon: Icon(
@@ -156,20 +160,22 @@ class _WordCardState extends State<WordCard> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text(dialogContext.l10n.wordCardMarkKnownTitle),
+          title: Text(
+            AppLocalizations.of(dialogContext)!.wordCardMarkKnownTitle,
+          ),
           content: Text(
-            dialogContext.l10n.wordCardMarkKnownConfirm(
-              widget.word.originalWord,
-            ),
+            AppLocalizations.of(
+              dialogContext,
+            )!.wordCardMarkKnownConfirm(widget.word.originalWord),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text(dialogContext.l10n.cancel),
+              child: Text(AppLocalizations.of(dialogContext)!.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: Text(dialogContext.l10n.confirm),
+              child: Text(AppLocalizations.of(dialogContext)!.confirm),
             ),
           ],
         );
