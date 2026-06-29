@@ -90,6 +90,12 @@ class AppLocalizations {
   String get importWordListSubtitle => _t('importWordListSubtitle');
   String get exportWordListTitle => _t('exportWordListTitle');
   String get exportWordListSubtitle => _t('exportWordListSubtitle');
+  String get exportFailedNoFolder => _t('exportFailedNoFolder');
+  String get exportFailedUserDismiss => _t('exportFailedUserDismiss');
+  String get exportFailedUnavailable => _t('exportFailedUnavailable');
+  String exportSuccess(String filePath) =>
+      _t('exportSuccess', {'filePath': filePath});
+  String exportFailed(String error) => _t('exportFailed', {'error': error});
   String get addWordTitle => _t('addWordTitle');
   String get addWordSubtitle => _t('addWordSubtitle');
   String get selectLanguageTitle => _t('selectLanguageTitle');
@@ -228,6 +234,11 @@ const Map<String, Map<String, String>> _localizedValues = {
     'importWordListSubtitle': 'Import from external file',
     'exportWordListTitle': 'Export word list',
     'exportWordListSubtitle': 'Export to external file',
+    'exportFailedNoFolder': 'Export failed, download folder not found.',
+    'exportFailedUserDismiss': 'Export failed, user dismissed.',
+    'exportFailedUnavailable': 'Export failed, unavailable method.',
+    'exportSuccess': 'Export success, file at {filePath}.',
+    'exportFailed': 'Export failed: {error}',
     'addWordTitle': 'Add word',
     'addWordSubtitle': 'Add a word to database',
     'selectLanguageTitle': 'Select language',
@@ -341,6 +352,11 @@ const Map<String, Map<String, String>> _localizedValues = {
     'importWordListSubtitle': '从外部文件导入单词清单',
     'exportWordListTitle': '导出单词清单',
     'exportWordListSubtitle': '将单词清单导出到外部文件',
+    'exportFailedNoFolder': '导出失败！未找到下载文件夹',
+    'exportFailedUserDismiss': '导出失败！用户取消操作',
+    'exportFailedUnavailable': '导出失败！不支持的操作',
+    'exportSuccess': '导出成功，文件在 {filePath}',
+    'exportFailed': '导出失败: {error}',
     'addWordTitle': '添加单词',
     'addWordSubtitle': '手动添加单词到数据库',
     'selectLanguageTitle': '选择语言',

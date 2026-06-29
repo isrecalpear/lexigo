@@ -6,11 +6,16 @@ library;
 
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'dart:io';
+
+import 'package:fsrs/fsrs.dart' as fsrs;
 
 // Package imports:
 import 'package:file_selector/file_selector.dart';
-import 'package:fsrs/fsrs.dart' as fsrs;
-import 'package:sqlite3/sqlite3.dart' as sqlite;
+import 'package:drift_flutter/drift_flutter.dart';
+import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 // Project imports:
 import 'package:lexigo/backend/word/manager.dart';
@@ -20,6 +25,7 @@ import 'package:lexigo/pages/my_page/word_management/word_add.dart';
 import 'package:lexigo/pages/my_page/word_management/word_view.dart';
 import 'package:lexigo/utils/app_logger.dart';
 import 'package:lexigo/utils/permission_manager.dart';
+import 'package:lexigo/backend/database/interface.dart';
 
 /// Word management menu page.
 class WordManagement extends StatelessWidget {
@@ -87,6 +93,7 @@ class WordManagement extends StatelessWidget {
 
   Future<void> _importWords(BuildContext context) async {
     await PermissionManager.makeSureReadExternalPermission();
+
     const XTypeGroup sqliteTypeGroup = XTypeGroup(
       label: 'SQLite Databases',
       extensions: <String>['sqlite', 'db'],
@@ -99,157 +106,201 @@ class WordManagement extends StatelessWidget {
       AppLogger.info('User canceled file selection');
       return;
     }
-    sqlite.Database? externalDb;
+
+    final tempDir = await getTemporaryDirectory();
+    final tempFile = File('${tempDir.path}/lexigo_import_temp.db');
+    Database? externalDatabase;
     try {
-      AppLogger.info('Starting to import external SQLite: ${file.path}');
-      externalDb = sqlite.sqlite3.open(file.path);
-
-      final validTableNames = LanguageCode.values.map((e) => e.name).toSet();
-      final tableRows = externalDb.select(
-        "SELECT name FROM sqlite_master WHERE type='table';",
-      );
-      final tableNames = tableRows
-          .map((row) => row['name']?.toString())
-          .whereType<String>()
-          .toSet();
-      final matched = tableNames.intersection(validTableNames);
-
-      String tableName;
-      LanguageCode language;
-      if (matched.length == 1) {
-        tableName = matched.first;
-        language = LanguageCode.values.firstWhere(
-          (item) => item.name == tableName,
-        );
-        AppLogger.info('Automatically detected language table: $tableName');
-      } else {
-        if (!context.mounted) return;
-        final LanguageCode? selected = await _selectLanguage(context);
-        if (selected == null) {
-          AppLogger.info('User canceled language selection');
-          return;
-        }
-        language = selected;
-        tableName = language.name;
-        final exists = tableNames.contains(tableName);
-        if (!exists) {
-          throw Exception('Table not found: $tableName');
-        }
-      }
-
-      final requiredColumns = <String>{
-        'original_word',
-        'translation',
-        'original_example',
-        'example_translation',
-        'unit_id',
-        'book_id',
-      };
-      final columnInfo = externalDb.select('PRAGMA table_info("$tableName");');
-      final existingColumns = columnInfo
-          .map((row) => row['name']?.toString())
-          .whereType<String>()
-          .toSet();
-      final missingColumns = requiredColumns.difference(existingColumns);
-      if (missingColumns.isNotEmpty) {
-        throw Exception('Missing columns: ${missingColumns.join(', ')}');
-      }
-
-      final rows = externalDb.select(
-        'SELECT original_word, translation, original_example, '
-        'example_translation, unit_id, book_id FROM "$tableName";',
-      );
-      if (rows.isEmpty) {
-        throw Exception('No data found');
-      }
-      final existing = await _wordManager.getWords(language);
-      final existingKeys = existing
-          .map((word) => '${word.originalWord}||${word.bookID}||${word.unitID}')
-          .toSet();
-      final seenKeys = <String>{...existingKeys};
-
-      final words = <Word>[];
-      int skipped = 0;
-      for (final row in rows) {
-        final originalWord = row['original_word']?.toString().trim() ?? '';
-        final translation = row['translation']?.toString().trim() ?? '';
-        final originalExample =
-            row['original_example']?.toString().trim() ?? '';
-        final exampleTranslation =
-            row['example_translation']?.toString().trim() ?? '';
-        final unitId = (row['unit_id']?.toString().trim().isEmpty ?? true)
-            ? 'DefaultUnit'
-            : row['unit_id']!.toString().trim();
-        final bookId = (row['book_id']?.toString().trim().isEmpty ?? true)
-            ? 'DefaultBook'
-            : row['book_id']!.toString().trim();
-
-        if (originalWord.isEmpty || translation.isEmpty) {
-          skipped += 1;
-          continue;
-        }
-
-        final key = '$originalWord||$bookId||$unitId';
-        if (seenKeys.contains(key)) {
-          skipped += 1;
-          continue;
-        }
-
-        final card = fsrs.Card.create();
-        words.add(
-          Word(
-            originalWord: originalWord,
-            originalTranslation: translation,
-            exampleSentence: originalExample,
-            exampleTranslation: exampleTranslation,
-            sourceLanguageCode: language,
-            card: card,
-            unitID: unitId,
-            bookID: bookId,
-          ),
-        );
-        seenKeys.add(key);
-      }
-      await _wordManager.insertWords(words);
-      AppLogger.info(
-        'Import completed: ${words.length} words, skipped: $skipped words',
-      );
-
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.l10n.importSuccess(words.length, skipped)),
+      AppLogger.info('Copying external DB to temp: ${file.path}');
+      await File(file.path).copy(tempFile.path);
+      AppLogger.info('Copied to: ${tempFile.path}');
+      final databaseQueryExecutor = driftDatabase(
+        name: "lexigo_import_temp",
+        native: DriftNativeOptions(
+          databasePath: () => Future(() => tempFile.path),
         ),
       );
-    } catch (e, stackTrace) {
-      AppLogger.error(
-        'Failed to import words',
-        error: e,
-        stackTrace: stackTrace,
+      externalDatabase = Database.external(databaseQueryExecutor);
+      final wordRows = await externalDatabase
+          .select(externalDatabase.wordTable)
+          .get();
+      AppLogger.info(
+        'Read ${wordRows.length} rows of word(s) from external DB',
       );
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(context.l10n.importFailed('$e'))));
+
+      if (wordRows.isEmpty) {
+        throw Exception('Empty DB');
+      }
+      final words = <Word>[];
+      final reviewLogs = <fsrs.ReviewLog>[];
+
+      for (final row in wordRows) {
+        final word = _wordManager.tableDataToWord(row);
+        final learningHistoryRows = await (externalDatabase.select(
+          externalDatabase.wordLearningHistoryTable,
+        )..where((t) => t.cardId.equals(row.cardId))).get();
+        final card = await fsrs.Card.create();
+
+        words.add(
+          Word(
+            originalWord: word.originalWord,
+            originalTranslation: word.originalTranslation,
+            exampleSentence: word.exampleTranslation,
+            exampleTranslation: word.exampleTranslation,
+            sourceLanguageCode: word.sourceLanguageCode,
+            card: Future(() => card),
+            unitID: word.unitID,
+            bookID: word.bookID,
+          ),
+        );
+
+        for (final learningHistoryRow in learningHistoryRows) {
+          reviewLogs.add(
+            fsrs.ReviewLog(
+              cardId: card.cardId,
+              rating: learningHistoryRow.rating,
+              reviewDateTime: learningHistoryRow.reviewDateTime,
+              reviewDuration: learningHistoryRow.reviewDuration,
+            ),
+          );
+        }
+      }
+
+      _wordManager.insertWords(words);
+      _wordManager.insertReviewLogs(reviewLogs);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.importSuccess(words.length, 0))),
+        );
+      }
+    } catch (e) {
+      AppLogger.error('Import failed: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.importFailed('$e'))),
+        );
+      }
     } finally {
-      externalDb?.close();
+      await externalDatabase?.close();
+      if (await tempFile.exists()) {
+        await tempFile.delete();
+        AppLogger.info('Temp file cleaned up: ${tempFile.path}');
+      }
     }
   }
 
   Future<void> _exportWords(BuildContext context) async {
     if (!context.mounted) return;
-    final LanguageCode? selected = await _selectLanguage(context);
-    if (selected == null) return;
 
-    // TODO: Implement word export functionality:
-    // - Export words to a new SQLite database file
-    // - Allow user to choose save location via file_selector
-    // - Include all columns: original_word, translation, original_example,
-    //   example_translation, unit_id, book_id
-    // - Show success/failure snackbar
-    AppLogger.warning(
-      'Word export not yet implemented for language: ${selected.name}',
-    );
+    final LanguageCode? languageCode = await _selectLanguage(context);
+    if (languageCode == null) return;
+
+    final directory = await getTemporaryDirectory();
+
+    final words = await _wordManager.getWords(languageCode);
+    final wordsCompanion = <WordTableCompanion>[];
+    final now = DateTime.now();
+    for (final word in words) {
+      wordsCompanion.add(
+        await _wordManager.wordToCompanion(
+          word,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+    }
+    final reviewLogs = await _wordManager.getReviewLogs();
+    final reviewLogsCompanion = <WordLearningHistoryTableCompanion>[];
+    for (final reviewLog in reviewLogs) {
+      reviewLogsCompanion.add(_wordManager.reviewLogToCompanion(reviewLog));
+    }
+
+    try {
+      final exportFileName =
+          'lexigo_export_${languageCode.name}_${DateFormat('yyyyMMdd_HHmmss').format(now)}.sqlite';
+      final tempFile = File('${directory.path}/$exportFileName');
+
+      final databaseQueryExecutor = driftDatabase(
+        name: "lexigo_export_temp",
+        native: DriftNativeOptions(
+          databasePath: () => Future(() => tempFile.path),
+        ),
+      );
+
+      final externalDatabase = Database.external(databaseQueryExecutor);
+      try {
+        await externalDatabase.batch((batch) {
+          batch.insertAll(externalDatabase.wordTable, wordsCompanion);
+          batch.insertAll(
+            externalDatabase.wordLearningHistoryTable,
+            reviewLogsCompanion,
+          );
+        });
+      } finally {
+        await externalDatabase.close();
+      }
+      late File targetFile;
+      if (Platform.isIOS || Platform.isMacOS) {
+        final params = ShareParams(files: [XFile(tempFile.path)]);
+
+        final result = await SharePlus.instance.share(params);
+
+        if (result.status == ShareResultStatus.dismissed) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(context.l10n.exportFailedUserDismiss)),
+            );
+          }
+          return;
+        } else if (result.status == ShareResultStatus.unavailable) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(context.l10n.exportFailedUnavailable)),
+            );
+          }
+          return;
+        } else {
+          targetFile = tempFile;
+        }
+      } else if (Platform.isAndroid) {
+        /// TODO: Find a way to let user select directory
+        final outputDirectory = '/storage/emulated/0/Documents/LexiGo';
+        final dir = Directory(outputDirectory);
+        if (!await dir.exists()) {
+          await dir.create(recursive: true);
+        }
+        targetFile = File('${dir.path}/$exportFileName');
+        await tempFile.copy(targetFile.path);
+      } else {
+        final dict = await getDownloadsDirectory();
+
+        if (dict == null) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(context.l10n.exportFailedNoFolder)),
+            );
+          }
+          return;
+        }
+        targetFile = File('${dict.path}/$exportFileName');
+        await tempFile.copy(targetFile.path);
+      }
+
+      AppLogger.info('Export success, file at: ${targetFile.path}');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.exportSuccess(tempFile.path))),
+        );
+      }
+    } catch (e) {
+      AppLogger.error('Export failed: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.exportFailed('$e'))),
+        );
+      }
+    }
   }
 
   Future<LanguageCode?> _selectLanguage(BuildContext context) async {
