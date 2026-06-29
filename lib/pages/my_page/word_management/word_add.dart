@@ -14,6 +14,7 @@ import 'package:lexigo/backend/word/manager.dart';
 import 'package:lexigo/backend/word.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
 import 'package:lexigo/utils/app_logger.dart';
+import 'package:lexigo/utils/settings.dart';
 
 /// Form widget for adding words.
 class WordAddPage extends StatefulWidget {
@@ -35,7 +36,8 @@ class _WordAddPageState extends State<WordAddPage> {
   final _unitIdController = TextEditingController(text: 'DefaultUnit');
   final _bookIdController = TextEditingController(text: 'DefaultBook');
 
-  late LanguageCode _languageCode = widget.languageCode ?? LanguageCode.en;
+  late LanguageCode _languageCode =
+      widget.languageCode ?? SettingsStore.instance.settings.learningLanguage;
   bool _isSaving = false;
 
   final _wordManager = WordManager();

@@ -26,6 +26,7 @@ import 'package:lexigo/pages/my_page/word_management/word_view.dart';
 import 'package:lexigo/utils/app_logger.dart';
 import 'package:lexigo/utils/permission_manager.dart';
 import 'package:lexigo/backend/database/interface.dart';
+import 'package:lexigo/utils/settings.dart';
 
 /// Word management menu page.
 class WordManagement extends StatelessWidget {
@@ -334,7 +335,7 @@ class WordManagement extends StatelessWidget {
   }
 
   Future<LanguageCode?> _selectLanguage(BuildContext context) async {
-    LanguageCode selected = LanguageCode.ko;
+    LanguageCode selected = SettingsStore.instance.settings.learningLanguage;
     return showDialog<LanguageCode>(
       context: context,
       builder: (dialogContext) {
