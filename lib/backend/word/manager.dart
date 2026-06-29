@@ -208,6 +208,29 @@ class WordManager {
     return tableDataToWord(result);
   }
 
+  Future<Word?> getNextUnlearnedWord([LanguageCode? languageCode]) async {
+    LanguageCode lang = languageCode ?? _settings.learningLanguage;
+    final result =
+        await (_database.select(_database.wordTable)
+              ..where(
+                (t) => Expression.and([
+                  t.cardLastReviewTime.isNull(),
+                  t.languageCode.equals(lang.name),
+                ]),
+              )
+              ..orderBy([
+                (t) => OrderingTerm(expression: CustomExpression('RANDOM()')),
+              ])
+              ..limit(1))
+            .getSingleOrNull();
+    if (result == null) {
+      AppLogger.info('No pending unlearned word for $lang');
+      return null;
+    }
+    AppLogger.info('Next word: ${result.originalWord}');
+    return tableDataToWord(result);
+  }
+
   Future<List<Word>> searchWords(
     LanguageCode languageCode,
     String parts, {
