@@ -290,7 +290,7 @@ class WordManagement extends StatelessWidget {
       AppLogger.info('Export success, file at: ${targetFile.path}');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.l10n.exportSuccess(tempFile.path))),
+          SnackBar(content: Text(context.l10n.exportSuccess(targetFile.path))),
         );
       }
     } catch (e) {
