@@ -74,7 +74,7 @@ class _WordAddPageState extends State<WordAddPage> {
       AppLogger.debug(
         'Starting to save word: ${_originalWordController.text.trim()}',
       );
-      final card = fsrs.Card.create();
+      final card = await fsrs.Card.create();
       final word = Word(
         originalWord: _originalWordController.text.trim(),
         originalTranslation: _translationController.text.trim(),

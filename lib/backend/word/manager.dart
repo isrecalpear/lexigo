@@ -283,7 +283,7 @@ class WordManager {
       exampleSentence: word.exampleSentence,
       exampleTranslation: word.exampleTranslation,
       sourceLanguageCode: word.sourceLanguageCode,
-      card: Future.value(card),
+      card: card,
       unitID: word.unitID,
       bookID: word.bookID,
     );
@@ -402,7 +402,7 @@ class WordManager {
       sourceLanguageCode: LanguageCode.values.byName(
         wordTableData.languageCode,
       ),
-      card: Future.value(card),
+      card: card,
       unitID: wordTableData.unitId,
       bookID: wordTableData.bookId,
     );

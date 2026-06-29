@@ -155,7 +155,7 @@ class WordManagement extends StatelessWidget {
             exampleSentence: word.exampleTranslation,
             exampleTranslation: word.exampleTranslation,
             sourceLanguageCode: word.sourceLanguageCode,
-            card: Future(() => card),
+            card: card,
             unitID: word.unitID,
             bookID: word.bookID,
           ),
