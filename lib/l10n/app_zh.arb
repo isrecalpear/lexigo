@@ -186,5 +186,7 @@
   "learningSummaryTitle": "总结",
   "learningSummaryNextLabel": "接下来的是：",
   "learningSummaryEnd": "结束学习",
-  "learningSummaryNextGroup": "下一组单词"
+  "learningSummaryNextGroup": "下一组单词",
+  "newWordHint": "这是一个未学习过的新单词",
+  "newWordHintEasterEgg": "❤️ ;D"
 }

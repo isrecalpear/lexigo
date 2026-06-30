@@ -380,4 +380,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get learningSummaryNextGroup => 'Next set';
+
+  @override
+  String get newWordHint => 'This is a new word to you :)';
+
+  @override
+  String get newWordHintEasterEgg => '❤️';
 }

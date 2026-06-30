@@ -781,6 +781,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Next set'**
   String get learningSummaryNextGroup;
+
+  /// No description provided for @newWordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This is a new word to you :)'**
+  String get newWordHint;
+
+  /// No description provided for @newWordHintEasterEgg.
+  ///
+  /// In en, this message translates to:
+  /// **'❤️'**
+  String get newWordHintEasterEgg;
 }
 
 class _AppLocalizationsDelegate

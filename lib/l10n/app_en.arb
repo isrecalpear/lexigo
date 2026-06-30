@@ -186,5 +186,7 @@
   "learningSummaryTitle": "Summary",
   "learningSummaryNextLabel": "Next word:",
   "learningSummaryEnd": "End learning",
-  "learningSummaryNextGroup": "Next set"
+  "learningSummaryNextGroup": "Next set",
+  "newWordHint": "This is a new word to you :)",
+  "newWordHintEasterEgg": "❤️ ;D"
 }

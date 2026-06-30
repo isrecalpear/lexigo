@@ -81,11 +81,30 @@ class _WordCardState extends State<WordCard> {
                         ),
                         const Spacer(),
                         if (widget.word.card.lastReview == null)
-                          Icon(
-                            Icons.fiber_new,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onPrimaryContainer,
+                          IconButton(
+                            onPressed: () =>
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    showCloseIcon: true,
+                                    content: Text(
+                                      widget.word.card.cardId > 0
+                                          ? AppLocalizations.of(
+                                              context,
+                                            )!.newWordHint
+                                          : AppLocalizations.of(
+                                              context,
+                                            )!.newWordHintEasterEgg,
+                                    ),
+                                  ),
+                                ),
+                            icon: Icon(
+                              widget.word.card.cardId > 0
+                                  ? Icons.fiber_new
+                                  : Icons.favorite,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onPrimaryContainer,
+                            ),
                           ),
                         PopupMenuButton<String>(
                           onSelected: (value) {

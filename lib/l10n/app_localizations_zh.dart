@@ -377,4 +377,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get learningSummaryNextGroup => '下一组单词';
+
+  @override
+  String get newWordHint => '这是一个未学习过的新单词';
+
+  @override
+  String get newWordHintEasterEgg => '❤️';
 }
