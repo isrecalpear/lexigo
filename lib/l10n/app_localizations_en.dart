@@ -385,5 +385,5 @@ class AppLocalizationsEn extends AppLocalizations {
   String get newWordHint => 'This is a new word to you :)';
 
   @override
-  String get newWordHintEasterEgg => '❤️';
+  String get newWordHintEasterEgg => '❤️ ;D';
 }

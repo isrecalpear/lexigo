@@ -791,7 +791,7 @@ abstract class AppLocalizations {
   /// No description provided for @newWordHintEasterEgg.
   ///
   /// In en, this message translates to:
-  /// **'❤️'**
+  /// **'❤️ ;D'**
   String get newWordHintEasterEgg;
 }
 

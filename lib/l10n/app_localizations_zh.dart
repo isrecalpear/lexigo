@@ -382,5 +382,5 @@ class AppLocalizationsZh extends AppLocalizations {
   String get newWordHint => '这是一个未学习过的新单词';
 
   @override
-  String get newWordHintEasterEgg => '❤️';
+  String get newWordHintEasterEgg => '❤️ ;D';
 }
