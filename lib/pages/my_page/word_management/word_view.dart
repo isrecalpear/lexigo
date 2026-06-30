@@ -55,7 +55,7 @@ class _WordViewPageState extends State<WordViewPage> {
 
       final result = <_WordWithCard>[];
       for (final word in words) {
-        final card = await word.card;
+        final card = word.card;
         result.add(_WordWithCard(word, card));
       }
 

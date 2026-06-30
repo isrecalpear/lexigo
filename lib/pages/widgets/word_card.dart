@@ -218,7 +218,7 @@ class _WordCardState extends State<WordCard> {
 
   /// Marks the word as wrong and opens the edit dialog.
   Future<void> signAsWrong(BuildContext context) async {
-    final card = await widget.word.card;
+    final card = widget.word.card;
     if (!context.mounted) return;
     final updated = await Navigator.push<Word>(
       context,

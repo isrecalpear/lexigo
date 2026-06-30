@@ -270,7 +270,7 @@ class WordManager {
   }
 
   Future<void> reviewWord(Word word, Rating rating, int? reviewDuration) async {
-    final card_ = await word.card;
+    final card_ = word.card;
     final (:card, :reviewLog) = scheduler.reviewCard(
       card_,
       rating,
@@ -319,7 +319,7 @@ class WordManager {
   Future<List<ReviewLog>> getReviewLogs([Word? word]) async {
     late List<WordLearningHistoryTableData> learningHistoryRows;
     if (word != null) {
-      final card = await word.card;
+      final card = word.card;
       learningHistoryRows = await (_database.select(
         _database.wordLearningHistoryTable,
       )..where((t) => t.cardId.equals(card.cardId))).get();
@@ -361,7 +361,7 @@ class WordManager {
     DateTime? createdAt,
     required DateTime updatedAt,
   }) async {
-    final wordCard = await word.card;
+    final wordCard = word.card;
     return WordTableCompanion.insert(
       languageCode: word.sourceLanguageCode.name,
       originalWord: word.originalWord,
