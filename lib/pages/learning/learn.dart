@@ -112,12 +112,31 @@ class _LearningPageState extends State<LearningPage> {
 
     return PopScope<Word>(
       canPop: false,
-      onPopInvokedWithResult: (bool didPop, Word? result) {
-        if (didPop) return;
-        if (!mounted) return;
+      onPopInvokedWithResult: (bool didPop, Word? result) async {
+        if (didPop || _isNavigating) return;
+        _isNavigating = true;
 
-        // Pop immediately to avoid issues caused by delayed navigation.
-        Navigator.pop(context, widget.wordProvider.currentWord);
+        final navigator = Navigator.of(context);
+
+        await widget.wordProvider.nextReviewWord();
+
+        final wordToPass = widget.wordProvider.currentWord;
+        if (wordToPass == null) {
+          widget.wordProvider.setFallbackWord();
+        }
+        if (mounted) {
+          navigator.pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => LearningSummarizePage(
+                wordsUnknown: widget.wordProvider.currentWord!,
+                wordsLearned: _learnedCount,
+                wordsReviewed: 0, 
+                wordsToReview: 0, 
+                wordProvider: widget.wordProvider,
+              ),
+            ),
+          );
+        }
       },
       child: Scaffold(
         appBar: AppBar(
