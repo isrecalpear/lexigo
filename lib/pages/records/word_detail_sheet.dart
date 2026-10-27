@@ -1,5 +1,10 @@
 /// Bottom sheet with the FSRS state, forgetting curve and review history of a
 /// single word.
+///
+/// The word translation and the example translation stay hidden until the user
+/// taps "Show answer". Revealing them is a purely visual action: it never
+/// records a review or touches the FSRS schedule, so it cannot influence the
+/// memory assessment.
 library;
 
 // Flutter imports:
@@ -74,17 +79,36 @@ class _WordDetailSheetState extends State<WordDetailSheet> {
   }
 }
 
-class _WordDetailContent extends StatelessWidget {
+class _WordDetailContent extends StatefulWidget {
   const _WordDetailContent({required this.insight, required this.onClose});
 
   final CardInsight insight;
   final VoidCallback onClose;
 
   @override
+  State<_WordDetailContent> createState() => _WordDetailContentState();
+}
+
+class _WordDetailContentState extends State<_WordDetailContent> {
+  /// Whether the word translation and the example translation are visible.
+  ///
+  /// Revealing them is a pure UI action: no review is recorded and the FSRS
+  /// schedule is left untouched, so reading the translation here can never
+  /// affect the memory assessment.
+  bool _translationsRevealed = false;
+
+  void _toggleTranslations() {
+    setState(() {
+      _translationsRevealed = !_translationsRevealed;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final AppLocalizations l10n = context.l10n;
     final ThemeData theme = Theme.of(context);
     final ColorScheme colors = theme.colorScheme;
+    final CardInsight insight = widget.insight;
     final word = insight.word;
     final card = word.card;
     final double? stability = card.stability;
@@ -119,12 +143,58 @@ class _WordDetailContent extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xxs),
-                  Text(
-                    word.originalTranslation,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: colors.onSurfaceVariant,
+                  AnimatedSwitcher(
+                    duration: AppMotion.medium,
+                    switchInCurve: AppMotion.curve,
+                    switchOutCurve: AppMotion.curve,
+                    child: _translationsRevealed
+                        ? Text(
+                            word.originalTranslation,
+                            key: const ValueKey<String>('word-translation'),
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: colors.onSurfaceVariant,
+                            ),
+                          )
+                        : ExcludeSemantics(
+                            key: const ValueKey<String>(
+                              'word-translation-masked',
+                            ),
+                            child: Text(
+                              '••••••',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: colors.onSurfaceVariant,
+                                letterSpacing: 3,
+                              ),
+                            ),
+                          ),
+                  ),
+                  const SizedBox(height: AppSpacing.xxs),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: _toggleTranslations,
+                      style: TextButton.styleFrom(
+                        foregroundColor: colors.onSurfaceVariant,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xs,
+                          vertical: 6,
+                        ),
+                        minimumSize: const Size(0, 40),
+                        textStyle: theme.textTheme.labelMedium,
+                      ),
+                      icon: Icon(
+                        _translationsRevealed
+                            ? Icons.visibility_off_rounded
+                            : Icons.visibility_rounded,
+                        size: 18,
+                      ),
+                      label: Text(
+                        _translationsRevealed
+                            ? l10n.hideAnswer
+                            : l10n.showAnswer,
+                      ),
                     ),
                   ),
                 ],
@@ -132,7 +202,7 @@ class _WordDetailContent extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.xs),
             IconButton(
-              onPressed: onClose,
+              onPressed: widget.onClose,
               icon: const Icon(Icons.close_rounded),
               tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
             ),
@@ -184,11 +254,30 @@ class _WordDetailContent extends StatelessWidget {
                 ),
                 if (word.exampleTranslation.isNotEmpty) ...<Widget>[
                   const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    word.exampleTranslation,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colors.onSurfaceVariant,
-                    ),
+                  AnimatedSwitcher(
+                    duration: AppMotion.medium,
+                    switchInCurve: AppMotion.curve,
+                    switchOutCurve: AppMotion.curve,
+                    child: _translationsRevealed
+                        ? Text(
+                            word.exampleTranslation,
+                            key: const ValueKey<String>('example-translation'),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colors.onSurfaceVariant,
+                            ),
+                          )
+                        : ExcludeSemantics(
+                            key: const ValueKey<String>(
+                              'example-translation-masked',
+                            ),
+                            child: Text(
+                              '••••••••',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: colors.onSurfaceVariant,
+                                letterSpacing: 2,
+                              ),
+                            ),
+                          ),
                   ),
                 ],
               ],

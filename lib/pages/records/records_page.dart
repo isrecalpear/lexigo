@@ -882,7 +882,10 @@ class _FutureDay extends StatelessWidget {
                   vertical: AppSpacing.sm,
                 ),
                 onTap: () => onOpenWord(entry.cardId),
-                semanticLabel: '${entry.word}, ${entry.translation}',
+                // The forecast only shows the word itself: translations are
+                // revealed (on request) in the word detail sheet, so browsing
+                // the upcoming words does not spoil the recall.
+                semanticLabel: entry.word,
                 child: Row(
                   children: <Widget>[
                     const AppIconBadge(
@@ -892,26 +895,13 @@ class _FutureDay extends StatelessWidget {
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            entry.word,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              color: colors.onSurface,
-                            ),
-                          ),
-                          Text(
-                            entry.translation,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: colors.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        entry.word,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: colors.onSurface,
+                        ),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.xs),
