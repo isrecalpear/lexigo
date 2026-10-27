@@ -76,6 +76,8 @@ lib/
 ├─ l10n/app_localizations.dart    手写中英文文案表 + BuildContext.l10n 扩展
 └─ utils/
    ├─ settings.dart               Settings + SettingsStore（单例，YAML 持久化）
+   ├─ app_font.dart               AppFont 枚举（system/MiSans/HarmonyOS 及官方下载地址）
+   ├─ font_manager.dart           ★字体下载/解压/运行时 FontLoader 注册
    ├─ app_logger.dart             文件日志（单例、按天文件、7 天/5MB 清理）
    ├─ device_info.dart            DeviceInfoManager（平台/平板/能力判断，单例）
    └─ permission_manager.dart     Android 存储权限包装
@@ -165,7 +167,16 @@ lib/
 导出（`_exportWords`）仍是 TODO，只弹语言选择后打日志。
 
 ### 设置持久化
-`SettingsStore` 单例持有内存 `Settings`，`saveSettings()` 写 `<support>/settings.yaml`（手写 YAML 序列化，不是 `yaml` 库的输出格式），`loadSettings()` 用 `yaml.loadYaml` 读并用 `_parse*` 兜底。`copyWith` 的 `null` 语义靠 `localeSet` / `colorSeedSet` 两个显式开关表达（`null` 表示跟随系统语言 / 自动主题色）；忘记传开关时 `null` 会被忽略。
+`SettingsStore` 单例持有内存 `Settings`，`saveSettings()` 写 `<support>/settings.yaml`（手写 YAML 序列化，不是 `yaml` 库的输出格式），`loadSettings()` 用 `yaml.loadYaml` 读并用 `_parse*` 兜底。`copyWith` 的 `null` 语义靠 `localeSet` / `colorSeedSet` 两个显式开关表达（`null` 表示跟随系统语言 / 自动主题色）；忘记传开关时 `null` 会被忽略。`font` 存 `AppFont.storageId`（`system`/`misans`/`harmonyos`），缺省/未知值回退 `system`。
+
+### UI 字体（动态下载，不随包分发）★
+- 设置项：`AppFont`（`lib/utils/app_font.dart`），默认 `system`；枚举同时携带官方页面、官方 zip 直链和注册用 family 名。
+  - MiSans：<https://hyperos.mi.com/font/en/details/sc/>，直链 `https://hyperos.mi.com/font-download/MiSans.zip`。
+  - HarmonyOS Sans：<https://developer.huawei.com/consumer/cn/design/resource-V1/>，直链 `https://developer.huawei.com/images/download/general/HarmonyOS-Sans.zip`（注意是站点根路径，不是页面里的 `/consumer/cn/...`）。
+- `FontManager`（`lib/utils/font_manager.dart`）负责：`HttpClient` 单线程下载（带 UA/Referer、进度回调）→ 校验 zip 魔数 → `archive` 流式解压 → 只保留 400/500/600/700 四个字重（优先 SC 变体，排除 TC/其它语种与斜体）→ 写入 `<support>/fonts/<storageId>/` 并落 `.lexigo-font.json` 标记 → `FontLoader(family)` 运行时注册。
+- 下载缓存目录与设置分离；下载失败/缓存被删时 `MyApp._loadSettings` 回退系统字体并把设置改回 `system`（不会让界面无字体可用）。
+- 平台权限：Android 需要 `INTERNET`（已加在 `android/app/src/main/AndroidManifest.xml`）；macOS 沙箱需要 `com.apple.security.network.client`（Debug/Release entitlements 已加）。新增字体时记得同步检查这两处。
+- 字体包不进入仓库、不进 `assets`；不要提交下载缓存。UI 入口在「编辑设置 → 字体」，非系统字体首次选择会弹确认框+进度弹窗。
 
 ### 日志
 `AppLogger` 静态方法（`debug/info/warning/error/fatal`），`logger` 包 + 自定义 printer / `_DailyFileOutput`，同步追加到 `<documents|support>/logs/yyyy-MM-dd.log`；跨天自动切到新日期文件；启动时清理到 7 个文件、单文件 >5MB 删除。日志量小，保留同步写入以保证日志查看页立即可见。禁止 `print`。

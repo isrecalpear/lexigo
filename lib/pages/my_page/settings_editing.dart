@@ -10,8 +10,11 @@ import 'package:flutter/services.dart';
 
 // Project imports:
 import 'package:lexigo/l10n/app_localizations.dart';
+import 'package:lexigo/utils/app_font.dart';
+import 'package:lexigo/utils/app_logger.dart';
+import 'package:lexigo/utils/font_manager.dart';
 
-/// Settings editor widget for locale, theme, and color customization.
+/// Settings editor widget for locale, theme, color, and font customization.
 class SettingsEditingPage extends StatefulWidget {
   const SettingsEditingPage({
     super.key,
@@ -21,6 +24,8 @@ class SettingsEditingPage extends StatefulWidget {
     required this.onThemeModeChanged,
     required this.colorSeed,
     required this.onColorSeedChanged,
+    required this.font,
+    required this.onFontChanged,
   });
 
   final Locale? locale;
@@ -29,6 +34,8 @@ class SettingsEditingPage extends StatefulWidget {
   final ValueChanged<ThemeMode> onThemeModeChanged;
   final Color? colorSeed;
   final ValueChanged<Color?> onColorSeedChanged;
+  final AppFont font;
+  final ValueChanged<AppFont> onFontChanged;
   @override
   State<SettingsEditingPage> createState() => _SettingsEditingPageState();
 }
@@ -39,6 +46,7 @@ class _SettingsEditingPageState extends State<SettingsEditingPage> {
   late ThemeMode _selectedThemeMode;
   late bool _useAutoColor;
   late Color _customColor;
+  late AppFont _font;
 
   @override
   void initState() {
@@ -47,6 +55,7 @@ class _SettingsEditingPageState extends State<SettingsEditingPage> {
     _selectedThemeMode = widget.themeMode;
     _useAutoColor = widget.colorSeed == null;
     _customColor = widget.colorSeed ?? Colors.blue;
+    _font = widget.font;
   }
 
   @override
@@ -65,6 +74,9 @@ class _SettingsEditingPageState extends State<SettingsEditingPage> {
         _useAutoColor = false;
         _customColor = widget.colorSeed!;
       }
+    }
+    if (oldWidget.font != widget.font) {
+      _font = widget.font;
     }
   }
 
@@ -97,6 +109,14 @@ class _SettingsEditingPageState extends State<SettingsEditingPage> {
               subtitle: Text(_currentColorLabel(context)),
               trailing: _buildColorPreview(),
               onTap: _openColorPicker,
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.font_download_outlined),
+              title: Text(context.l10n.settingsFont),
+              subtitle: Text(_fontLabel(context, _font)),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: _openFontPicker,
             ),
           ],
         ),
@@ -268,6 +288,258 @@ class _SettingsEditingPageState extends State<SettingsEditingPage> {
     );
 
     selectThemeMode(result);
+  }
+
+  String _fontLabel(BuildContext context, AppFont font) {
+    switch (font) {
+      case AppFont.system:
+        return context.l10n.fontSystem;
+      case AppFont.miSans:
+        return context.l10n.fontMiSans;
+      case AppFont.harmonyOS:
+        return context.l10n.fontHarmonyOS;
+    }
+  }
+
+  String _fontDescription(BuildContext context, AppFont font) {
+    switch (font) {
+      case AppFont.system:
+        return context.l10n.fontSystemSubtitle;
+      case AppFont.miSans:
+        return context.l10n.fontMiSansSubtitle;
+      case AppFont.harmonyOS:
+        return context.l10n.fontHarmonyOSSubtitle;
+    }
+  }
+
+  Future<void> _openFontPicker() async {
+    final AppFont? result = await showDialog<AppFont>(
+      context: context,
+      builder: (context) {
+        return SimpleDialog(
+          title: Text(context.l10n.fontPickerTitle),
+          children: AppFont.values.map((AppFont font) {
+            return SimpleDialogOption(
+              onPressed: () => Navigator.pop(context, font),
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(_fontLabel(context, font)),
+                subtitle: Text(_fontDescription(context, font)),
+                trailing: font == _font ? const Icon(Icons.check) : null,
+              ),
+            );
+          }).toList(),
+        );
+      },
+    );
+
+    if (result == null || result == _font) {
+      return;
+    }
+    await _applyFont(result);
+  }
+
+  /// Downloads (when needed) and activates [font].
+  ///
+  /// The settings callback is only invoked after the font has been registered
+  /// with the engine, so the persisted selection always matches a usable font.
+  Future<void> _applyFont(AppFont font) async {
+    try {
+      if (font.isSystem) {
+        await FontManager.instance.loadFont(AppFont.system);
+        if (!mounted) {
+          return;
+        }
+        _selectFont(AppFont.system);
+        return;
+      }
+
+      final bool installed = await FontManager.instance.isInstalled(font);
+      if (!installed) {
+        if (!mounted) {
+          return;
+        }
+        final bool? confirmed = await _confirmFontDownload(font);
+        if (confirmed != true || !mounted) {
+          return;
+        }
+        await _downloadFont(font);
+        if (!mounted) {
+          return;
+        }
+      }
+
+      final bool loaded = await FontManager.instance.loadFont(font);
+      if (!mounted) {
+        return;
+      }
+      if (!loaded) {
+        // The cached files are unusable (corrupt or half-extracted). Drop them so
+        // the next attempt downloads a fresh archive.
+        await FontManager.instance.removeFont(font);
+        if (!mounted) {
+          return;
+        }
+        _showSnackBar(context.l10n.fontNotAvailable);
+        return;
+      }
+      _selectFont(font);
+    } catch (error, stackTrace) {
+      AppLogger.error(
+        'Failed to download or apply font ${font.storageId}',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (!mounted) {
+        return;
+      }
+      _showSnackBar(context.l10n.fontDownloadFailed('$error'));
+    }
+  }
+
+  Future<bool?> _confirmFontDownload(AppFont font) {
+    final String source = font.officialPageUrl ?? '';
+    return showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(context.l10n.fontDownloadTitle),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                context.l10n.fontDownloadConfirm(
+                  _fontLabel(context, font),
+                  '${font.approximateSizeMb ?? ''}',
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                context.l10n.fontOfficialSource,
+                style: Theme.of(context).textTheme.labelMedium,
+              ),
+              SelectableText(
+                source,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                context.l10n.fontLicenseHint,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(context.l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(context.l10n.confirm),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Shows a blocking progress dialog while the official archive is downloaded.
+  Future<void> _downloadFont(AppFont font) async {
+    final NavigatorState navigator = Navigator.of(context, rootNavigator: true);
+    bool dialogOpen = true;
+    StateSetter? setDialogState;
+    double? progressFraction;
+    String? progressLabel = context.l10n.fontDownloadPreparing;
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return PopScope(
+          canPop: false,
+          child: StatefulBuilder(
+            builder: (dialogContext, setState) {
+              setDialogState = setState;
+              return AlertDialog(
+                title: Text(dialogContext.l10n.fontDownloadTitle),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    LinearProgressIndicator(value: progressFraction),
+                    const SizedBox(height: 16),
+                    Text(
+                      progressLabel ?? dialogContext.l10n.fontDownloadPreparing,
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+
+    try {
+      await FontManager.instance.installFont(
+        font,
+        onProgress: (int received, int? total) {
+          if (!dialogOpen) {
+            return;
+          }
+          setDialogState?.call(() {
+            progressFraction = (total != null && total > 0)
+                ? (received / total).clamp(0.0, 1.0).toDouble()
+                : null;
+            progressLabel = _downloadProgressLabel(context, received, total);
+          });
+        },
+      );
+    } finally {
+      dialogOpen = false;
+      if (navigator.mounted) {
+        navigator.pop();
+      }
+    }
+  }
+
+  String _downloadProgressLabel(
+    BuildContext context,
+    int received,
+    int? total,
+  ) {
+    if (total != null && total > 0) {
+      final int percent = (received * 100 / total)
+          .round()
+          .clamp(0, 100)
+          .toInt();
+      return context.l10n.fontDownloading(
+        '$percent',
+        _formatMegabytes(received),
+        _formatMegabytes(total),
+      );
+    }
+    return context.l10n.fontDownloadingUnknown(_formatMegabytes(received));
+  }
+
+  String _formatMegabytes(int bytes) {
+    return (bytes / (1024 * 1024)).toStringAsFixed(1);
+  }
+
+  void _selectFont(AppFont font) {
+    setState(() {
+      _font = font;
+    });
+    widget.onFontChanged(font);
+    _showSnackBar(context.l10n.fontApplied(_fontLabel(context, font)));
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<_ColorSelection?> _showColorPickerDialog(

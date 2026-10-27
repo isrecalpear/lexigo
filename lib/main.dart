@@ -22,8 +22,10 @@ import 'pages/my_page.dart';
 import 'package:lexigo/pages/records/records_page.dart';
 import 'pages/start_page.dart';
 import 'package:lexigo/backend/word/global_provider.dart';
+import 'utils/app_font.dart';
 import 'utils/app_logger.dart';
 import 'utils/device_info.dart';
+import 'utils/font_manager.dart';
 import 'utils/settings.dart';
 
 /// Observes navigation events and logs route changes for debugging.
@@ -94,17 +96,24 @@ void main() async {
 ///
 /// Uses Material 3 design. If [seedColor] is provided, generates a color scheme
 /// from that seed. Otherwise, uses [dynamicScheme] or falls back to system defaults.
+/// [fontFamily] is `null` for the platform system font, or the family name of a
+/// runtime-loaded font (MiSans / HarmonyOS Sans).
 ThemeData buildTheme(
   ColorScheme? dynamicScheme,
   bool isDarkMode, {
   Color? seedColor,
+  String? fontFamily,
 }) {
   final Brightness brightness = isDarkMode ? Brightness.dark : Brightness.light;
   final ColorScheme colorScheme = seedColor != null
       ? ColorScheme.fromSeed(seedColor: seedColor, brightness: brightness)
       : (dynamicScheme ??
             (isDarkMode ? ColorScheme.dark() : ColorScheme.light()));
-  return ThemeData(colorScheme: colorScheme, useMaterial3: true);
+  return ThemeData(
+    colorScheme: colorScheme,
+    useMaterial3: true,
+    fontFamily: fontFamily,
+  );
 }
 
 /// Root stateful widget that manages global app state and settings.
@@ -125,6 +134,7 @@ class _MyAppState extends State<MyApp> {
   ThemeMode _themeMode = ThemeMode.system;
   Color? _colorSeed;
   LanguageCode? _language;
+  AppFont _font = AppFont.system;
 
   @override
   void initState() {
@@ -141,6 +151,25 @@ class _MyAppState extends State<MyApp> {
   Future<void> _loadSettings() async {
     await SettingsStore.instance.loadSettings();
     final Settings settings = SettingsStore.instance.settings;
+
+    // Optional fonts are downloaded on demand, so the user may have selected a
+    // font whose cache was later removed. Fall back to the system font instead
+    // of showing broken text.
+    AppFont font = settings.font;
+    if (!font.isSystem) {
+      final bool loaded = await FontManager.instance.loadFont(font);
+      if (!loaded) {
+        AppLogger.warning(
+          'Selected font ${font.storageId} is not installed, using system font',
+        );
+        font = AppFont.system;
+        SettingsStore.instance.updateSettings(
+          settings.copyWith(font: AppFont.system),
+        );
+        unawaited(SettingsStore.instance.saveSettings());
+      }
+    }
+
     if (!mounted) {
       return;
     }
@@ -149,6 +178,7 @@ class _MyAppState extends State<MyApp> {
       _locale = settings.locale;
       _themeMode = settings.themeMode;
       _colorSeed = settings.colorSeed;
+      _font = font;
     });
     unawaited(_wordProvider.loadRandomWord());
   }
@@ -221,8 +251,18 @@ class _MyAppState extends State<MyApp> {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      theme: buildTheme(lightColorScheme, false, seedColor: _colorSeed),
-      darkTheme: buildTheme(darkColorScheme, true, seedColor: _colorSeed),
+      theme: buildTheme(
+        lightColorScheme,
+        false,
+        seedColor: _colorSeed,
+        fontFamily: _font.familyName,
+      ),
+      darkTheme: buildTheme(
+        darkColorScheme,
+        true,
+        seedColor: _colorSeed,
+        fontFamily: _font.familyName,
+      ),
       themeMode: _themeMode,
       navigatorObservers: [AppRouteObserver()],
       home: MyHomePage(
@@ -234,6 +274,8 @@ class _MyAppState extends State<MyApp> {
         onThemeModeChanged: _setThemeMode,
         colorSeed: _colorSeed,
         onColorSeedChanged: _setColorSeed,
+        font: _font,
+        onFontChanged: _setFont,
         wordProvider: _wordProvider,
       ),
     );
@@ -266,6 +308,21 @@ class _MyAppState extends State<MyApp> {
     SettingsStore.instance.updateSettings(updated);
     unawaited(SettingsStore.instance.saveSettings());
   }
+
+  /// Updates the UI font and persists it.
+  ///
+  /// The font files are downloaded and registered by the settings page before
+  /// this callback runs, so only the theme has to be rebuilt here.
+  void _setFont(AppFont font) {
+    setState(() {
+      _font = font;
+    });
+    final Settings updated = SettingsStore.instance.settings.copyWith(
+      font: font,
+    );
+    SettingsStore.instance.updateSettings(updated);
+    unawaited(SettingsStore.instance.saveSettings());
+  }
 }
 
 /// Main home page widget with navigation tabs.
@@ -283,6 +340,8 @@ class MyHomePage extends StatefulWidget {
     required this.onThemeModeChanged,
     required this.colorSeed,
     required this.onColorSeedChanged,
+    required this.font,
+    required this.onFontChanged,
     required this.wordProvider,
   });
 
@@ -309,6 +368,12 @@ class MyHomePage extends StatefulWidget {
 
   /// Callback when color seed is changed.
   final ValueChanged<Color?> onColorSeedChanged;
+
+  /// Currently applied UI font.
+  final AppFont font;
+
+  /// Callback when the UI font is changed.
+  final ValueChanged<AppFont> onFontChanged;
 
   /// Centralized word state provider shared across learning-flow pages.
   final WordProvider wordProvider;
@@ -384,6 +449,8 @@ class _MyHomePageState extends State<MyHomePage> {
         onThemeModeChanged: widget.onThemeModeChanged,
         colorSeed: widget.colorSeed,
         onColorSeedChanged: widget.onColorSeedChanged,
+        font: widget.font,
+        onFontChanged: widget.onFontChanged,
       ),
     ];
 

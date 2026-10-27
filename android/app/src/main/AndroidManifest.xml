@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Network access for downloading optional fonts from vendor websites -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <!-- Storage/media access for reading external files -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />

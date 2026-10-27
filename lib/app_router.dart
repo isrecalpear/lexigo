@@ -24,6 +24,7 @@ import 'package:lexigo/pages/my_page/word_management/word_add.dart';
 import 'package:lexigo/pages/my_page/word_management/word_edit.dart';
 import 'package:lexigo/pages/my_page/word_management/word_management.dart';
 import 'package:lexigo/pages/my_page/word_management/word_view.dart';
+import 'package:lexigo/utils/app_font.dart';
 
 /// Stable route names, also surfaced by the route observer in app logs.
 abstract final class AppRoute {
@@ -89,6 +90,8 @@ abstract final class AppRoutes {
     required ValueChanged<ThemeMode> onThemeModeChanged,
     required Color? colorSeed,
     required ValueChanged<Color?> onColorSeedChanged,
+    required AppFont font,
+    required ValueChanged<AppFont> onFontChanged,
   }) {
     return _page(
       AppRoute.settingsEditing,
@@ -99,6 +102,8 @@ abstract final class AppRoutes {
         onThemeModeChanged: onThemeModeChanged,
         colorSeed: colorSeed,
         onColorSeedChanged: onColorSeedChanged,
+        font: font,
+        onFontChanged: onFontChanged,
       ),
     );
   }

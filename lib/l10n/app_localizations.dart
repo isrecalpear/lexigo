@@ -66,6 +66,30 @@ class AppLocalizations {
   String get settingsLanguage => _t('settingsLanguage');
   String get settingsTheme => _t('settingsTheme');
   String get settingsThemeColor => _t('settingsThemeColor');
+  String get settingsFont => _t('settingsFont');
+  String get fontPickerTitle => _t('fontPickerTitle');
+  String get fontSystem => _t('fontSystem');
+  String get fontSystemSubtitle => _t('fontSystemSubtitle');
+  String get fontMiSans => _t('fontMiSans');
+  String get fontMiSansSubtitle => _t('fontMiSansSubtitle');
+  String get fontHarmonyOS => _t('fontHarmonyOS');
+  String get fontHarmonyOSSubtitle => _t('fontHarmonyOSSubtitle');
+  String get fontDownloadTitle => _t('fontDownloadTitle');
+  String fontDownloadConfirm(String font, String sizeMb) =>
+      _t('fontDownloadConfirm', {'font': font, 'size': sizeMb});
+  String get fontOfficialSource => _t('fontOfficialSource');
+  String get fontLicenseHint => _t('fontLicenseHint');
+  String get fontDownloadPreparing => _t('fontDownloadPreparing');
+  String fontDownloading(String percent, String received, String total) => _t(
+    'fontDownloading',
+    {'percent': percent, 'received': received, 'total': total},
+  );
+  String fontDownloadingUnknown(String received) =>
+      _t('fontDownloadingUnknown', {'received': received});
+  String fontDownloadFailed(String error) =>
+      _t('fontDownloadFailed', {'error': error});
+  String fontApplied(String font) => _t('fontApplied', {'font': font});
+  String get fontNotAvailable => _t('fontNotAvailable');
   String get themeSystem => _t('themeSystem');
   String get themeLight => _t('themeLight');
   String get themeDark => _t('themeDark');
@@ -255,6 +279,30 @@ const Map<String, Map<String, String>> _localizedValues = {
     'settingsLanguage': 'Language',
     'settingsTheme': 'Theme',
     'settingsThemeColor': 'Theme color',
+    'settingsFont': 'Font',
+    'fontPickerTitle': 'Choose font',
+    'fontSystem': 'System font',
+    'fontSystemSubtitle': 'Use the font built into your operating system',
+    'fontMiSans': 'MiSans',
+    'fontMiSansSubtitle':
+        'Xiaomi official font, downloaded from hyperos.mi.com',
+    'fontHarmonyOS': 'HarmonyOS Sans',
+    'fontHarmonyOSSubtitle':
+        'Huawei official font, downloaded from developer.huawei.com',
+    'fontDownloadTitle': 'Download font',
+    'fontDownloadConfirm':
+        '"{font}" is not bundled with the app. It will be downloaded from the font vendor\'s official website (about {size} MB, network required). Continue?',
+    'fontOfficialSource': 'Official source',
+    'fontLicenseHint':
+        'Fonts remain the property of their vendors and are used for on-device UI display only.',
+    'fontDownloadPreparing': 'Preparing download…',
+    'fontDownloading':
+        'Downloading font package… {percent}% ({received} MB / {total} MB)',
+    'fontDownloadingUnknown': 'Downloading font package… {received} MB',
+    'fontDownloadFailed': 'Font download failed: {error}',
+    'fontApplied': '{font} applied',
+    'fontNotAvailable':
+        'The font package is incomplete. Please download it again.',
     'themeSystem': 'System',
     'themeLight': 'Light',
     'themeDark': 'Dark',
@@ -409,6 +457,24 @@ const Map<String, Map<String, String>> _localizedValues = {
     'settingsLanguage': '语言',
     'settingsTheme': '主题',
     'settingsThemeColor': '主题色',
+    'settingsFont': '字体',
+    'fontPickerTitle': '选择字体',
+    'fontSystem': '系统字体',
+    'fontSystemSubtitle': '跟随操作系统默认字体，不额外下载',
+    'fontMiSans': 'MiSans',
+    'fontMiSansSubtitle': '小米官方字体，从 hyperos.mi.com 下载',
+    'fontHarmonyOS': 'HarmonyOS Sans',
+    'fontHarmonyOSSubtitle': '华为官方字体，从 developer.huawei.com 下载',
+    'fontDownloadTitle': '下载字体',
+    'fontDownloadConfirm': '「{font}」不随应用分发，需要从字体官方网站下载（约 {size} MB，需联网）。是否继续？',
+    'fontOfficialSource': '官方来源',
+    'fontLicenseHint': '字体版权归字体厂商所有，仅用于本机界面显示。',
+    'fontDownloadPreparing': '正在准备下载…',
+    'fontDownloading': '正在下载字体包… {percent}%（{received} MB / {total} MB）',
+    'fontDownloadingUnknown': '正在下载字体包… 已下载 {received} MB',
+    'fontDownloadFailed': '字体下载失败: {error}',
+    'fontApplied': '已应用 {font}',
+    'fontNotAvailable': '字体包不完整，请重新下载。',
     'themeSystem': '跟随系统',
     'themeLight': '浅色',
     'themeDark': '深色',

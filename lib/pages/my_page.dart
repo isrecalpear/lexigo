@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 // Project imports:
 import 'package:lexigo/app_router.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
+import 'package:lexigo/utils/app_font.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
 /// Settings menu page with navigation to sub-pages.
@@ -21,6 +22,8 @@ class SettingsPage extends StatelessWidget {
     required this.onThemeModeChanged,
     required this.colorSeed,
     required this.onColorSeedChanged,
+    required this.font,
+    required this.onFontChanged,
   });
 
   final Locale? locale;
@@ -29,6 +32,8 @@ class SettingsPage extends StatelessWidget {
   final ValueChanged<ThemeMode> onThemeModeChanged;
   final Color? colorSeed;
   final ValueChanged<Color?> onColorSeedChanged;
+  final AppFont font;
+  final ValueChanged<AppFont> onFontChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -63,6 +68,8 @@ class SettingsPage extends StatelessWidget {
                   onThemeModeChanged: onThemeModeChanged,
                   colorSeed: colorSeed,
                   onColorSeedChanged: onColorSeedChanged,
+                  font: font,
+                  onFontChanged: onFontChanged,
                 ),
               );
             },

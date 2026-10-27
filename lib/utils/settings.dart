@@ -17,6 +17,7 @@ import 'package:yaml/yaml.dart' as yaml;
 
 // Project imports:
 import 'package:lexigo/backend/word.dart';
+import 'package:lexigo/utils/app_font.dart';
 
 /// Immutable settings configuration.
 ///
@@ -54,6 +55,9 @@ class Settings {
   /// Custom theme color seed (null means use dynamic/default colors).
   Color? colorSeed;
 
+  /// UI font. Defaults to the platform's built-in font.
+  AppFont font;
+
   /// Creates a Settings instance with all required parameters.
   Settings({
     required this.learningLanguage,
@@ -65,6 +69,7 @@ class Settings {
     required this.locale,
     required this.themeMode,
     required this.colorSeed,
+    required this.font,
   });
 
   /// Creates default Settings with recommended values.
@@ -82,6 +87,7 @@ class Settings {
       locale: null,
       themeMode: ThemeMode.system,
       colorSeed: null,
+      font: AppFont.system,
     );
   }
 
@@ -103,6 +109,7 @@ class Settings {
     ThemeMode? themeMode,
     Color? colorSeed,
     bool colorSeedSet = false,
+    AppFont? font,
   }) {
     return Settings(
       learningLanguage: learningLanguage ?? this.learningLanguage,
@@ -114,6 +121,7 @@ class Settings {
       locale: localeSet ? locale : this.locale,
       themeMode: themeMode ?? this.themeMode,
       colorSeed: colorSeedSet ? colorSeed : this.colorSeed,
+      font: font ?? this.font,
     );
   }
 
@@ -131,6 +139,7 @@ class Settings {
       'locale': locale?.toString(),
       'themeMode': themeMode.toString(),
       'colorSeed': colorSeed?.toARGB32(),
+      'font': font.storageId,
     };
   }
 
@@ -257,6 +266,7 @@ class SettingsStore extends ChangeNotifier {
         locale: locale,
         themeMode: themeMode,
         colorSeed: colorSeed,
+        font: AppFont.fromStorageId(yamlMap['font']?.toString()),
       );
 
       notifyListeners();
