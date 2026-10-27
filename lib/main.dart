@@ -19,7 +19,7 @@ import 'package:lexigo/backend/word/manager.dart';
 import 'backend/word.dart';
 import 'l10n/app_localizations.dart';
 import 'pages/my_page.dart';
-import 'pages/records_page.dart';
+import 'package:lexigo/pages/records/records_page.dart';
 import 'pages/start_page.dart';
 import 'package:lexigo/backend/word/global_provider.dart';
 import 'utils/app_logger.dart';
@@ -376,7 +376,7 @@ class _MyHomePageState extends State<MyHomePage> {
         learningLanguage: widget.learningLanguage,
         wordProvider: widget.wordProvider,
       ),
-      const RecordsPicker(),
+      RecordsPage(active: _selectedIndex == 1),
       SettingsPage(
         locale: widget.locale,
         onLocaleChanged: widget.onLocaleChanged,

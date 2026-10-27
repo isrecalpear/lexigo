@@ -139,7 +139,47 @@ class AppLocalizations {
   String get logAboutSubtitle => _t('logAboutSubtitle');
   String get refreshInfo => _t('refreshInfo');
   String get clearLogs => _t('clearLogs');
-  String get recordsBuilding => _t('recordsBuilding');
+  String get today => _t('today');
+  String get recordsEmptyDay => _t('recordsEmptyDay');
+  String recordsReviewCount(int count) =>
+      _t('recordsReviewCount', {'count': '$count'});
+  String recordsWordCount(int count) =>
+      _t('recordsWordCount', {'count': '$count'});
+  String recordsForgottenCount(int count) =>
+      _t('recordsForgottenCount', {'count': '$count'});
+  String recordsAverageTime(int seconds) =>
+      _t('recordsAverageTime', {'seconds': '$seconds'});
+  String get recordsDueLabel => _t('recordsDueLabel');
+  String get recordsOverdueLabel => _t('recordsOverdueLabel');
+  String get recordsNewWordsLabel => _t('recordsNewWordsLabel');
+  String get recordsPreviousWeek => _t('recordsPreviousWeek');
+  String get recordsNextWeek => _t('recordsNextWeek');
+  String get recordsJumpToWeek => _t('recordsJumpToWeek');
+  String get recordsBackToToday => _t('recordsBackToToday');
+  String get recordsForecastHint => _t('recordsForecastHint');
+  String get recordsDueListTitle => _t('recordsDueListTitle');
+  String get recordsNoDue => _t('recordsNoDue');
+  String get recordsOverview => _t('recordsOverview');
+  String get recordsStreakLabel => _t('recordsStreakLabel');
+  String get recordsLast7Days => _t('recordsLast7Days');
+  String get recordsRetentionLabel => _t('recordsRetentionLabel');
+  String get recordsMasteredLabel => _t('recordsMasteredLabel');
+  String get recordsVocabularyLabel => _t('recordsVocabularyLabel');
+  String get recordsTotalReviewsLabel => _t('recordsTotalReviewsLabel');
+  String get recordsRetry => _t('recordsRetry');
+  String get recordsLoadFailed => _t('recordsLoadFailed');
+  String get recordsUnavailable => _t('recordsUnavailable');
+  String get difficultyLabel => _t('difficultyLabel');
+  String get stabilityLabel => _t('stabilityLabel');
+  String daysLabel(String value) => _t('daysLabel', {'value': value});
+  String get nextReviewLabel => _t('nextReviewLabel');
+  String get lastReviewLabel => _t('lastReviewLabel');
+  String get forgettingCurve => _t('forgettingCurve');
+  String currentRetrievability(int percent) =>
+      _t('currentRetrievability', {'percent': '$percent'});
+  String get neverReviewed => _t('neverReviewed');
+  String get cardHistoryTitle => _t('cardHistoryTitle');
+  String get noCardHistory => _t('noCardHistory');
   String get wordViewTitle => _t('wordViewTitle');
   String get wordViewEmpty => _t('wordViewEmpty');
   String get edit => _t('edit');
@@ -285,7 +325,43 @@ const Map<String, Map<String, String>> _localizedValues = {
         'Logs are stored in app data and kept for 7 days, older logs are removed automatically.',
     'refreshInfo': 'Refresh',
     'clearLogs': 'Clear logs',
-    'recordsBuilding': 'Coming soon...',
+    'today': 'Today',
+    'recordsEmptyDay': 'No study records on this day',
+    'recordsReviewCount': '{count} reviews',
+    'recordsWordCount': '{count} words',
+    'recordsForgottenCount': '{count} forgotten',
+    'recordsAverageTime': 'avg {seconds}s per word',
+    'recordsDueLabel': 'Due review',
+    'recordsOverdueLabel': 'Overdue',
+    'recordsNewWordsLabel': 'New words',
+    'recordsPreviousWeek': 'Previous week',
+    'recordsNextWeek': 'Next week',
+    'recordsJumpToWeek': 'Pick a date to jump to its week',
+    'recordsBackToToday': 'Back to today',
+    'recordsForecastHint':
+        'Future dates are forecasts based on the current schedule.',
+    'recordsDueListTitle': 'Scheduled words',
+    'recordsNoDue': 'Nothing scheduled for this day',
+    'recordsOverview': 'Study overview',
+    'recordsStreakLabel': 'Streak',
+    'recordsLast7Days': 'Reviews in the last 7 days',
+    'recordsRetentionLabel': 'Retention (7d)',
+    'recordsMasteredLabel': 'Mastered',
+    'recordsVocabularyLabel': 'Vocabulary',
+    'recordsTotalReviewsLabel': 'Total reviews',
+    'recordsRetry': 'Retry',
+    'recordsLoadFailed': 'Failed to load records',
+    'recordsUnavailable': 'Records unavailable',
+    'difficultyLabel': 'Difficulty',
+    'stabilityLabel': 'Stability',
+    'daysLabel': '{value} d',
+    'nextReviewLabel': 'Next review',
+    'lastReviewLabel': 'Last review',
+    'forgettingCurve': 'Forgetting curve',
+    'currentRetrievability': 'Recall probability {percent}%',
+    'neverReviewed': 'Not reviewed yet',
+    'cardHistoryTitle': 'Review history',
+    'noCardHistory': 'No reviews yet',
     'wordViewTitle': 'Word list',
     'wordViewEmpty': 'No words',
     'edit': 'Edit',
@@ -401,7 +477,42 @@ const Map<String, Map<String, String>> _localizedValues = {
     'logAboutSubtitle': '日志文件保存在应用数据目录，最多保留7天，超过后自动删除旧日志。',
     'refreshInfo': '刷新信息',
     'clearLogs': '清除日志',
-    'recordsBuilding': '开发中...',
+    'today': '今天',
+    'recordsEmptyDay': '当天没有学习记录',
+    'recordsReviewCount': '复习 {count} 次',
+    'recordsWordCount': '涉及 {count} 词',
+    'recordsForgottenCount': '未记住 {count} 个',
+    'recordsAverageTime': '平均 {seconds} 秒/词',
+    'recordsDueLabel': '到期复习',
+    'recordsOverdueLabel': '积压',
+    'recordsNewWordsLabel': '待学新词',
+    'recordsPreviousWeek': '上一周',
+    'recordsNextWeek': '下一周',
+    'recordsJumpToWeek': '选择日期跳转到所在周',
+    'recordsBackToToday': '回到今天',
+    'recordsForecastHint': '未来日期为基于当前排程的预测。',
+    'recordsDueListTitle': '预计到期单词',
+    'recordsNoDue': '当天没有到期单词',
+    'recordsOverview': '学习概览',
+    'recordsStreakLabel': '连续学习',
+    'recordsLast7Days': '近 7 天复习',
+    'recordsRetentionLabel': '记忆保持率',
+    'recordsMasteredLabel': '已掌握',
+    'recordsVocabularyLabel': '词库',
+    'recordsTotalReviewsLabel': '累计复习',
+    'recordsRetry': '重试',
+    'recordsLoadFailed': '记录加载失败',
+    'recordsUnavailable': '记录不可用',
+    'difficultyLabel': '记忆难度',
+    'stabilityLabel': '记忆强度',
+    'daysLabel': '{value} 天',
+    'nextReviewLabel': '下次复习',
+    'lastReviewLabel': '上次复习',
+    'forgettingCurve': '遗忘曲线',
+    'currentRetrievability': '当前记忆概率 {percent}%',
+    'neverReviewed': '尚未复习',
+    'cardHistoryTitle': '复习记录',
+    'noCardHistory': '暂无复习记录',
     'wordViewTitle': '单词清单',
     'wordViewEmpty': '暂无单词',
     'edit': '编辑',

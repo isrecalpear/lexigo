@@ -52,12 +52,17 @@ lib/
 │     ├─ global_provider.dart     WordProvider（ChangeNotifier，跨页面共享“当前单词”）
 │     ├─ import_service.dart      ★导入流水线：检测/校验/去重（prepare）→ 分块事务写入（commit）
 │     └─ fallback.dart            每个语言一个兜底词（DB 为空时展示用，不落库）
+├─ backend/records/records_service.dart  ★记录页只读查询：周统计/日回顾/未来预测/整体统计/单卡详情 + retrievability
 ├─ pages/
 │  ├─ start_page.dart             学习 Tab：随机词卡片 + 「下一个」+「开始学习」
 │  ├─ learning/
 │  │  ├─ learn.dart               评分页（4 个 FSRS 按钮、进度条、会话 10 词）
 │  │  └─ learning_summarize.dart  会话总结页
-│  ├─ records_page.dart           记录 Tab —— 纯占位（“开发中...”）
+│  ├─ records/
+│  │  ├─ records_page.dart        记录 Tab：周条 + 当天回顾/未来预测 + 学习概览
+│  │  ├─ word_detail_sheet.dart   单词详情弹层（FSRS 状态、遗忘曲线、复习历史）
+│  │  ├─ forgetting_curve.dart    遗忘曲线 CustomPainter（FSRS retrievability）
+│  │  └─ records_format.dart      rating/state 文案、颜色、时间格式化、RatingBadge
 │  ├─ my_page.dart                我的 Tab：菜单（单词管理/编辑设置/日志/关于）
 │  ├─ my_page/
 │  │  ├─ settings_editing.dart    UI 语言、主题模式、主题色（HSV + Hex 选择器）
@@ -98,7 +103,7 @@ lib/
 
 唯一键：`UNIQUE(original_word, unit_id, book_id, card_id)`（因为 cardId 每张卡不同，实际上几乎不会触发去重）。
 
-`WordLearningHistoryTable`（`word_learning_history_table`）：`id`、`card_id`、`rating`（`intEnum<Rating>`：1=again,2=hard,3=good,4=easy）、`review_date_time`、`review_duration`（毫秒，可空）。
+`WordLearningHistoryTable`（`word_learning_history_table`）：`id`、`card_id`、`rating`（`intEnum<Rating>` 存枚举 **index**：0=again、1=hard、2=good、3=easy）、`review_date_time`（UTC 存储）、`review_duration`（毫秒，可空）。
 
 ### 关键事实
 
@@ -131,6 +136,17 @@ lib/
 - 会话长度 `_totalCount = 10` 是常量（有 TODO 要配置化）。
 - 总结页的 `wordsReviewed` / `wordsToReview` 恒为 0；`wordsLearned` 在“没词可用”提前结束时少算最后一条。
 - DB 为空时 `WordProvider.setFallbackWord()` 提供一个**不在库里**的兜底词；对它评分不会落库，也不会再写孤儿 history 记录（`reviewWord` 以更新行数为 0 判断并跳过）。
+
+### 记录页（记录 Tab）★
+页面在 `lib/pages/records/records_page.dart`，只读查询集中在 `lib/backend/records/records_service.dart`：
+
+- **周条**：以周一为起点展示 7 天；过去/今天显示当天复习次数（有“忘记”时数字标红），未来显示当天到期复习数。左右箭头切换上一周/下一周（Tooltip 同样是“上一周/下一周”），切换时保持当前星期几不变；在周条上左右滑动也切换周。点击中间日期范围会弹出日期选择器并跳到所选日期所在的周；点日期格子选中。选中日期不是今天时，头部右侧额外显示「回到今天」按钮（`Icons.today`，仅此时出现）。
+- **手势**：除周条以外的整个页面区域左右滑动都切换前一天/后一天（跨周时周条随之切换）；周条内部滑动仍切换周。左滑=下一天/下一周，右滑=上一天/上一周。实现上整个 `ListView` 包一层日切换 `GestureDetector`，周条自己再包一层周切换 `GestureDetector`（内层在手势竞技场中优先）。
+- **当天（≤ 今天）**：`word_learning_history_table` join `word_table` 得到复习事件，展示单词、评分（忘记/困难/还行/简单）、记忆难度/强度、用时；点条目打开单词详情；顶部汇总复习次数、涉及词数、未记住数、平均用时。
+- **未来日期**：`card_due_time` 落在本地当天且 `card_last_review_time != null` 计为“到期复习”；`due < 当天` 为“积压”；`card_last_review_time == null` 为“待学新词”（词库库存，不是按天排程）。列出当天到期单词（最多 100 条）。
+- **学习概览**：连续学习天数（近 90 天内有记录的连续日期）、近 7 天复习柱状图、近 7 天记忆保持率（非 Again 占比）、已掌握（`card_state = review`）、词库规模、累计复习数。
+- **单词详情弹层**：FSRS 状态/难度/强度、下次与上次复习时间、遗忘曲线、该词复习历史。遗忘曲线用 FSRS-5 retrievability `R(t,S) = (1 + 19/81·t/S)^(-0.5)`，`S` 是 stability（天），90% 保留率恰好出现在 `t = S`。
+- 记录页只读，不修改任何数据；未来日期的数字是“当前排程快照”，不会模拟未来的评分结果。
 
 ### 词表导入（当前唯一导入通道）★
 入口：我的 → 单词管理 → 导入单词清单。UI 在 `lib/pages/my_page/word_management/word_management.dart`，流水线在 `lib/backend/word/import_service.dart`，分三步：
@@ -200,12 +216,11 @@ lib/
 |---|---|---|
 | 1 | FSRS 设置项是死代码（序列化了但 Scheduler 不用），且无设置 UI | `manager.dart` 顶部 vs `settings.dart` |
 | 2 | `WordCard` “标记为熟知”只有 TODO；"纠错"实际是打开编辑页 | `word_card.dart` |
-| 3 | 记录/统计页未实现 | `records_page.dart` |
-| 4 | 词表导出未实现 | `word_management.dart` `_exportWords` |
-| 5 | 学习会话固定 10 词；总结页 `wordsReviewed`/`wordsToReview` 恒为 0，提前结束时 `wordsLearned` 少算一条 | `learn.dart`、`learning_summarize.dart` |
-| 6 | Android 权限模型过时（`READ_MEDIA_*` + `Permission.storage`）与 SAF 不匹配 | `AndroidManifest.xml`、`permission_manager.dart` |
-| 7 | `getNextReviewWord` 只按 `due < now`，没有新卡/旧卡优先级、没有每日上限 | `manager.dart` |
-| 8 | 没有任何自动化测试 | `test/`（不存在） |
+| 3 | 词表导出未实现 | `word_management.dart` `_exportWords` |
+| 4 | 学习会话固定 10 词；总结页 `wordsReviewed`/`wordsToReview` 恒为 0，提前结束时 `wordsLearned` 少算一条 | `learn.dart`、`learning_summarize.dart` |
+| 5 | Android 权限模型过时（`READ_MEDIA_*` + `Permission.storage`）与 SAF 不匹配 | `AndroidManifest.xml`、`permission_manager.dart` |
+| 6 | `getNextReviewWord` 只按 `due < now`，没有新卡/旧卡优先级、没有每日上限 | `manager.dart` |
+| 7 | 没有任何自动化测试 | `test/`（不存在） |
 
 ## 8. 典型改动指南
 
@@ -222,5 +237,5 @@ lib/
 - 新增/修改页面跳转 → 已在 `AppRoutes` 中声明，页面内没有裸 `MaterialPageRoute`。
 - 改过 `tables.dart` → 已跑 build_runner，`interface.g.dart` 已更新。
 - 新增用户可见文案 → 中英双语齐全。
-- 手动验证：启动 → 学习（至少一次评分）→ 刷新后数据在 → 导入一份词表（含预览与进度）；Android/桌面至少各跑一次（涉及文件/权限时）。
+- 手动验证：启动 → 学习（至少一次评分）→ 刷新后数据在 → 导入一份词表（含预览与进度）→ 记录页周条、日回顾、未来预测与单词详情；Android/桌面至少各跑一次（涉及文件/权限时）。
 - 不提交构建产物（`build/`、`generated_plugin_*`、`.dart_tool/`）。
