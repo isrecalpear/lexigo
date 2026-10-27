@@ -130,6 +130,11 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     _wordProvider = WordProvider();
+    if (!DeviceInfoManager().supportsDynamicColor) {
+      AppLogger.warning(
+        'Current platform don\'t support dynamic color, using fallback color scheme',
+      );
+    }
     _loadSettings();
   }
 
@@ -174,72 +179,64 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    LanguageCode learningLanguage = _language ?? LanguageCode.en;
-    final deviceInfo = DeviceInfoManager();
+    final LanguageCode learningLanguage = _language ?? LanguageCode.en;
 
-    if (!deviceInfo.supportsDynamicColor) {
-      AppLogger.warning(
-        'Current platform don\'t support dynamic color, using fallback color scheme',
-      );
-      ColorScheme colorScheme = ColorScheme.fromSeed(
+    if (!DeviceInfoManager().supportsDynamicColor) {
+      final ColorScheme colorScheme = ColorScheme.fromSeed(
         seedColor: _colorSeed ?? Colors.pink.shade200,
       );
-      return MaterialApp(
-        locale: _locale,
-        supportedLocales: AppLocalizations.supportedLocales,
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        theme: buildTheme(colorScheme, false, seedColor: _colorSeed),
-        darkTheme: buildTheme(colorScheme, true, seedColor: _colorSeed),
-        themeMode: _themeMode,
-        navigatorObservers: [AppRouteObserver()],
-        home: MyHomePage(
-          locale: _locale,
-          onLearningLanguageChanged: _setLearningLanguage,
-          learningLanguage: learningLanguage,
-          onLocaleChanged: _setLocale,
-          themeMode: _themeMode,
-          onThemeModeChanged: _setThemeMode,
-          colorSeed: _colorSeed,
-          onColorSeedChanged: _setColorSeed,
-          wordProvider: _wordProvider,
-        ),
-      );
-    } else {
-      return DynamicColorBuilder(
-        builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
-          return MaterialApp(
-            locale: _locale,
-            supportedLocales: AppLocalizations.supportedLocales,
-            localizationsDelegates: const [
-              AppLocalizations.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            theme: buildTheme(lightDynamic, false, seedColor: _colorSeed),
-            darkTheme: buildTheme(darkDynamic, true, seedColor: _colorSeed),
-            themeMode: _themeMode,
-            navigatorObservers: [AppRouteObserver()],
-            home: MyHomePage(
-              locale: _locale,
-              onLearningLanguageChanged: _setLearningLanguage,
-              learningLanguage: learningLanguage,
-              onLocaleChanged: _setLocale,
-              themeMode: _themeMode,
-              onThemeModeChanged: _setThemeMode,
-              colorSeed: _colorSeed,
-              onColorSeedChanged: _setColorSeed,
-              wordProvider: _wordProvider,
-            ),
-          );
-        },
+      return _buildMaterialApp(
+        lightColorScheme: colorScheme,
+        darkColorScheme: colorScheme,
+        learningLanguage: learningLanguage,
       );
     }
+
+    return DynamicColorBuilder(
+      builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
+        return _buildMaterialApp(
+          lightColorScheme: lightDynamic,
+          darkColorScheme: darkDynamic,
+          learningLanguage: learningLanguage,
+        );
+      },
+    );
+  }
+
+  /// Builds the root [MaterialApp].
+  ///
+  /// The two call sites (dynamic color supported or not) only differ in the
+  /// color schemes they provide, so the shared configuration lives here.
+  Widget _buildMaterialApp({
+    required ColorScheme? lightColorScheme,
+    required ColorScheme? darkColorScheme,
+    required LanguageCode learningLanguage,
+  }) {
+    return MaterialApp(
+      locale: _locale,
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      theme: buildTheme(lightColorScheme, false, seedColor: _colorSeed),
+      darkTheme: buildTheme(darkColorScheme, true, seedColor: _colorSeed),
+      themeMode: _themeMode,
+      navigatorObservers: [AppRouteObserver()],
+      home: MyHomePage(
+        locale: _locale,
+        onLearningLanguageChanged: _setLearningLanguage,
+        learningLanguage: learningLanguage,
+        onLocaleChanged: _setLocale,
+        themeMode: _themeMode,
+        onThemeModeChanged: _setThemeMode,
+        colorSeed: _colorSeed,
+        onColorSeedChanged: _setColorSeed,
+        wordProvider: _wordProvider,
+      ),
+    );
   }
 
   /// Updates the theme mode and persists it.
@@ -255,12 +252,16 @@ class _MyAppState extends State<MyApp> {
   }
 
   /// Updates the color seed and persists it.
+  ///
+  /// `colorSeedSet: true` is required so that picking "Auto" (a null seed) is
+  /// actually persisted instead of keeping the previous color.
   void _setColorSeed(Color? seed) {
     setState(() {
       _colorSeed = seed;
     });
     final Settings updated = SettingsStore.instance.settings.copyWith(
       colorSeed: seed,
+      colorSeedSet: true,
     );
     SettingsStore.instance.updateSettings(updated);
     unawaited(SettingsStore.instance.saveSettings());

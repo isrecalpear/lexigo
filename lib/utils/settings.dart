@@ -87,7 +87,10 @@ class Settings {
 
   /// Creates a copy of this Settings with specified fields replaced.
   ///
-  /// If [localeSet] is false, the locale field is unchanged (used for system locale).
+  /// [localeSet] and [colorSeedSet] are needed because `null` is a meaningful
+  /// value for those fields: pass the matching flag to actually clear them
+  /// (`locale: null` = follow the system locale, `colorSeed: null` = automatic
+  /// theme color). Without the flag a `null` argument keeps the current value.
   Settings copyWith({
     LanguageCode? learningLanguage,
     double? fsrsDesiredRetention,
@@ -99,6 +102,7 @@ class Settings {
     bool localeSet = false,
     ThemeMode? themeMode,
     Color? colorSeed,
+    bool colorSeedSet = false,
   }) {
     return Settings(
       learningLanguage: learningLanguage ?? this.learningLanguage,
@@ -109,7 +113,7 @@ class Settings {
       fsrsEnableFuzzing: fsrsEnableFuzzing ?? this.fsrsEnableFuzzing,
       locale: localeSet ? locale : this.locale,
       themeMode: themeMode ?? this.themeMode,
-      colorSeed: colorSeed ?? this.colorSeed,
+      colorSeed: colorSeedSet ? colorSeed : this.colorSeed,
     );
   }
 

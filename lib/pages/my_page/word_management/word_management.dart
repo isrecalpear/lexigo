@@ -162,11 +162,10 @@ class WordManagement extends StatelessWidget {
       if (rows.isEmpty) {
         throw Exception('No data found');
       }
-      final existing = await _wordManager.getWords(language);
-      final existingKeys = existing
-          .map((word) => '${word.originalWord}||${word.bookID}||${word.unitID}')
-          .toSet();
-      final seenKeys = <String>{...existingKeys};
+      // De-duplicate against the *whole* table (not just the first page), so
+      // importing the same file twice really skips everything.
+      final seenKeys = await _wordManager.getWordIdentityKeys(language);
+      AppLogger.info('${seenKeys.length} existing ${language.name} words');
 
       final words = <Word>[];
       int skipped = 0;

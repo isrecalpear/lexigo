@@ -75,10 +75,11 @@ class _LearningSummarizePageState extends State<LearningSummarizePage> {
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Text(
-                  AppLocalizations.of(context).learningSummary
-                      .replaceAll('{learned}', '${widget.wordsLearned}')
-                      .replaceAll('{reviewed}', '${widget.wordsReviewed}')
-                      .replaceAll('{toReview}', '${widget.wordsToReview}'),
+                  AppLocalizations.of(context).learningSummary(
+                    widget.wordsLearned,
+                    widget.wordsReviewed,
+                    widget.wordsToReview,
+                  ),
                 ),
               ),
             ),

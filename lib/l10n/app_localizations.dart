@@ -151,7 +151,10 @@ class AppLocalizations {
   String get wordCardMarkKnownTitle => _t('wordCardMarkKnownTitle');
   String wordCardMarkKnownConfirm(String word) =>
       _t('wordCardMarkKnownConfirm', {'word': word});
-  String get learningSummary => _t('learningSummary');
+  String learningSummary(int learned, int reviewed, int toReview) => _t(
+    'learningSummary',
+    {'learned': '$learned', 'reviewed': '$reviewed', 'toReview': '$toReview'},
+  );
   String get learningSummaryTitle => _t('learningSummaryTitle');
   String get learningSummaryNextLabel => _t('learningSummaryNextLabel');
   String get learningSummaryEnd => _t('learningSummaryEnd');

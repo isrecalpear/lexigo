@@ -13,7 +13,23 @@ part 'interface.g.dart';
 
 @DriftDatabase(tables: [WordTable, WordLearningHistoryTable])
 class Database extends _$Database {
-  Database([QueryExecutor? executor]) : super(executor ?? _initConnection());
+  Database._(super.executor);
+
+  /// Shared application database.
+  ///
+  /// Previously every `WordManager` opened its own connection to the same file,
+  /// leaving several sqlite handles open concurrently. All application code now
+  /// uses this singleton; [Database.new] only opens a separate connection when
+  /// an explicit [QueryExecutor] is supplied (tests, tooling).
+  static final Database _instance = Database._(_initConnection());
+
+  /// Returns the shared database, or a dedicated one for [executor].
+  factory Database([QueryExecutor? executor]) {
+    if (executor == null) {
+      return _instance;
+    }
+    return Database._(executor);
+  }
 
   @override
   int get schemaVersion => 1;

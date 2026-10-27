@@ -40,6 +40,7 @@ class _StartPageState extends State<StartPage> {
     super.initState();
     AppLogger.info('Initializing start page');
     widget.wordProvider.addListener(_onWordChanged);
+    _scheduleFallbackWordIfNeeded();
   }
 
   @override
@@ -50,10 +51,12 @@ class _StartPageState extends State<StartPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.wordProvider.currentWord == null) {
-      widget.wordProvider.setFallbackWord();
+    final Word? displayWord = widget.wordProvider.currentWord;
+    if (displayWord == null) {
+      // The fallback word is installed in a post-frame callback right after
+      // this frame; see [_scheduleFallbackWordIfNeeded].
+      return const Scaffold();
     }
-    Word displayWord = widget.wordProvider.currentWord!;
 
     return Scaffold(
       body: SafeArea(
@@ -145,9 +148,27 @@ class _StartPageState extends State<StartPage> {
     widget.wordProvider.loadRandomWord();
   }
 
-  void _onWordChanged() {
-    if (mounted) {
-      setState(() {});
+  /// Installs the per-language fallback word when there is nothing to show.
+  ///
+  /// Scheduling happens in a post-frame callback because
+  /// [WordProvider.setFallbackWord] notifies listeners, and mutating shared
+  /// state (or calling `setState`) while `build` is running triggers framework
+  /// assertions.
+  void _scheduleFallbackWordIfNeeded() {
+    if (widget.wordProvider.currentWord != null) {
+      return;
     }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || widget.wordProvider.currentWord != null) {
+        return;
+      }
+      widget.wordProvider.setFallbackWord();
+    });
+  }
+
+  void _onWordChanged() {
+    if (!mounted) return;
+    _scheduleFallbackWordIfNeeded();
+    setState(() {});
   }
 }

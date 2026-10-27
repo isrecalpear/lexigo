@@ -94,34 +94,44 @@ class WordManager {
     AppLogger.info('Inserted ${words.length} words successfully');
   }
 
-  Future<void> updateWord(Word word) async {
+  /// Updates the word row identified by `cardId`.
+  ///
+  /// Returns the number of affected rows. A result of `0` means the word is not
+  /// persisted (for example the in-memory fallback word shown for an empty
+  /// database), which callers use to avoid writing orphan data.
+  Future<int> updateWord(Word word) async {
     AppLogger.info('Updating word: ${word.originalWord}');
     final companion = await _wordToCompanion(word, updatedAt: DateTime.now());
-    _database.update(_database.wordTable)
-      ..where((t) => t.cardId.equals(companion.cardId.value))
-      ..write(companion);
-    AppLogger.info('Updated word successfully: ${word.originalWord}');
+    final statement = _database.update(_database.wordTable)
+      ..where((t) => t.cardId.equals(companion.cardId.value));
+    final rows = await statement.write(companion);
+    AppLogger.info(
+      'Updated word successfully: ${word.originalWord} ($rows rows)',
+    );
+    return rows;
   }
 
   Future<void> updateWords(List<Word> words) async {
     AppLogger.info('Start to update multiple words');
     final updatedAt = DateTime.now();
-    for (final word in words) {
-      final companion = await _wordToCompanion(word, updatedAt: updatedAt);
-      _database.update(_database.wordTable)
-        ..where((t) => t.cardId.equals(companion.cardId.value))
-        ..write(companion);
-      AppLogger.info('Updated word successfully: ${word.originalWord}');
-    }
+    await _database.transaction(() async {
+      for (final word in words) {
+        final companion = await _wordToCompanion(word, updatedAt: updatedAt);
+        final statement = _database.update(_database.wordTable)
+          ..where((t) => t.cardId.equals(companion.cardId.value));
+        await statement.write(companion);
+        AppLogger.info('Updated word successfully: ${word.originalWord}');
+      }
+    });
     AppLogger.info('Multiple words updated');
   }
 
   Future<void> deleteWordsByCardId(List<int> cardIds) async {
     AppLogger.info('Deleting ${cardIds.length} words by cardIds: $cardIds');
-    (_database.delete(
-      _database.wordTable,
-    )..where((t) => t.cardId.isIn(cardIds))).go();
-    AppLogger.info('Deleted words successfully');
+    final statement = _database.delete(_database.wordTable)
+      ..where((t) => t.cardId.isIn(cardIds));
+    final rows = await statement.go();
+    AppLogger.info('Deleted $rows words successfully');
   }
 
   Future<Word?> getWordByCardId(int cardId) async {
@@ -138,21 +148,26 @@ class WordManager {
     return _tableDataToWord(result);
   }
 
+  /// Returns the words for [languageCode].
+  ///
+  /// When [limit] is omitted every word is returned, so callers such as the
+  /// word list and the import de-duplication see the whole table instead of a
+  /// silently truncated slice.
   Future<List<Word>> getWords(
     LanguageCode languageCode, {
     int? limit,
     int? offset,
   }) async {
-    final lim = limit ?? 64;
     AppLogger.info(
-      'Getting words for $languageCode, limit: $lim, offset: $offset',
+      'Getting words for $languageCode, limit: ${limit ?? 'all'}, offset: $offset',
     );
-    final results =
-        await (_database.select(_database.wordTable)
-              ..where((t) => t.languageCode.equals(languageCode.name))
-              ..limit(lim, offset: offset)
-              ..orderBy([(t) => OrderingTerm(expression: t.id)]))
-            .get();
+    final query = _database.select(_database.wordTable)
+      ..where((t) => t.languageCode.equals(languageCode.name))
+      ..orderBy([(t) => OrderingTerm(expression: t.id)]);
+    if (limit != null) {
+      query.limit(limit, offset: offset);
+    }
+    final results = await query.get();
 
     final words = <Word>[];
     if (results.isEmpty) {
@@ -164,6 +179,30 @@ class WordManager {
     }
     AppLogger.info('Retrieved ${words.length} words for $languageCode');
     return words;
+  }
+
+  /// Returns the identity keys (`originalWord||bookId||unitId`) of every word
+  /// in [languageCode].
+  ///
+  /// Only the three columns that take part in import de-duplication are read,
+  /// which keeps this cheap even for large vocabulary tables.
+  Future<Set<String>> getWordIdentityKeys(LanguageCode languageCode) async {
+    final query = _database.selectOnly(_database.wordTable)
+      ..addColumns([
+        _database.wordTable.originalWord,
+        _database.wordTable.bookId,
+        _database.wordTable.unitId,
+      ])
+      ..where(_database.wordTable.languageCode.equals(languageCode.name));
+    final rows = await query.get();
+    return rows
+        .map(
+          (row) =>
+              '${row.read(_database.wordTable.originalWord) ?? ''}'
+              '||${row.read(_database.wordTable.bookId) ?? ''}'
+              '||${row.read(_database.wordTable.unitId) ?? ''}',
+        )
+        .toSet();
   }
 
   Future<Word?> getRandomWord(LanguageCode languageCode) async {
@@ -208,22 +247,52 @@ class WordManager {
     return _tableDataToWord(result);
   }
 
+  /// Escape character used to treat user input literally in `LIKE` patterns.
+  static const String _likeEscapeChar = '\\';
+
+  /// Escapes `LIKE` wildcards in [input] so it is matched as literal text.
+  static String _escapeLikePattern(String input) => input
+      .replaceAll('\\', '\\\\')
+      .replaceAll('%', '\\%')
+      .replaceAll('_', '\\_');
+
+  /// Searches [languageCode] words for [parts] in every text column.
+  ///
+  /// Matches are case-insensitive substrings (the query is wrapped in `%`), and
+  /// they never leak into other languages.
   Future<List<Word>> searchWords(
     LanguageCode languageCode,
     String parts, {
     int limit = 20,
   }) async {
+    final String query = parts.trim();
+    if (query.isEmpty) {
+      return <Word>[];
+    }
+    final String pattern = '%${_escapeLikePattern(query)}%';
     AppLogger.info(
-      'Searching words for $languageCode with query: "$parts", limit: $limit',
+      'Searching words for $languageCode with query: "$query", limit: $limit',
     );
     final results =
         await (_database.select(_database.wordTable)
               ..where(
-                (t) => Expression.or([
-                  t.originalWord.like(parts),
-                  t.originalTranslation.like(parts),
-                  t.exampleSentence.like(parts),
-                  t.exampleTranslation.like(parts),
+                (t) => Expression.and([
+                  t.languageCode.equals(languageCode.name),
+                  Expression.or([
+                    t.originalWord.like(pattern, escapeChar: _likeEscapeChar),
+                    t.originalTranslation.like(
+                      pattern,
+                      escapeChar: _likeEscapeChar,
+                    ),
+                    t.exampleSentence.like(
+                      pattern,
+                      escapeChar: _likeEscapeChar,
+                    ),
+                    t.exampleTranslation.like(
+                      pattern,
+                      escapeChar: _likeEscapeChar,
+                    ),
+                  ]),
                 ]),
               )
               ..orderBy([
@@ -236,13 +305,13 @@ class WordManager {
             .get();
     final words = <Word>[];
     if (results.isEmpty) {
-      AppLogger.info('No search results for "$parts"');
+      AppLogger.info('No search results for "$query"');
       return words;
     }
     for (final r in results) {
       words.add(_tableDataToWord(r));
     }
-    AppLogger.info('Found ${words.length} results for "$parts"');
+    AppLogger.info('Found ${words.length} results for "$query"');
     return words;
   }
 
@@ -264,7 +333,15 @@ class WordManager {
       unitID: word.unitID,
       bookID: word.bookID,
     );
-    await updateWord(updatedWord);
+    final int updatedRows = await updateWord(updatedWord);
+    if (updatedRows == 0) {
+      // Fallback/demo words are never persisted, so reviewing them must not
+      // create history rows pointing at a non-existent card.
+      AppLogger.warning(
+        'Skipping review persistence for unpersisted word: ${word.originalWord}',
+      );
+      return;
+    }
 
     final companion = WordLearningHistoryTableCompanion(
       cardId: Value(reviewLog.cardId),
@@ -272,7 +349,8 @@ class WordManager {
       reviewDateTime: Value(reviewLog.reviewDateTime),
       reviewDuration: Value(reviewLog.reviewDuration),
     );
-    _database.into(_database.wordLearningHistoryTable).insert(companion);
+    await _database.into(_database.wordLearningHistoryTable).insert(companion);
+    AppLogger.info('Review recorded for: ${word.originalWord} ($rating)');
   }
 
   Future<int> reviewPendingWordsCount([LanguageCode? languageCode]) async {
