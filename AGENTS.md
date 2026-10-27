@@ -19,6 +19,9 @@
 - 学习语言（词表语言）：`ko`（韩语）、`ru`（俄语）、`en`（英语），见 `lib/backend/word.dart` 的 `LanguageCode`。
 - 每条单词是**双语卡片**：原文 / 译文 / 原文例句 / 例句翻译，外加 `unitID`、`bookID` 两个分组维度。
 - 目标平台：Android / iOS / Windows / macOS / Linux（无 web 目录，`.metadata` 里的 web 条目是模板残留）。
+- **macOS 最低系统版本 = 12.0**（Monterey）。`macos/Runner.xcodeproj/project.pbxproj` 中三个 project 级 build configuration（Debug / Release / Profile）的 `MACOSX_DEPLOYMENT_TARGET` 都是 `12.0`。Xcode 27（macOS SDK 27）支持的最低部署目标是 12.0，模板残留的 `10.15` 会直接报 `The macOS deployment target 'MACOSX_DEPLOYMENT_TARGET' is set to 10.15, but the range of supported deployment target versions is 12.0 to 27.0.x` 并让 Runner / Flutter Assemble 两个 target 同时失败。升级 Flutter / Xcode 后如果 `flutter create` 生成的模板又把它写回 `10.15`，按错误提示的下限改回 `12.0` 即可。
+- macOS 原生依赖走 **Swift Package Manager**（`macos/Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage`），仓库里**没有 `macos/Podfile`**（`Podfile.lock` 是旧遗留文件）。切换依赖管理方式时注意 `macos/Runner.xcodeproj` 里的 `XCLocalSwiftPackageReference` / `XCSwiftPackageProductDependency` 与 `Flutter-Generated.xcconfig` 是同一次生成的，别只改一半。
+- 在 macOS 上构建时，SwiftPM 会把缓存写到 `~/Library/Caches/org.swift.swiftpm`；本机在 DSH 沙箱下该目录不可写，`xcodebuild -showBuildSettings` 会报 `cannot open file '...org.swift.swiftpm/...' (Operation not permitted)`，`flutter build macos` / `flutter run -d macos` 也因为 Flutter SDK 在沙箱外（`/Users/isrecal/source_code/sdk/flutter`）而无法执行 —— 这些命令要用「完全权限」跑。
 
 ## 2. 常用命令
 
@@ -145,7 +148,7 @@ lib/
 `StartPage`（随机词 + 开始）→ `LearningPage`（当前词、遮译文、4 个评分按钮）→ 评一次更新一次 FSRS → `nextReviewWord()` 立刻取下一条到期词 → 满 10 条或没词了 → `LearningSummarizePage`。「下一组」用 `pushReplacement` 回到 `LearningPage`。
 - 会话长度 `_totalCount = 10` 是常量（有 TODO 要配置化）。
 - 总结页的 `wordsReviewed` / `wordsToReview` 恒为 0；`wordsLearned` 在“没词可用”提前结束时少算最后一条。
-- DB 为空时 `WordProvider.setFallbackWord()` 提供一个**不在库里**的兜底词；对它评分不会落库，也不会再写孤儿 history 记录（`reviewWord` 以更新行数为 0 判断并跳过）。
+- `WordProvider` 构造时就装上当前语言的**不在库里**的兜底词；加载随机词失败（该语言没有词）时保留兜底词而不是把 `currentWord` 置 `null`，所以「下一个 / 左右滑动 / 开始学习」在空词库下不会出现空白帧或闪烁；`currentWord` 为空只出现在学习页 `nextReviewWord()` 取不到下一条到期词时。对它评分不会落库，也不会再写孤儿 history 记录（`reviewWord` 以更新行数为 0 判断并跳过）。
 
 ### 记录页（记录 Tab）★
 页面在 `lib/pages/records/records_page.dart`，只读查询集中在 `lib/backend/records/records_service.dart`：
@@ -249,7 +252,7 @@ lib/
 | 每个 `WordManager()` 新建 DB 连接 | `Database` 改为单例工厂，显式 `QueryExecutor` 时才开新连接 | `interface.dart` |
 | drift 写操作未 await、批量更新非事务 | 全部 `await`；`updateWords` 包进 `transaction` | `manager.dart` |
 | 兜底词评分产生孤儿 history | `reviewWord` 检查更新行数，为 0 时只记日志不写 history | `manager.dart` |
-| `StartPage.build` 中调用 `setFallbackWord()` | 改为 post-frame 回调安装兜底词 | `start_page.dart` |
+| 空词库时点击开始学习/滑动切换词会闪一帧空白页 | 兜底词下沉到 `WordProvider`（构造时初始化，加载不到词时保留而不是发布 `null`），`loadRandomWord()` 返回加载结果供调用方判断；`StartPage` 删除帧后安装兜底词的逻辑，空词库时开始学习直接返回 | `global_provider.dart`、`start_page.dart` |
 | 总结页手写 `replaceAll` 拼文案 | `learningSummary(learned, reviewed, toReview)` 走 l10n 参数机制 | `app_localizations.dart`、`learning_summarize.dart` |
 | `MyApp.build` 两份 `MaterialApp` | 抽取 `_buildMaterialApp`，两分支只传 ColorScheme | `main.dart` |
 | 无路由表、跳转散落 | 新增 `app_router.dart`：`AppRoutes` 类型化构建器 + `AppRoute` 名称，全部 `MaterialPageRoute` 收敛于此 | `app_router.dart` |
