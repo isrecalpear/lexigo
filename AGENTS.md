@@ -42,6 +42,8 @@ flutter build apk --release
 lib/
 ├─ main.dart                      入口 + 根 MyApp（主题/动态取色/语言/设置）+ MyHomePage（三 Tab、侧边 Rail、搜索）
 ├─ app_router.dart                ★路由表：AppRoute 名称 + AppRoutes 类型化构建器（全项目唯一 MaterialPageRoute 来源）
+├─ theme/
+│  └─ app_theme.dart              ★Material 3 设计系统：AppSpacing/AppRadius/AppMotion + 全部组件主题（只用 ColorScheme 角色，无渐变）
 ├─ backend/
 │  ├─ word.dart                   Word 模型、LanguageCode 枚举
 │  ├─ database/
@@ -73,7 +75,9 @@ lib/
 │  │  │  ├─ word_add.dart         手动添加单词表单
 │  │  │  └─ word_edit.dart        编辑单词表单
 │  │  └─ log_management/          日志查看/清除/分享
-│  └─ widgets/word_card.dart      单词卡片组件（含“纠错/标记熟知”菜单）
+│  └─ widgets/
+│     ├─ app_ui.dart              ★共享 M3 组件（AppSurface/AppSettingsGroup/AppStatTile/AppPageHeader/AppEmptyState/...）
+│     └─ word_card.dart           单词卡片组件（含“纠错/标记熟知”菜单、遮罩/显示答案）
 ├─ l10n/
 │  ├─ app_en.arb / app_zh.arb          ★文案源（ARB，模板 app_en.arb，占位符元数据写在模板里）
 │  ├─ l10n.dart                        手写出口：export 生成类 + BuildContext.l10n 扩展
@@ -204,6 +208,35 @@ lib/
 8. **生成代码**：`interface.g.dart` 只由 build_runner 生成，改表后必须重跑；不要手改。
 9. **格式化**：`dart format`（默认 80 列、末尾逗号风格），提交前 `dart analyze` 必须 0 issue。
 
+## 6.1 UI 设计系统（Material 3）★
+
+这是 2026-10 这一轮 UI 重做后的约定，新增/修改界面前必读。
+
+- **主题**：全局主题在 `lib/theme/app_theme.dart`，由 `AppTheme.build(brightness, dynamicScheme: ..., seedColor: ..., fontFamily: ...)` 统一生成 light/dark `ThemeData`。不要在页面里手写 `ThemeData`，也不要改 `buildTheme` 之类的旧入口。
+- **设计令牌**：`AppSpacing`（4dp 网格）、`AppRadius`（xs..huge/full/card/group/sheet）、`AppMotion`（fast/medium/slow + easeOutCubic）。颜色/圆角/间距优先取这些常量。
+- **共享组件**（`lib/pages/widgets/app_ui.dart`）：
+  - `AppContent`（内容最大宽度 920 并居中）+ `AppInsets`（`page` / `formPage` / `surface` / `group` 标准内边距）；
+  - `AppSurface`（圆角 tonal 卡片，可传纯色 `color`/`onTap`，**不支持渐变**）、`AppSectionHeader`、`AppPageHeader`、`AppEyebrow`；
+  - `AppSettingsGroup` + `AppSettingsTile`（分组设置列表）、`AppChoiceTile<T>`（选择器行，圆形勾选）；
+  - `AppIconBadge`、`AppPill`、`AppStatTile`、`AppEmptyState`、`AppLoading`、`AppErrorView`。
+- **页面骨架**：
+  - Tab 页（学习/记录/我的）**不要 AppBar**——外壳 `MyHomePage` 已有品牌头、语言选择和搜索；body 用 `SafeArea(top: false) → AppContent → ListView(padding: AppInsets.page)`，需要页面标题时用 `AppPageHeader`。
+  - 压栈页面用 `Scaffold + AppBar`，body 用 `SafeArea → AppContent → ListView(padding: AppInsets.formPage)`。
+  - `MyHomePage` 宽屏判断沿用宽高比 ≥ 1.2：竖屏 `NavigationBar`，宽屏 `NavigationRail`；`start_page.dart` 在宽度 ≥ 900 时切左右双栏。
+- **颜色（Material 规范）**：
+  - 只允许 `Theme.of(context).colorScheme` 的语义角色；禁止自定义色相、`Color(0x...)`、`Colors.red` 之类字面色值（`Colors.transparent` 仅用于“无边框/无底色”占位）。不要把多个角色 `Color.alphaBlend` 混成一个新颜色。
+  - **禁止渐变**：不要使用 `LinearGradient` / `RadialGradient` / `SweepGradient` / `BoxDecoration(gradient:)` / `Shader` 画渐变；高亮块、品牌块、图表柱体、弹层预览一律用纯色容器角色。
+  - 常用映射：页面/卡片底 `surface`、`surfaceContainerLow`、`surfaceContainerHigh`；品牌/主操作 `primary` + `onPrimary` 或 `primaryContainer` + `onPrimaryContainer`；次级 `secondaryContainer` + `onSecondaryContainer`；第三色 `tertiaryContainer` + `onTertiaryContainer`；错误/忘记 `errorContainer` + `onErrorContainer`；分割线/边框 `outlineVariant`；次要文字 `onSurfaceVariant`；遮罩 `scrim`；阴影 `shadow`。
+  - 评级/状态色统一走 `lib/pages/records/records_format.dart` 的 `ratingContainerColor` / `ratingOnColor`、`stateContainerColor` / `stateOnColor`（again=errorContainer、hard=tertiaryContainer、good=primaryContainer、easy=secondaryContainer），页面里不要另写映射。
+  - 状态层、边框、阴影、图表网格允许对 ColorScheme 角色使用标准透明度（8%–24%，例如 12% hover/选中态、`scrim` 45% 遮罩），但不得因此混出新的色相；图表柱体用 `primary`（今天）/ `primaryContainer`（其余）/ `outlineVariant`（零值），遗忘曲线用 `primary` 线 + `primaryContainer` 端点，不要填充渐变。
+  - 主题色选择器本身需要展示用户选择的任意颜色（HSV/Hex 预览），这是唯一允许出现自定义颜色的场景；其余 UI 不得跟随它。
+  - 所有页面必须同时适配浅色与深色主题；深浅模式下都不得出现渐变或不可读的低对比文字。
+- **文字/图标**：字号走 `textTheme`；图标统一 Material Icons，优先 `*_rounded` 变体；圆角用 `AppRadius`，间距用 `AppSpacing`。
+- **组件主题已覆盖**：AppBar / Card / ListTile / FilledButton / OutlinedButton / InputDecoration / Dialog / BottomSheet / SnackBar / NavigationBar / NavigationRail / Chip / PopupMenu / Tooltip / SearchBar / Slider / Switch / SegmentedButton 等，优先复用主题，避免局部 `styleFrom` 重复造轮子。
+- **动效**：时间/曲线用 `AppMotion`；选中态用 `AnimatedContainer`，内容切换用 `AnimatedSwitcher`，不要堆叠过多动画。
+- **字体/主题色**：用户选的字体只通过 `fontFamily` 注入主题；主题色/动态取色仍然只由 `main.dart` 的 `AppTheme.build(seedColor/dynamicScheme)` 处理，页面不要自己 `ColorScheme.fromSeed`。
+- **自测尺寸**：360×800、430×932、≥1024 宽桌面三种尺寸 + 明暗两套主题 + 中英文案，均不能溢出或出现不可读文字。
+
 ## 7. 已知问题清单
 
 ### 已修复（2026-10 这一轮）
@@ -249,6 +282,7 @@ lib/
 ## 9. 完成定义（Definition of Done）
 
 - `dart analyze lib` 无 issue；`dart format` 无 diff。
+- UI 改动使用 `AppTheme`/`app_ui.dart` 里的令牌与组件，没有新增硬编码颜色/圆角；已检查浅色/深色、小屏/桌面和中英文案不溢出。
 - 新增/修改页面跳转 → 已在 `AppRoutes` 中声明，页面内没有裸 `MaterialPageRoute`。
 - 改过 `tables.dart` → 已跑 build_runner，`interface.g.dart` 已更新。
 - 新增用户可见文案 → 中英双语齐全。
