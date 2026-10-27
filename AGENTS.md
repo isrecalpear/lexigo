@@ -9,7 +9,7 @@
 - 本机运行在 DSH 沙箱下时，`dart analyze` / `flutter build` 需要进程间管道，**可能被沙箱拒绝（CreateFile failed 5）**；这类命令需要「完全权限」再跑。`dart format` 不受影响。
 - 沙箱内 **`lib/` 等子目录下已有文件的写入可能仍被拒绝**（即使目录 ACL 已修复，`Add-Content`/`dart format` 都会报拒绝访问）。遇到时用「完全权限」执行写操作；编辑文件本身通过 agent 的编辑工具不受影响。
 - 当前基线：`dart analyze lib` → **No issues found**；`dart format` 干净；仓库**没有任何测试**。
-- `git status` 里 `windows|linux|macos/.../generated_plugin*` 的改动是构建产物，不要当成业务改动提交。
+- 构建产物已在 `.gitignore` 中屏蔽：`build/`、`.dart_tool/`、各平台 `ephemeral/`/`Pods/`/`app/build/`，以及自动生成的 `generated_plugin_registrant.*`、`generated_plugins.cmake`、`GeneratedPluginRegistrant.*`。这些文件不再被跟踪，由 `flutter pub get` / 构建自动重建，不要手动加入版本库。
 
 ## 1. 项目是什么
 

@@ -27,6 +27,7 @@ migrate_working_dir/
 **/doc/api/
 **/ios/Flutter/.last_build_id
 .dart_tool/
+.flutter-plugins
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
@@ -43,3 +44,19 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Build output (Flutter and platform toolchains)
+**/build/
+**/ephemeral/
+/android/.gradle/
+/android/.cxx/
+/android/app/build/
+/android/build/
+/ios/Pods/
+/ios/.symlinks/
+/macos/Pods/
+
+# Generated plugin registrants, recreated by `flutter pub get` / `flutter build`
+**/generated_plugin_registrant.*
+**/generated_plugins.cmake
+**/GeneratedPluginRegistrant.*
