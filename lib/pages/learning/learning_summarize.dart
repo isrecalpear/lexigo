@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:lexigo/l10n/app_localizations.dart';
+import 'package:lexigo/app_router.dart';
 import 'package:lexigo/backend/word.dart';
-import 'package:lexigo/pages/learning/learn.dart';
-import 'package:lexigo/pages/widgets/word_card.dart';
 import 'package:lexigo/backend/word/global_provider.dart';
+import 'package:lexigo/l10n/app_localizations.dart';
+import 'package:lexigo/pages/widgets/word_card.dart';
 
 /// Summary page displayed after completing a learning session.
 
@@ -125,12 +125,10 @@ class _LearningSummarizePageState extends State<LearningSummarizePage> {
                     child: FilledButton(
                       onPressed: () {
                         Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                            builder: (context) => LearningPage(
-                              word: word,
-                              learningLanguage: word.sourceLanguageCode,
-                              wordProvider: widget.wordProvider,
-                            ),
+                          AppRoutes.learning(
+                            word: word,
+                            languageCode: word.sourceLanguageCode,
+                            wordProvider: widget.wordProvider,
                           ),
                         );
                       },

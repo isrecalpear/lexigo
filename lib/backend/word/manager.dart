@@ -72,26 +72,47 @@ class WordManager {
   Future<void> insertWord(Word word) async {
     AppLogger.info('Inserting word: ${word.originalWord}');
     final now = DateTime.now();
-    final companion = await _wordToCompanion(word, updatedAt: now);
+    final companion = _wordToCompanion(word, updatedAt: now);
     await _database.into(_database.wordTable).insert(companion);
     AppLogger.info('Inserted word successfully: ${word.originalWord}');
   }
 
-  Future<void> insertWords(List<Word> words) async {
-    AppLogger.info('Start to insert ${words.length} words');
-    final now = DateTime.now();
-    final companions = <WordTableCompanion>[];
-    for (final word in words) {
-      companions.add(await _wordToCompanion(word, updatedAt: now));
+  /// Inserts [words] in chunks inside a single transaction.
+  ///
+  /// Chunking keeps the working set small and lets callers report progress
+  /// between batches, while the surrounding transaction keeps an import
+  /// all-or-nothing. [onProgress] receives the processed and total counts after
+  /// every chunk.
+  Future<void> insertWords(
+    List<Word> words, {
+    void Function(int done, int total)? onProgress,
+  }) async {
+    if (words.isEmpty) {
+      AppLogger.info('No words to insert');
+      return;
     }
-    await _database.batch((batch) {
-      batch.insertAll(
-        _database.wordTable,
-        companions,
-        mode: InsertMode.insertOrReplace,
-      );
+    const int chunkSize = 200;
+    final int total = words.length;
+    final now = DateTime.now();
+    AppLogger.info('Start to insert $total words');
+    await _database.transaction(() async {
+      for (int start = 0; start < total; start += chunkSize) {
+        final int end = start + chunkSize < total ? start + chunkSize : total;
+        final companions = <WordTableCompanion>[
+          for (final word in words.sublist(start, end))
+            _wordToCompanion(word, updatedAt: now),
+        ];
+        await _database.batch((batch) {
+          batch.insertAll(
+            _database.wordTable,
+            companions,
+            mode: InsertMode.insertOrReplace,
+          );
+        });
+        onProgress?.call(end, total);
+      }
     });
-    AppLogger.info('Inserted ${words.length} words successfully');
+    AppLogger.info('Inserted $total words successfully');
   }
 
   /// Updates the word row identified by `cardId`.
@@ -101,7 +122,7 @@ class WordManager {
   /// database), which callers use to avoid writing orphan data.
   Future<int> updateWord(Word word) async {
     AppLogger.info('Updating word: ${word.originalWord}');
-    final companion = await _wordToCompanion(word, updatedAt: DateTime.now());
+    final companion = _wordToCompanion(word, updatedAt: DateTime.now());
     final statement = _database.update(_database.wordTable)
       ..where((t) => t.cardId.equals(companion.cardId.value));
     final rows = await statement.write(companion);
@@ -116,7 +137,7 @@ class WordManager {
     final updatedAt = DateTime.now();
     await _database.transaction(() async {
       for (final word in words) {
-        final companion = await _wordToCompanion(word, updatedAt: updatedAt);
+        final companion = _wordToCompanion(word, updatedAt: updatedAt);
         final statement = _database.update(_database.wordTable)
           ..where((t) => t.cardId.equals(companion.cardId.value));
         await statement.write(companion);
@@ -316,7 +337,7 @@ class WordManager {
   }
 
   Future<void> reviewWord(Word word, Rating rating, int? reviewDuration) async {
-    final card_ = await word.card;
+    final card_ = word.card;
     final (:card, :reviewLog) = scheduler.reviewCard(
       card_,
       rating,
@@ -329,7 +350,7 @@ class WordManager {
       exampleSentence: word.exampleSentence,
       exampleTranslation: word.exampleTranslation,
       sourceLanguageCode: word.sourceLanguageCode,
-      card: Future.value(card),
+      card: card,
       unitID: word.unitID,
       bookID: word.bookID,
     );
@@ -374,12 +395,12 @@ class WordManager {
     return count;
   }
 
-  Future<WordTableCompanion> _wordToCompanion(
+  WordTableCompanion _wordToCompanion(
     Word word, {
     DateTime? createdAt,
     required DateTime updatedAt,
-  }) async {
-    final wordCard = await word.card;
+  }) {
+    final wordCard = word.card;
     return WordTableCompanion.insert(
       languageCode: word.sourceLanguageCode.name,
       originalWord: word.originalWord,
@@ -420,7 +441,7 @@ class WordManager {
       sourceLanguageCode: LanguageCode.values.byName(
         wordTableData.languageCode,
       ),
-      card: Future.value(card),
+      card: card,
       unitID: wordTableData.unitId,
       bookID: wordTableData.bookId,
     );

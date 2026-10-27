@@ -40,6 +40,7 @@ flutter build apk --release
 ```
 lib/
 ├─ main.dart                      入口 + 根 MyApp（主题/动态取色/语言/设置）+ MyHomePage（三 Tab、侧边 Rail、搜索）
+├─ app_router.dart                ★路由表：AppRoute 名称 + AppRoutes 类型化构建器（全项目唯一 MaterialPageRoute 来源）
 ├─ backend/
 │  ├─ word.dart                   Word 模型、LanguageCode 枚举
 │  ├─ database/
@@ -49,6 +50,7 @@ lib/
 │  └─ word/
 │     ├─ manager.dart             数据访问层 + FSRS Scheduler（所有 CRUD / 复习）
 │     ├─ global_provider.dart     WordProvider（ChangeNotifier，跨页面共享“当前单词”）
+│     ├─ import_service.dart      ★导入流水线：检测/校验/去重（prepare）→ 分块事务写入（commit）
 │     └─ fallback.dart            每个语言一个兜底词（DB 为空时展示用，不落库）
 ├─ pages/
 │  ├─ start_page.dart             学习 Tab：随机词卡片 + 「下一个」+「开始学习」
@@ -60,7 +62,7 @@ lib/
 │  ├─ my_page/
 │  │  ├─ settings_editing.dart    UI 语言、主题模式、主题色（HSV + Hex 选择器）
 │  │  ├─ word_management/
-│  │  │  ├─ word_management.dart  ★词表导入（SQLite）+ 导出（TODO）菜单
+│  │  │  ├─ word_management.dart  ★导入入口（预览确认 + 进度弹窗）+ 导出（TODO）菜单
 │  │  │  ├─ word_view.dart        当前语言单词列表（编辑/删除）
 │  │  │  ├─ word_add.dart         手动添加单词表单
 │  │  │  └─ word_edit.dart        编辑单词表单
@@ -103,7 +105,7 @@ lib/
 - `schemaVersion = 1`，**没有 `MigrationStrategy`**。改表必须同时 bump 版本并写迁移，否则老用户升级会直接炸（drift 默认 `onUpgrade` 抛异常/或 schema 校验失败）。
 - 数据库文件：`driftDatabase(name: "database")`，目录 Android 用 documents，其它平台用 support。
 - **`Database` 是单例**：`WordManager()` 仍然各自创建，但内部的 `Database()` 工厂返回同一实例，所有读写共用一条 sqlite 连接；只有在显式传入 `QueryExecutor` 时才开新连接（测试/工具用）。
-- `Word.card` 是 `Future<Card>`（历史遗留设计）：从行数据还原时用 `Card.fromMap` 包成已完成的 Future；新增字段时两边都要改。
+- `Word.card` 是 `Card`（不是 `Future<Card>`）：从行数据还原时用 `Card.fromMap`，内存中的卡片可直接读写；兜底词用 `Card(cardId: -1)`。
 - 写操作现在都会 `await`（`updateWord` 返回受影响行数），`updateWords` 在事务里执行；`reviewWord` 用受影响行数判断单词是否已落库，未落库的兜底词不会写孤儿 history 记录。
 
 ### FSRS 调度
@@ -121,7 +123,8 @@ lib/
 `MyApp.build` 按 `DeviceInfoManager().supportsDynamicColor` 决定主题来源，两条分支只差 ColorScheme，`MaterialApp` 的公共配置集中在 `_buildMaterialApp`（iOS 不支持动态取色，用 seed/默认色）。
 
 ### 导航
-无路由表、无 `go_router`：全部 `Navigator.push(MaterialPageRoute(...))`。底部三 Tab 用 `PageView`（禁止滑动）+ `NavigationBar`；横屏宽高比 ≥ 1.2 时换成 `NavigationRail`。
+路由集中在 `lib/app_router.dart`：`AppRoute` 是稳定的路径名，`AppRoutes.xxx(...)` 返回带 `RouteSettings(name:)` 的类型化 `MaterialPageRoute`，页面参数保持强类型，没有 `Object? arguments`。**不要在页面里直接 new `MaterialPageRoute`**；新增页面时在 `AppRoutes` 里加构建器。路由名会出现在 `AppRouteObserver` 的日志里。没有引入 `go_router`：应用没有深链 / 多 Shell / 浏览器 URL 需求，集中式路由表已经覆盖可维护性目标。
+底部三 Tab 用 `PageView`（禁止滑动）+ `NavigationBar`；横屏宽高比 ≥ 1.2 时换成 `NavigationRail`。
 
 ### 学习
 `StartPage`（随机词 + 开始）→ `LearningPage`（当前词、遮译文、4 个评分按钮）→ 评一次更新一次 FSRS → `nextReviewWord()` 立刻取下一条到期词 → 满 10 条或没词了 → `LearningSummarizePage`。「下一组」用 `pushReplacement` 回到 `LearningPage`。
@@ -130,29 +133,26 @@ lib/
 - DB 为空时 `WordProvider.setFallbackWord()` 提供一个**不在库里**的兜底词；对它评分不会落库，也不会再写孤儿 history 记录（`reviewWord` 以更新行数为 0 判断并跳过）。
 
 ### 词表导入（当前唯一导入通道）★
-入口：我的 → 单词管理 → 导入单词清单。实现在 `lib/pages/my_page/word_management/word_management.dart` 的 `_importWords`：
+入口：我的 → 单词管理 → 导入单词清单。UI 在 `lib/pages/my_page/word_management/word_management.dart`，流水线在 `lib/backend/word/import_service.dart`，分三步：
 
-1. `PermissionManager.makeSureReadExternalPermission()`（Android 请求 `Permission.storage`，Android 13+ 已废弃；`file_selector` 走 SAF，实际不需要）。
-2. `openFile` 只接受扩展名 `sqlite` / `db`（**不支持 CSV/JSON/TXT**）。
-3. 用 `sqlite3` 直接打开外部文件，读 `sqlite_master`，表名必须命中 `ko`/`ru`/`en`；只命中一个则自动识别语言，否则弹窗让用户选（还会校验该表存在）。
-4. 必需列：`original_word, translation, original_example, example_translation, unit_id, book_id`（缺一个就报错）。
-5. 逐行读取并 `trim`；`original_word` 或 `translation` 为空 → 跳过；键 `originalWord||bookId||unitId` 已存在 → 跳过。
-6. 每行 `fsrs.Card.create()`（内部固定 `await 1ms` 防 cardId 碰撞）→ `insertWords` 批量 `insertOrReplace`。
-7. 完成后 SnackBar 报 `importSuccess(成功数, 跳过数)`；失败报 `importFailed(error)`；页面**不会自动刷新**单词列表。
+1. `detectLanguages(path)`：只读 `sqlite_master`，返回文件里存在的 `ko` / `ru` / `en` 表；只有一个时自动识别，多个时弹窗选择。
+2. `prepare(path, language)`：校验必需列，逐行 `trim`，跳过空词/空译，按 `originalWord||bookId||unitId` 与**整表**去重，返回 `ImportPlan`（总行数 / 可导入数 / 跳过数：空行 + 重复）。**此阶段不写库。**
+3. UI 用确认框展示 `ImportPlan` 统计（语言、总数、可导入、跳过）→ `commit(plan)`：批量构造 `Word`（`Card(cardId: 起始毫秒 + i)`，不再每词 `await 1ms`），`WordManager.insertWords` 在**单个事务**里按 200 条分块写入并回调进度，UI 用不可取消的进度弹窗显示百分比。
+4. 完成后 SnackBar 报 `importSuccess(导入数, 跳过数)`；失败报 `importFailed`。
 
-**现有缺陷（改这块时一并考虑）**：
-- 没有事务、没有进度、没有导入前预览，几千词会明显卡顿（每词 1ms + 无批事务）。
-- 安卓上 `XFile.path` 可能是缓存路径；直接 `sqlite3.open(path)` 在部分厂商 ROM 上不可靠。
-- 唯一键含 `card_id`，所以“同词同书同单元”在 DB 层并不唯一，去重全靠应用层。
-- 去重已改为读取整表的 `originalWord||bookId||unitId` 键集合（`getWordIdentityKeys`），不再受 64 条限制。
+细节/注意：
+- 只接受扩展名 `sqlite` / `db`（**不支持 CSV/JSON/TXT**）；必需列 `original_word, translation, original_example, example_translation, unit_id, book_id`。
+- 去重靠应用层：DB 唯一键包含 `card_id`，库层并不保证“同词同书同单元”唯一。
+- Android 上 `XFile.path` 可能是缓存路径，部分厂商 ROM 上直接 `sqlite3.open(path)` 不可靠。
+- 解析仍使用同步 `sqlite3`，几千行约在百毫秒级；写入已分块并包在事务里，失败会整体回滚。
 
-导出（`_exportWords`）是 TODO，只弹语言选择后打日志。
+导出（`_exportWords`）仍是 TODO，只弹语言选择后打日志。
 
 ### 设置持久化
 `SettingsStore` 单例持有内存 `Settings`，`saveSettings()` 写 `<support>/settings.yaml`（手写 YAML 序列化，不是 `yaml` 库的输出格式），`loadSettings()` 用 `yaml.loadYaml` 读并用 `_parse*` 兜底。`copyWith` 的 `null` 语义靠 `localeSet` / `colorSeedSet` 两个显式开关表达（`null` 表示跟随系统语言 / 自动主题色）；忘记传开关时 `null` 会被忽略。
 
 ### 日志
-`AppLogger` 静态方法（`debug/info/warning/error/fatal`），`logger` 包 + 自定义 printer/output 同步追加到 `<documents|support>/logs/yyyy-MM-dd.log`；启动时清理到 7 个文件、单文件 >5MB 删除。跨天不会自动切文件（进程常驻时仍写旧文件）。禁止 `print`。
+`AppLogger` 静态方法（`debug/info/warning/error/fatal`），`logger` 包 + 自定义 printer / `_DailyFileOutput`，同步追加到 `<documents|support>/logs/yyyy-MM-dd.log`；跨天自动切到新日期文件；启动时清理到 7 个文件、单文件 >5MB 删除。日志量小，保留同步写入以保证日志查看页立即可见。禁止 `print`。
 
 ## 6. 编码约定
 
@@ -188,6 +188,11 @@ lib/
 | `StartPage.build` 中调用 `setFallbackWord()` | 改为 post-frame 回调安装兜底词 | `start_page.dart` |
 | 总结页手写 `replaceAll` 拼文案 | `learningSummary(learned, reviewed, toReview)` 走 l10n 参数机制 | `app_localizations.dart`、`learning_summarize.dart` |
 | `MyApp.build` 两份 `MaterialApp` | 抽取 `_buildMaterialApp`，两分支只传 ColorScheme | `main.dart` |
+| 无路由表、跳转散落 | 新增 `app_router.dart`：`AppRoutes` 类型化构建器 + `AppRoute` 名称，全部 `MaterialPageRoute` 收敛于此 | `app_router.dart` |
+| 导入无事务/进度/预览、每词 1ms | 抽出 `WordImportService`（检测→预览→提交）：单事务分块写入 + 进度回调 + 确认弹窗；批量构造 Card 去掉 1ms/词 | `import_service.dart`、`word_management.dart`、`manager.dart` |
+| 单词列表编辑结果类型不一致（`push<bool>` vs `pop<Word>`） | 统一为 `Route<Word>`，保存后按返回值刷新列表 | `word_view.dart`、`app_router.dart` |
+| `Word.card` 是 `Future<Card>` | 模型改为直接持有 `Card`，去掉各处 `await word.card` | `word.dart`、`manager.dart`、各页面 |
+| 日志跨天仍写旧文件 | `_DailyFileOutput` 按日期切换文件并同步日志查看路径；`getLogSize` 改为异步遍历 | `app_logger.dart` |
 
 ### 仍待处理
 
@@ -199,24 +204,23 @@ lib/
 | 4 | 词表导出未实现 | `word_management.dart` `_exportWords` |
 | 5 | 学习会话固定 10 词；总结页 `wordsReviewed`/`wordsToReview` 恒为 0，提前结束时 `wordsLearned` 少算一条 | `learn.dart`、`learning_summarize.dart` |
 | 6 | Android 权限模型过时（`READ_MEDIA_*` + `Permission.storage`）与 SAF 不匹配 | `AndroidManifest.xml`、`permission_manager.dart` |
-| 7 | 日志跨天不轮转；`getLogSize` 同步 `listSync` | `app_logger.dart` |
-| 8 | 导入无事务/无进度/无预览，大词表慢且可能部分失败 | `word_management.dart` |
-| 9 | `getNextReviewWord` 只按 `due < now`，没有新卡/旧卡优先级、没有每日上限 | `manager.dart` |
-| 10 | 没有任何自动化测试 | `test/`（不存在） |
+| 7 | `getNextReviewWord` 只按 `due < now`，没有新卡/旧卡优先级、没有每日上限 | `manager.dart` |
+| 8 | 没有任何自动化测试 | `test/`（不存在） |
 
 ## 8. 典型改动指南
 
 **新增一条 UI 文案**：`app_localizations.dart` 加 getter → `en` map → `zh` map → 用 `context.l10n.xxx`。
-**新增页面**：`lib/pages/...` 单文件一页（`XxxPage` + `_XxxPageState`），入口在 `my_page.dart` 或对应父页 `Navigator.push`；文案走 l10n；进出页面打 `AppLogger.info`（现有页面都有）。
+**新增页面**：`lib/pages/...` 单文件一页（`XxxPage` + `_XxxPageState`）；在 `lib/app_router.dart` 的 `AppRoutes` 里加构建器和 `AppRoute` 名称，页面内用 `Navigator.push(context, AppRoutes.xxx(...))`，不要直接构造 `MaterialPageRoute`；文案走 l10n；进出页面打 `AppLogger.info`。
 **新增数据表/字段**：改 `tables.dart` → bump `interface.dart` 的 `schemaVersion` 并实现 `MigrationStrategy`（drift 文档的 `onUpgrade` + `m.addColumn(...)`）→ `dart run build_runner build --delete-conflicting-outputs` → 修 `_wordToCompanion` / `_tableDataToWord` / 各表单页 / 导入列校验。
 **新增学习语言**：`LanguageCode` 加值 → `fallback.dart` 加兜底词 → 外部导入表名映射自动生效 → 检查 `settings_editing` 语言名展示（目前直接显示 enum name）。
-**支持 CSV/JSON 词表（推荐下一步）**：抽 `lib/backend/word/import_service.dart`：`parse(bytes) -> List<Word>` + 校验 + 去重（分页/全量查询，不要用 64 条默认）+ 批量事务插入 + 进度回调；`word_management.dart` 只负责选文件与展示结果。注意 `Card.create()` 每张卡 1ms，大批量要么并行创建 Card 后统一插入，要么接受耗时并给进度。
+**支持 CSV/JSON 词表（推荐下一步）**：在现有 `lib/backend/word/import_service.dart` 上扩展解析器（`sqlite` 走 `prepare`，CSV/JSON 走新方法），复用 `ImportPlan` / `commit` 的事务 + 分块 + 进度；`word_management.dart` 只负责选文件和展示预览。批量构造 Card 用 `Card(cardId: base + i)`，不要逐词 `Card.create()`（每个 sleep 1ms）。
 **实现导出**：`file_selector.getSaveLocation` 拿路径 → `sqlite3` 建新库 → 建 `ko/ru/en` 表并写入六列（与导入格式对齐，形成往返一致）→ 成功/失败 SnackBar。
 
 ## 9. 完成定义（Definition of Done）
 
 - `dart analyze lib` 无 issue；`dart format` 无 diff。
+- 新增/修改页面跳转 → 已在 `AppRoutes` 中声明，页面内没有裸 `MaterialPageRoute`。
 - 改过 `tables.dart` → 已跑 build_runner，`interface.g.dart` 已更新。
 - 新增用户可见文案 → 中英双语齐全。
-- 手动验证：启动 → 学习（至少一次评分）→ 刷新后数据在 → 导入一份词表成功；Android/桌面至少各跑一次（涉及文件/权限时）。
+- 手动验证：启动 → 学习（至少一次评分）→ 刷新后数据在 → 导入一份词表（含预览与进度）；Android/桌面至少各跑一次（涉及文件/权限时）。
 - 不提交构建产物（`build/`、`generated_plugin_*`、`.dart_tool/`）。

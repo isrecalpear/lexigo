@@ -51,7 +51,7 @@ class AppLogger {
       _logger = Logger(
         filter: ProductionFilter(),
         printer: _CustomLogPrinter(),
-        output: _FileOutput(_logFile!),
+        output: _DailyFileOutput(logDir),
         level: Level.debug,
       );
 
@@ -100,10 +100,9 @@ class AppLogger {
         final Directory logDir = Directory(logDirPath);
         if (await logDir.exists()) {
           int totalSize = 0;
-          final List<FileSystemEntity> files = logDir.listSync();
-          for (final file in files) {
-            if (file is File) {
-              totalSize += await file.length();
+          await for (final FileSystemEntity entity in logDir.list()) {
+            if (entity is File) {
+              totalSize += await entity.length();
             }
           }
           return totalSize / (1024 * 1024);
@@ -235,14 +234,31 @@ class _CustomLogPrinter extends LogPrinter {
   }
 }
 
-class _FileOutput extends LogOutput {
-  final File file;
+/// Appends log lines to today's file and rotates when the date changes.
+///
+/// A long-running session used to keep writing to the file of the day it
+/// started, which made the in-app log viewer show stale content after midnight.
+class _DailyFileOutput extends LogOutput {
+  _DailyFileOutput(this._logDir);
 
-  _FileOutput(this.file);
+  final Directory _logDir;
+  String? _currentDate;
+  File? _currentFile;
+
+  File _fileForToday() {
+    final String dateStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    if (_currentDate != dateStr || _currentFile == null) {
+      _currentDate = dateStr;
+      _currentFile = File('${_logDir.path}/$dateStr.log');
+      AppLogger._logFile = _currentFile;
+    }
+    return _currentFile!;
+  }
 
   @override
   void output(OutputEvent event) {
     try {
+      final File file = _fileForToday();
       final String content = '${event.lines.join('\n')}\n';
       file.writeAsStringSync(content, mode: FileMode.append);
     } catch (e, stackTrace) {

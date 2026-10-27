@@ -98,6 +98,13 @@ class AppLocalizations {
   String importSuccess(int count, int skipped) =>
       _t('importSuccess', {'count': '$count', 'skipped': '$skipped'});
   String importFailed(String error) => _t('importFailed', {'error': error});
+  String get importPreviewTitle => _t('importPreviewTitle');
+  String importPreviewSummary(int total, int count, int skipped) => _t(
+    'importPreviewSummary',
+    {'total': '$total', 'count': '$count', 'skipped': '$skipped'},
+  );
+  String get importInProgress => _t('importInProgress');
+  String get importNothingToImport => _t('importNothingToImport');
   String get addWordPageTitle => _t('addWordPageTitle');
   String get editWordPageTitle => _t('editWordPageTitle');
   String get fieldLanguage => _t('fieldLanguage');
@@ -238,6 +245,11 @@ const Map<String, Map<String, String>> _localizedValues = {
     'confirm': 'Confirm',
     'importSuccess': 'Imported {count} items, skipped {skipped}.',
     'importFailed': 'Import failed: {error}',
+    'importPreviewTitle': 'Confirm import',
+    'importPreviewSummary':
+        'Found {total} rows: {count} to import, {skipped} skipped (empty or duplicate).',
+    'importInProgress': 'Importing…',
+    'importNothingToImport': 'No new words to import',
     'addWordPageTitle': 'Add word',
     'editWordPageTitle': 'Edit word',
     'fieldLanguage': 'Language',
@@ -351,6 +363,10 @@ const Map<String, Map<String, String>> _localizedValues = {
     'confirm': '确定',
     'importSuccess': '导入成功: {count} 条，跳过: {skipped} 条',
     'importFailed': '导入失败: {error}',
+    'importPreviewTitle': '确认导入',
+    'importPreviewSummary': '共 {total} 行：可导入 {count} 条，跳过 {skipped} 条（空行或重复）。',
+    'importInProgress': '正在导入…',
+    'importNothingToImport': '没有可导入的新单词',
     'addWordPageTitle': '添加单词',
     'editWordPageTitle': '编辑单词',
     'fieldLanguage': '语言',

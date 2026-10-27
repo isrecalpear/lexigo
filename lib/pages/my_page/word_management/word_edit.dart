@@ -89,7 +89,7 @@ class _WordEditPageState extends State<WordEditPage> {
         exampleSentence: _originalExampleController.text.trim(),
         exampleTranslation: _exampleTranslationController.text.trim(),
         sourceLanguageCode: widget.word.sourceLanguageCode,
-        card: Future.value(widget.card),
+        card: widget.card,
         unitID: _unitIdController.text.trim().isEmpty
             ? 'DefaultUnit'
             : _unitIdController.text.trim(),

@@ -7,10 +7,8 @@ library;
 import 'package:flutter/material.dart';
 
 // Project imports:
+import 'package:lexigo/app_router.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
-import 'package:lexigo/pages/my_page/log_management/log_management.dart';
-import 'package:lexigo/pages/my_page/settings_editing.dart';
-import 'package:lexigo/pages/my_page/word_management/word_management.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
 /// Settings menu page with navigation to sub-pages.
@@ -45,10 +43,7 @@ class SettingsPage extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               AppLogger.info('Opening word management page');
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => WordManagement()),
-              );
+              Navigator.push(context, AppRoutes.wordManagement());
             },
           ),
           const Divider(),
@@ -61,15 +56,13 @@ class SettingsPage extends StatelessWidget {
               AppLogger.info('Opening settings editing page');
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => SettingsEditingPage(
-                    locale: locale,
-                    onLocaleChanged: onLocaleChanged,
-                    themeMode: themeMode,
-                    onThemeModeChanged: onThemeModeChanged,
-                    colorSeed: colorSeed,
-                    onColorSeedChanged: onColorSeedChanged,
-                  ),
+                AppRoutes.settingsEditing(
+                  locale: locale,
+                  onLocaleChanged: onLocaleChanged,
+                  themeMode: themeMode,
+                  onThemeModeChanged: onThemeModeChanged,
+                  colorSeed: colorSeed,
+                  onColorSeedChanged: onColorSeedChanged,
                 ),
               );
             },
@@ -82,12 +75,7 @@ class SettingsPage extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               AppLogger.info('Opening log management page');
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const LogManagementPage(),
-                ),
-              );
+              Navigator.push(context, AppRoutes.logManagement());
             },
           ),
           const Divider(),

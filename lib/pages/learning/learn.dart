@@ -11,11 +11,11 @@ import 'package:flutter/material.dart';
 import 'package:fsrs/fsrs.dart' as fsrs;
 
 // Project imports:
+import 'package:lexigo/app_router.dart';
 import 'package:lexigo/backend/word.dart';
-import 'package:lexigo/l10n/app_localizations.dart';
-import 'package:lexigo/pages/learning/learning_summarize.dart';
-import 'package:lexigo/pages/widgets/word_card.dart';
 import 'package:lexigo/backend/word/global_provider.dart';
+import 'package:lexigo/l10n/app_localizations.dart';
+import 'package:lexigo/pages/widgets/word_card.dart';
 import 'package:lexigo/utils/app_logger.dart';
 import 'package:progress_indicator_m3e/progress_indicator_m3e.dart';
 
@@ -86,14 +86,12 @@ class _LearningPageState extends State<LearningPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => LearningSummarizePage(
-            wordsUnknown: word,
-            wordsLearned: _learnedCount,
-            wordsReviewed: 0,
-            wordsToReview: 0,
-            wordProvider: widget.wordProvider,
-          ),
+        AppRoutes.learningSummary(
+          wordsUnknown: word,
+          wordsLearned: _learnedCount,
+          wordsReviewed: 0,
+          wordsToReview: 0,
+          wordProvider: widget.wordProvider,
         ),
       );
     });
@@ -242,14 +240,12 @@ class _LearningPageState extends State<LearningPage> {
       _isNavigating = true;
       // TODO: Track actual wordsReviewed and wordsToReview counts (see above)
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => LearningSummarizePage(
-            wordsUnknown: nextWord,
-            wordsLearned: nextLearnedCount,
-            wordsReviewed: 0,
-            wordsToReview: 0,
-            wordProvider: widget.wordProvider,
-          ),
+        AppRoutes.learningSummary(
+          wordsUnknown: nextWord,
+          wordsLearned: nextLearnedCount,
+          wordsReviewed: 0,
+          wordsToReview: 0,
+          wordProvider: widget.wordProvider,
         ),
       );
       return;

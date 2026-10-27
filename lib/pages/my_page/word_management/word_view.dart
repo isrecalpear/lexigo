@@ -10,11 +10,10 @@ import 'package:flutter/material.dart';
 import 'package:fsrs/fsrs.dart' as fsrs;
 
 // Project imports:
-import 'package:lexigo/backend/word/manager.dart';
+import 'package:lexigo/app_router.dart';
 import 'package:lexigo/backend/word.dart';
+import 'package:lexigo/backend/word/manager.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
-import 'package:lexigo/pages/my_page/word_management/word_add.dart';
-import 'package:lexigo/pages/my_page/word_management/word_edit.dart';
 import 'package:lexigo/utils/app_logger.dart';
 import 'package:lexigo/utils/settings.dart';
 
@@ -29,7 +28,7 @@ class WordViewPage extends StatefulWidget {
 class _WordViewPageState extends State<WordViewPage> {
   LanguageCode _languageCode = SettingsStore.instance.settings.learningLanguage;
   bool _isLoading = false;
-  List<_WordWithCard> _words = [];
+  List<Word> _words = [];
   final _wordManager = WordManager();
 
   @override
@@ -53,15 +52,9 @@ class _WordViewPageState extends State<WordViewPage> {
     try {
       final words = await _wordManager.getWords(_languageCode);
 
-      final result = <_WordWithCard>[];
-      for (final word in words) {
-        final card = await word.card;
-        result.add(_WordWithCard(word, card));
-      }
-
       if (!mounted) return;
       setState(() {
-        _words = result;
+        _words = words;
       });
     } catch (e, stackTrace) {
       AppLogger.error(
@@ -82,26 +75,24 @@ class _WordViewPageState extends State<WordViewPage> {
     }
   }
 
-  Future<void> _editWord(_WordWithCard item) async {
-    final updated = await Navigator.push<bool>(
+  Future<void> _editWord(Word word) async {
+    final updated = await Navigator.push<Word>(
       context,
-      MaterialPageRoute(
-        builder: (context) => WordEditPage(word: item.word, card: item.card),
-      ),
+      AppRoutes.wordEdit(word: word, card: word.card),
     );
 
-    if (updated == true) {
+    if (updated != null) {
       await _loadWords();
     }
   }
 
-  Future<void> _deleteWord(_WordWithCard item) async {
+  Future<void> _deleteWord(Word word) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: Text(context.l10n.deleteWordTitle),
-          content: Text(context.l10n.deleteWordConfirm(item.word.originalWord)),
+          content: Text(context.l10n.deleteWordConfirm(word.originalWord)),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
@@ -121,8 +112,8 @@ class _WordViewPageState extends State<WordViewPage> {
     }
 
     try {
-      await _wordManager.deleteWordsByCardId([item.card.cardId]);
-      AppLogger.info('Deleted word successfully: ${item.word.originalWord}');
+      await _wordManager.deleteWordsByCardId([word.card.cardId]);
+      AppLogger.info('Deleted word successfully: ${word.originalWord}');
       await _loadWords();
       if (mounted) {
         ScaffoldMessenger.of(
@@ -173,14 +164,14 @@ class _WordViewPageState extends State<WordViewPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async {
+              await Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      WordAddPage(languageCode: _languageCode),
-                ),
-              ).then((_) => _loadWords());
+                AppRoutes.wordAdd(languageCode: _languageCode),
+              );
+              if (mounted) {
+                await _loadWords();
+              }
             },
           ),
         ],
@@ -224,16 +215,16 @@ class _WordViewPageState extends State<WordViewPage> {
                         itemCount: _words.length,
                         separatorBuilder: (_, _) => const Divider(height: 1),
                         itemBuilder: (context, index) {
-                          final item = _words[index];
+                          final word = _words[index];
                           final familiarity = _familiarityLabel(
-                            item.card,
+                            word.card,
                             context,
                           );
-                          final color = _familiarityColor(item.card, context);
+                          final color = _familiarityColor(word.card, context);
 
                           return ListTile(
-                            title: Text(item.word.originalWord),
-                            subtitle: Text(item.word.originalTranslation),
+                            title: Text(word.originalWord),
+                            subtitle: Text(word.originalTranslation),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -249,10 +240,10 @@ class _WordViewPageState extends State<WordViewPage> {
                                   onSelected: (value) {
                                     switch (value) {
                                       case 'edit':
-                                        _editWord(item);
+                                        _editWord(word);
                                         break;
                                       case 'delete':
-                                        _deleteWord(item);
+                                        _deleteWord(word);
                                         break;
                                     }
                                   },
@@ -273,7 +264,7 @@ class _WordViewPageState extends State<WordViewPage> {
                             dense: false,
                             onTap: () {
                               AppLogger.debug(
-                                'View word: ${item.word.originalWord}',
+                                'View word: ${word.originalWord}',
                               );
                             },
                           );
@@ -286,11 +277,4 @@ class _WordViewPageState extends State<WordViewPage> {
       ),
     );
   }
-}
-
-class _WordWithCard {
-  _WordWithCard(this.word, this.card);
-
-  final Word word;
-  final fsrs.Card card;
 }

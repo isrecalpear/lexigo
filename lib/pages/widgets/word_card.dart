@@ -8,9 +8,9 @@ library;
 import 'package:flutter/material.dart';
 
 // Project imports:
+import 'package:lexigo/app_router.dart';
 import 'package:lexigo/backend/word.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
-import 'package:lexigo/pages/my_page/word_management/word_edit.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
 /// Displays a single word card with bilingual content.
@@ -186,13 +186,10 @@ class _WordCardState extends State<WordCard> {
 
   /// Marks the word as wrong and opens the edit dialog.
   Future<void> signAsWrong(BuildContext context) async {
-    final card = await widget.word.card;
     if (!context.mounted) return;
     final updated = await Navigator.push<Word>(
       context,
-      MaterialPageRoute(
-        builder: (context) => WordEditPage(word: widget.word, card: card),
-      ),
+      AppRoutes.wordEdit(word: widget.word, card: widget.word.card),
     );
     if (updated != null) {
       widget.onUpdated?.call(updated);

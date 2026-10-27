@@ -44,8 +44,7 @@ class Word {
   final LanguageCode sourceLanguageCode;
 
   /// FSRS spaced repetition card for scheduling reviews.
-  /// Future is used because card data may be loaded asynchronously.
-  final Future<Card> card;
+  final Card card;
 
   /// Unit ID for organizing words by curriculum units.
   /// Defaults to 'DefaultUnit' if not specified.

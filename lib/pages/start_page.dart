@@ -8,11 +8,11 @@ library;
 import 'package:flutter/material.dart';
 
 // Project imports:
+import 'package:lexigo/app_router.dart';
 import 'package:lexigo/backend/word.dart';
-import 'package:lexigo/l10n/app_localizations.dart';
-import 'package:lexigo/pages/learning/learn.dart';
-import 'package:lexigo/pages/widgets/word_card.dart';
 import 'package:lexigo/backend/word/global_provider.dart';
+import 'package:lexigo/l10n/app_localizations.dart';
+import 'package:lexigo/pages/widgets/word_card.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
 /// Widget that displays a single word and allows starting learning.
@@ -122,12 +122,10 @@ class _StartPageState extends State<StartPage> {
     AppLogger.info('Start learning word: ${word.originalWord}');
     Navigator.of(context)
         .push<Word?>(
-          MaterialPageRoute(
-            builder: (context) => LearningPage(
-              word: word,
-              learningLanguage: widget.learningLanguage,
-              wordProvider: widget.wordProvider,
-            ),
+          AppRoutes.learning(
+            word: word,
+            languageCode: widget.learningLanguage,
+            wordProvider: widget.wordProvider,
           ),
         )
         .then((returned) {

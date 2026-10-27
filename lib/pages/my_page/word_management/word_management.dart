@@ -5,26 +5,30 @@
 library;
 
 // Flutter imports:
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:file_selector/file_selector.dart';
-import 'package:fsrs/fsrs.dart' as fsrs;
-import 'package:sqlite3/sqlite3.dart' as sqlite;
 
 // Project imports:
-import 'package:lexigo/backend/word/manager.dart';
+import 'package:lexigo/app_router.dart';
 import 'package:lexigo/backend/word.dart';
+import 'package:lexigo/backend/word/import_service.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
-import 'package:lexigo/pages/my_page/word_management/word_add.dart';
-import 'package:lexigo/pages/my_page/word_management/word_view.dart';
 import 'package:lexigo/utils/app_logger.dart';
 import 'package:lexigo/utils/permission_manager.dart';
 
 /// Word management menu page.
-class WordManagement extends StatelessWidget {
-  final _wordManager = WordManager();
-  WordManagement({super.key});
+class WordManagement extends StatefulWidget {
+  const WordManagement({super.key});
+
+  @override
+  State<WordManagement> createState() => _WordManagementState();
+}
+
+class _WordManagementState extends State<WordManagement> {
+  final WordImportService _importService = WordImportService();
 
   @override
   Widget build(BuildContext context) {
@@ -39,10 +43,7 @@ class WordManagement extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               AppLogger.info('Opening word list page');
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const WordViewPage()),
-              );
+              Navigator.push(context, AppRoutes.wordList());
             },
           ),
           const Divider(),
@@ -53,7 +54,7 @@ class WordManagement extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               AppLogger.info('Selecting file to import word list');
-              _importWords(context);
+              _importWords();
             },
           ),
           ListTile(
@@ -63,7 +64,7 @@ class WordManagement extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               AppLogger.info('Selecting file to export word list');
-              _exportWords(context);
+              _exportWords();
             },
           ),
           const Divider(),
@@ -74,10 +75,7 @@ class WordManagement extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               AppLogger.info('Opening add word page');
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const WordAddPage()),
-              );
+              Navigator.push(context, AppRoutes.wordAdd());
             },
           ),
         ],
@@ -85,7 +83,8 @@ class WordManagement extends StatelessWidget {
     );
   }
 
-  Future<void> _importWords(BuildContext context) async {
+  /// Runs the three-step import flow: inspect -> preview -> commit.
+  Future<void> _importWords() async {
     await PermissionManager.makeSureReadExternalPermission();
     const XTypeGroup sqliteTypeGroup = XTypeGroup(
       label: 'SQLite Databases',
@@ -99,145 +98,164 @@ class WordManagement extends StatelessWidget {
       AppLogger.info('User canceled file selection');
       return;
     }
-    sqlite.Database? externalDb;
+
     try {
-      AppLogger.info('Starting to import external SQLite: ${file.path}');
-      externalDb = sqlite.sqlite3.open(file.path);
-
-      final validTableNames = LanguageCode.values.map((e) => e.name).toSet();
-      final tableRows = externalDb.select(
-        "SELECT name FROM sqlite_master WHERE type='table';",
+      final List<LanguageCode> languages = await _importService.detectLanguages(
+        file.path,
       );
-      final tableNames = tableRows
-          .map((row) => row['name']?.toString())
-          .whereType<String>()
-          .toSet();
-      final matched = tableNames.intersection(validTableNames);
-
-      String tableName;
-      LanguageCode language;
-      if (matched.length == 1) {
-        tableName = matched.first;
-        language = LanguageCode.values.firstWhere(
-          (item) => item.name == tableName,
+      if (!mounted) return;
+      if (languages.isEmpty) {
+        throw const WordImportException(
+          'No ko / ru / en table found in the selected file.',
         );
-        AppLogger.info('Automatically detected language table: $tableName');
-      } else {
-        if (!context.mounted) return;
-        final LanguageCode? selected = await _selectLanguage(context);
-        if (selected == null) {
-          AppLogger.info('User canceled language selection');
-          return;
-        }
-        language = selected;
-        tableName = language.name;
-        final exists = tableNames.contains(tableName);
-        if (!exists) {
-          throw Exception('Table not found: $tableName');
-        }
       }
 
-      final requiredColumns = <String>{
-        'original_word',
-        'translation',
-        'original_example',
-        'example_translation',
-        'unit_id',
-        'book_id',
-      };
-      final columnInfo = externalDb.select('PRAGMA table_info("$tableName");');
-      final existingColumns = columnInfo
-          .map((row) => row['name']?.toString())
-          .whereType<String>()
-          .toSet();
-      final missingColumns = requiredColumns.difference(existingColumns);
-      if (missingColumns.isNotEmpty) {
-        throw Exception('Missing columns: ${missingColumns.join(', ')}');
+      final LanguageCode? language = languages.length == 1
+          ? languages.first
+          : await _selectLanguage(languages);
+      if (language == null) {
+        AppLogger.info('User canceled language selection');
+        return;
       }
 
-      final rows = externalDb.select(
-        'SELECT original_word, translation, original_example, '
-        'example_translation, unit_id, book_id FROM "$tableName";',
+      final ImportPlan plan = await _importService.prepare(
+        path: file.path,
+        language: language,
       );
-      if (rows.isEmpty) {
-        throw Exception('No data found');
+      if (!mounted) return;
+      if (plan.isEmpty) {
+        _showMessage(context.l10n.importNothingToImport);
+        return;
       }
-      // De-duplicate against the *whole* table (not just the first page), so
-      // importing the same file twice really skips everything.
-      final seenKeys = await _wordManager.getWordIdentityKeys(language);
-      AppLogger.info('${seenKeys.length} existing ${language.name} words');
 
-      final words = <Word>[];
-      int skipped = 0;
-      for (final row in rows) {
-        final originalWord = row['original_word']?.toString().trim() ?? '';
-        final translation = row['translation']?.toString().trim() ?? '';
-        final originalExample =
-            row['original_example']?.toString().trim() ?? '';
-        final exampleTranslation =
-            row['example_translation']?.toString().trim() ?? '';
-        final unitId = (row['unit_id']?.toString().trim().isEmpty ?? true)
-            ? 'DefaultUnit'
-            : row['unit_id']!.toString().trim();
-        final bookId = (row['book_id']?.toString().trim().isEmpty ?? true)
-            ? 'DefaultBook'
-            : row['book_id']!.toString().trim();
-
-        if (originalWord.isEmpty || translation.isEmpty) {
-          skipped += 1;
-          continue;
-        }
-
-        final key = '$originalWord||$bookId||$unitId';
-        if (seenKeys.contains(key)) {
-          skipped += 1;
-          continue;
-        }
-
-        final card = fsrs.Card.create();
-        words.add(
-          Word(
-            originalWord: originalWord,
-            originalTranslation: translation,
-            exampleSentence: originalExample,
-            exampleTranslation: exampleTranslation,
-            sourceLanguageCode: language,
-            card: card,
-            unitID: unitId,
-            bookID: bookId,
-          ),
-        );
-        seenKeys.add(key);
+      final bool? confirmed = await _confirmImport(plan);
+      if (confirmed != true) {
+        AppLogger.info('User canceled import');
+        return;
       }
-      await _wordManager.insertWords(words);
-      AppLogger.info(
-        'Import completed: ${words.length} words, skipped: $skipped words',
-      );
-
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.l10n.importSuccess(words.length, skipped)),
-        ),
-      );
-    } catch (e, stackTrace) {
+      await _runImport(plan);
+    } on WordImportException catch (error, stackTrace) {
       AppLogger.error(
-        'Failed to import words',
-        error: e,
+        'Word import rejected',
+        error: error,
         stackTrace: stackTrace,
       );
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(context.l10n.importFailed('$e'))));
-    } finally {
-      externalDb?.close();
+      if (!mounted) return;
+      _showMessage(context.l10n.importFailed(error.message));
+    } catch (error, stackTrace) {
+      AppLogger.error(
+        'Failed to import words',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (!mounted) return;
+      _showMessage(context.l10n.importFailed('$error'));
     }
   }
 
-  Future<void> _exportWords(BuildContext context) async {
-    if (!context.mounted) return;
-    final LanguageCode? selected = await _selectLanguage(context);
+  /// Commits [plan] behind a non-dismissible progress dialog.
+  Future<void> _runImport(ImportPlan plan) async {
+    final NavigatorState navigator = Navigator.of(context, rootNavigator: true);
+    final progress = ValueNotifier<double>(0);
+    final dialog = _showProgressDialog(progress);
+    try {
+      await _importService.commit(
+        plan,
+        onProgress: (done, total) {
+          progress.value = total == 0 ? 1 : done / total;
+        },
+      );
+    } finally {
+      // The dialog lives on the root navigator, so it can be closed without
+      // borrowing this page's context again.
+      if (navigator.mounted) {
+        navigator.pop();
+        await dialog;
+      }
+      progress.dispose();
+    }
+
+    AppLogger.info(
+      'Import completed: ${plan.importCount} words, '
+      'skipped ${plan.skippedCount}',
+    );
+    if (!mounted) return;
+    _showMessage(
+      context.l10n.importSuccess(plan.importCount, plan.skippedCount),
+    );
+  }
+
+  /// Shows what is about to be imported and asks for confirmation.
+  Future<bool?> _confirmImport(ImportPlan plan) {
+    return showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(dialogContext.l10n.importPreviewTitle),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${dialogContext.l10n.fieldLanguage}: ${plan.language.name}',
+              ),
+              const SizedBox(height: 8),
+              Text(
+                dialogContext.l10n.importPreviewSummary(
+                  plan.totalRows,
+                  plan.importCount,
+                  plan.skippedCount,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: Text(dialogContext.l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(dialogContext.l10n.confirm),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Non-dismissible dialog driven by [progress].
+  Future<void> _showProgressDialog(ValueListenable<double> progress) async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return PopScope(
+          canPop: false,
+          child: AlertDialog(
+            title: Text(dialogContext.l10n.importInProgress),
+            content: ValueListenableBuilder<double>(
+              valueListenable: progress,
+              builder: (context, value, child) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    LinearProgressIndicator(value: value),
+                    const SizedBox(height: 12),
+                    Text('${(value * 100).round()}%', textAlign: TextAlign.end),
+                  ],
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _exportWords() async {
+    final LanguageCode? selected = await _selectLanguage(LanguageCode.values);
     if (selected == null) return;
 
     // TODO: Implement word export functionality:
@@ -251,18 +269,19 @@ class WordManagement extends StatelessWidget {
     );
   }
 
-  Future<LanguageCode?> _selectLanguage(BuildContext context) async {
-    LanguageCode selected = LanguageCode.ko;
+  /// Lets the user pick one of [options].
+  Future<LanguageCode?> _selectLanguage(List<LanguageCode> options) {
+    LanguageCode selected = options.first;
     return showDialog<LanguageCode>(
       context: context,
       builder: (dialogContext) {
         return StatefulBuilder(
-          builder: (context, setState) {
+          builder: (dialogContext, setState) {
             return AlertDialog(
-              title: Text(context.l10n.selectLanguageTitle),
+              title: Text(dialogContext.l10n.selectLanguageTitle),
               content: DropdownButton<LanguageCode>(
                 value: selected,
-                items: LanguageCode.values
+                items: options
                     .map(
                       (item) =>
                           DropdownMenuItem(value: item, child: Text(item.name)),
@@ -278,11 +297,11 @@ class WordManagement extends StatelessWidget {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext),
-                  child: Text(context.l10n.cancel),
+                  child: Text(dialogContext.l10n.cancel),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext, selected),
-                  child: Text(context.l10n.confirm),
+                  child: Text(dialogContext.l10n.confirm),
                 ),
               ],
             );
@@ -290,5 +309,12 @@ class WordManagement extends StatelessWidget {
         );
       },
     );
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 }

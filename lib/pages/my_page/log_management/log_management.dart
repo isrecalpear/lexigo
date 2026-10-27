@@ -7,8 +7,8 @@ library;
 import 'package:flutter/material.dart';
 
 // Project imports:
+import 'package:lexigo/app_router.dart';
 import 'package:lexigo/l10n/app_localizations.dart';
-import 'package:lexigo/pages/my_page/log_management/log_view.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
 /// Log management page
@@ -104,12 +104,7 @@ class _LogManagementPageState extends State<LogManagementPage> {
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
                     AppLogger.info('Opening log view page');
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const LogViewPage(),
-                      ),
-                    );
+                    Navigator.push(context, AppRoutes.logView());
                   },
                 ),
                 ListTile(
