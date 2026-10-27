@@ -2,11 +2,18 @@
 ///
 /// Displays words one at a time with four rating options (Again, Hard, Good,
 /// Easy). The translation stays hidden until the user reveals it, which turns
-/// the card into a recall prompt. Ratings update the FSRS schedule and load the
-/// next word.
+/// the card into a recall prompt.
+///
+/// Revealing the answer means the word was not recalled: it is automatically
+/// rated as "Again" and the rating panel collapses to a single "Next" action,
+/// so no other rating can be picked afterwards. Tapping "Again" while the card
+/// is still obscured does the same — it reveals the answer, records the rating
+/// and only offers "Next". The other ratings update the FSRS schedule and load
+/// the next word directly.
 library;
 
 // Dart imports:
+import 'dart:async';
 import 'dart:math' as math;
 
 // Flutter imports:
@@ -55,6 +62,35 @@ class _LearningPageState extends State<LearningPage> {
   int _learnedCount = 0;
   bool _obscured = true;
 
+  /// Whether the answer has been revealed on the current word.
+  ///
+  /// Revealing the answer records an automatic [fsrs.Rating.again]; once this
+  /// flag is set the card can no longer be obscured and the rating panel shows
+  /// only the "Next" action.
+  bool _answerRevealed = false;
+
+  /// Disables the actions while a review is being written or the next word is
+  /// being loaded, so a double tap cannot rate or advance twice.
+  bool _isBusy = false;
+
+  /// Swallows taps for a short moment after a new word appears.
+  ///
+  /// A fast second tap (for example a double tap on "Next") is otherwise
+  /// delivered to the freshly built rating panel and would rate the next word
+  /// before the user even sees it.
+  bool _ignoreInput = false;
+
+  /// Resets [_ignoreInput] after [_inputCooldown].
+  Timer? _inputTimer;
+
+  /// Longer than Flutter's 300 ms double-tap timeout, so even a slow double tap
+  /// cannot reach the freshly built rating panel.
+  static const Duration _inputCooldown = Duration(milliseconds: 350);
+
+  /// [Card.cardId] of the word currently on screen, used to tell a genuinely
+  /// new word apart from an in-place edit of the same word.
+  int? _wordCardId;
+
   /// TODO: Make session length configurable in settings (e.g., 5/10/15/20 words per session)
   static const int _totalCount = 10;
 
@@ -67,26 +103,45 @@ class _LearningPageState extends State<LearningPage> {
   @override
   void initState() {
     super.initState();
+    _wordCardId = widget.wordProvider.currentWord?.card.cardId;
     widget.wordProvider.addListener(_onWordChanged);
     AppLogger.info('Entering learning page: ${widget.word.originalWord}');
   }
 
   @override
   void dispose() {
+    _inputTimer?.cancel();
     widget.wordProvider.removeListener(_onWordChanged);
     super.dispose();
   }
 
   void _onWordChanged() {
     if (!mounted || _isNavigating) return;
-    if (widget.wordProvider.currentWord == null) {
+    final Word? currentWord = widget.wordProvider.currentWord;
+    if (currentWord == null) {
       _navigateToSummarizeOnNull();
       return;
     }
+    final bool wordChanged = currentWord.card.cardId != _wordCardId;
+    _wordCardId = currentWord.card.cardId;
     setState(() {
-      _reviewStartTime = DateTime.now();
-      _obscured = true;
+      if (wordChanged) {
+        _reviewStartTime = DateTime.now();
+        _obscured = true;
+        _answerRevealed = false;
+        _isBusy = false;
+        _ignoreInput = true;
+      }
     });
+    if (wordChanged) {
+      _inputTimer?.cancel();
+      _inputTimer = Timer(_inputCooldown, () {
+        if (!mounted) return;
+        setState(() {
+          _ignoreInput = false;
+        });
+      });
+    }
   }
 
   /// Navigates to the summary page when [WordProvider.currentWord] becomes
@@ -156,62 +211,70 @@ class _LearningPageState extends State<LearningPage> {
                 _buildProgress(context),
                 Expanded(
                   child: LayoutBuilder(
-                    builder:
-                        (BuildContext context, BoxConstraints constraints) {
-                          const EdgeInsets padding = EdgeInsets.fromLTRB(
-                            AppSpacing.lg,
-                            AppSpacing.sm,
-                            AppSpacing.lg,
-                            AppSpacing.sm,
-                          );
-                          return SingleChildScrollView(
-                            padding: padding,
-                            child: ConstrainedBox(
-                              constraints: BoxConstraints(
-                                minHeight: math.max(
-                                  0,
-                                  constraints.maxHeight - padding.vertical,
+                    builder: (BuildContext context, BoxConstraints constraints) {
+                      const EdgeInsets padding = EdgeInsets.fromLTRB(
+                        AppSpacing.lg,
+                        AppSpacing.sm,
+                        AppSpacing.lg,
+                        AppSpacing.sm,
+                      );
+                      return SingleChildScrollView(
+                        padding: padding,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: math.max(
+                              0,
+                              constraints.maxHeight - padding.vertical,
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              Hero(
+                                tag: widget.wordProvider.heroTag,
+                                flightShuttleBuilder:
+                                    (
+                                      BuildContext flightContext,
+                                      Animation<double> animation,
+                                      HeroFlightDirection direction,
+                                      BuildContext fromContext,
+                                      BuildContext toContext,
+                                    ) {
+                                      return Material(
+                                        color: Colors.transparent,
+                                        child: toContext.widget,
+                                      );
+                                    },
+                                child: WordCard(
+                                  word: currentWord,
+                                  obscured: _obscured,
+                                  // Once revealed, the answer must stay
+                                  // visible: the card is locked to the
+                                  // "Next" action only. The card id and the
+                                  // short input cooldown after a word change
+                                  // keep a stale tap from rating the new
+                                  // word by accident.
+                                  onToggleObscured: _answerRevealed
+                                      ? null
+                                      : () => _revealAnswerAndRateAgain(
+                                          currentWord.card.cardId,
+                                        ),
+                                  onUpdated: (Word updated) {
+                                    widget.wordProvider.updateWord(updated);
+                                  },
                                 ),
                               ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: <Widget>[
-                                  Hero(
-                                    tag: widget.wordProvider.heroTag,
-                                    flightShuttleBuilder:
-                                        (
-                                          BuildContext flightContext,
-                                          Animation<double> animation,
-                                          HeroFlightDirection direction,
-                                          BuildContext fromContext,
-                                          BuildContext toContext,
-                                        ) {
-                                          return Material(
-                                            color: Colors.transparent,
-                                            child: toContext.widget,
-                                          );
-                                        },
-                                    child: WordCard(
-                                      word: currentWord,
-                                      obscured: _obscured,
-                                      onToggleObscured: () {
-                                        setState(() {
-                                          _obscured = !_obscured;
-                                        });
-                                      },
-                                      onUpdated: (Word updated) {
-                                        widget.wordProvider.updateWord(updated);
-                                      },
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
-                _buildRatingPanel(context),
+                IgnorePointer(
+                  ignoring: _ignoreInput,
+                  child: _buildRatingPanel(context),
+                ),
               ],
             ),
           ),
@@ -265,7 +328,13 @@ class _LearningPageState extends State<LearningPage> {
   }
 
   /// Rating prompt and the four FSRS rating actions.
+  ///
+  /// Once the answer has been revealed the panel is replaced by
+  /// [_buildRevealedPanel], which only offers the "Next" action.
   Widget _buildRatingPanel(BuildContext context) {
+    if (_answerRevealed) {
+      return _buildRevealedPanel(context);
+    }
     final ThemeData theme = Theme.of(context);
     const List<fsrs.Rating> ratings = <fsrs.Rating>[
       fsrs.Rating.again,
@@ -300,7 +369,7 @@ class _LearningPageState extends State<LearningPage> {
                     ),
                     child: _RatingAction(
                       rating: rating,
-                      onPressed: () => _handleChoice(rating),
+                      onPressed: _isBusy ? null : () => _handleChoice(rating),
                     ),
                   ),
                 ),
@@ -311,17 +380,132 @@ class _LearningPageState extends State<LearningPage> {
     );
   }
 
-  /// Handles user rating and loads the next word.
-  Future<void> _handleChoice(fsrs.Rating rating) async {
+  /// Panel shown after the answer was revealed.
+  ///
+  /// The word has already been rated [fsrs.Rating.again] automatically, so the
+  /// "Again" pill is only a status indicator and "Next" is the sole available
+  /// action.
+  Widget _buildRevealedPanel(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    const fsrs.Rating rating = fsrs.Rating.again;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        AppSpacing.xs,
+        AppSpacing.lg,
+        AppSpacing.md,
+      ),
+      child: Row(
+        children: <Widget>[
+          AppPill(
+            label: ratingLabel(context.l10n, rating),
+            icon: ratingIcon(rating),
+            color: ratingOnColor(colors, rating),
+            backgroundColor: ratingContainerColor(colors, rating),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: FilledButton.icon(
+              onPressed: _isBusy ? null : _handleNext,
+              icon: const Icon(Icons.arrow_forward_rounded),
+              label: Text(context.l10n.next),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Reveals the answer of the word with [cardId], records an automatic
+  /// [fsrs.Rating.again] and locks the card to the "Next" action.
+  ///
+  /// [cardId] rejects a callback that was already dispatched against the
+  /// previous word; taps delivered after the rebuild are covered by
+  /// [_ignoreInput].
+  Future<void> _revealAnswerAndRateAgain(int cardId) async {
     final Word? currentWord = widget.wordProvider.currentWord;
-    AppLogger.info('Learning Select: $rating - ${currentWord?.originalWord}');
+    if (_answerRevealed ||
+        _isBusy ||
+        _ignoreInput ||
+        currentWord == null ||
+        currentWord.card.cardId != cardId) {
+      return;
+    }
     final int reviewDuration = DateTime.now()
         .difference(_reviewStartTime)
         .inMilliseconds;
-    if (currentWord != null) {
-      await widget.wordProvider.reviewWord(currentWord, rating, reviewDuration);
+    setState(() {
+      _obscured = false;
+      _answerRevealed = true;
+      _isBusy = true;
+    });
+    AppLogger.info('Learning Reveal → Again: ${currentWord.originalWord}');
+    try {
+      await widget.wordProvider.reviewWord(
+        currentWord,
+        fsrs.Rating.again,
+        reviewDuration,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isBusy = false;
+        });
+      }
     }
+  }
 
+  /// Handles a rating picked while the answer is still hidden.
+  ///
+  /// "Again" reveals the answer instead of moving on (see
+  /// [_revealAnswerAndRateAgain]); the other ratings are recorded and advance
+  /// to the next word.
+  Future<void> _handleChoice(fsrs.Rating rating) async {
+    if (_isBusy || _ignoreInput || _answerRevealed) return;
+    final Word? currentWord = widget.wordProvider.currentWord;
+    if (currentWord == null) return;
+    if (rating == fsrs.Rating.again) {
+      await _revealAnswerAndRateAgain(currentWord.card.cardId);
+      return;
+    }
+    AppLogger.info('Learning Select: $rating - ${currentWord.originalWord}');
+    final int reviewDuration = DateTime.now()
+        .difference(_reviewStartTime)
+        .inMilliseconds;
+    setState(() {
+      _isBusy = true;
+    });
+    try {
+      await widget.wordProvider.reviewWord(currentWord, rating, reviewDuration);
+      await _advance();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isBusy = false;
+        });
+      }
+    }
+  }
+
+  /// Moves past the current word after it was automatically rated "Again".
+  Future<void> _handleNext() async {
+    if (_isBusy || _ignoreInput || !_answerRevealed) return;
+    setState(() {
+      _isBusy = true;
+    });
+    try {
+      await _advance();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isBusy = false;
+        });
+      }
+    }
+  }
+
+  /// Loads the next word and ends the session once enough words were studied.
+  Future<void> _advance() async {
     await widget.wordProvider.nextReviewWord();
     final Word? nextWord = widget.wordProvider.currentWord;
 
@@ -358,7 +542,6 @@ class _LearningPageState extends State<LearningPage> {
 
     setState(() {
       _learnedCount = nextLearnedCount;
-      _obscured = true;
     });
   }
 }
@@ -368,7 +551,10 @@ class _RatingAction extends StatelessWidget {
   const _RatingAction({required this.rating, required this.onPressed});
 
   final fsrs.Rating rating;
-  final VoidCallback onPressed;
+
+  /// Tapping is disabled while the previous review is still being written, in
+  /// which case [onPressed] is `null`.
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -378,6 +564,7 @@ class _RatingAction extends StatelessWidget {
     final String label = ratingLabel(context.l10n, rating);
     return Semantics(
       button: true,
+      enabled: onPressed != null,
       label: label,
       child: Material(
         color: background,

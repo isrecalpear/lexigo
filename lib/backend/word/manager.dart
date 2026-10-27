@@ -359,7 +359,17 @@ class WordManager {
     return words;
   }
 
-  Future<void> reviewWord(Word word, Rating rating, int? reviewDuration) async {
+  /// Reviews [word] with [rating], persisting the updated card and a history
+  /// row.
+  ///
+  /// Returns the word carrying the updated FSRS card so callers can keep their
+  /// in-memory copy in sync with the scheduler, or `null` when the word is not
+  /// persisted (e.g. the per-language fallback word).
+  Future<Word?> reviewWord(
+    Word word,
+    Rating rating,
+    int? reviewDuration,
+  ) async {
     final card_ = word.card;
     final (:card, :reviewLog) = scheduler.reviewCard(
       card_,
@@ -384,10 +394,11 @@ class WordManager {
       AppLogger.warning(
         'Skipping review persistence for unpersisted word: ${word.originalWord}',
       );
-      return;
+      return null;
     }
     await insertReviewLog(reviewLog);
     AppLogger.info('Review recorded for: ${word.originalWord} ($rating)');
+    return updatedWord;
   }
 
   /// Inserts [reviewLog] into the learning history table.

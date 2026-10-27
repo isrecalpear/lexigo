@@ -72,8 +72,24 @@ class WordProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Reviews [word] and publishes the updated card when it is still the word
+  /// on screen.
+  ///
+  /// The learning page keeps a reviewed word visible until the user taps
+  /// "next", so [currentWord] must carry the post-review schedule: otherwise
+  /// the word card (e.g. the "new word" badge) and the edit sheet would work
+  /// from a stale card and could write the pre-review schedule back.
   Future<void> reviewWord(Word word, Rating rating, int? reviewDuration) async {
-    await _wordManager.reviewWord(word, rating, reviewDuration);
+    final Word? updated = await _wordManager.reviewWord(
+      word,
+      rating,
+      reviewDuration,
+    );
+    if (updated == null) return;
+    if (_currentWord?.card.cardId != updated.card.cardId) return;
+    _currentWord = updated;
+    _isFallbackWord = false;
+    notifyListeners();
   }
 
   /// Replaces [currentWord] with the placeholder word for the current language.

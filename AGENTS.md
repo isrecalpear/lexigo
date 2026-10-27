@@ -62,7 +62,7 @@ lib/
 ├─ pages/
 │  ├─ start_page.dart             学习 Tab：随机词卡片 + 「下一个」+「开始学习」
 │  ├─ learning/
-│  │  ├─ learn.dart               评分页（4 个 FSRS 按钮、进度条、会话 10 词）
+│  │  ├─ learn.dart               评分页（4 个 FSRS 按钮；显示答案/忘记 → 自动 again + 只剩「下一个」；进度条、会话 10 词）
 │  │  └─ learning_summarize.dart  会话总结页
 │  ├─ records/
 │  │  ├─ records_page.dart        记录 Tab：周条 + 当天回顾/未来预测 + 学习概览
@@ -146,6 +146,9 @@ lib/
 
 ### 学习
 `StartPage`（随机词 + 开始）→ `LearningPage`（当前词、遮译文、4 个评分按钮）→ 评一次更新一次 FSRS → `nextReviewWord()` 立刻取下一条到期词 → 满 10 条或没词了 → `LearningSummarizePage`。「下一组」用 `pushReplacement` 回到 `LearningPage`。
+- **显示答案即忘记**：点卡片上的「显示答案」或点评分里的「忘记」都会立刻把当前词记为 `Rating.again`，同时显示出译文/例句翻译，评分区只剩「下一个」（`_answerRevealed` 锁住卡片，不能再隐藏答案或选其它评分）；点「下一个」才调用 `nextReviewWord()`。困难/还行/简单仍是评分后直接进入下一个词（不显示答案）。
+- **评分结果回写内存**：`WordManager.reviewWord` 返回更新后的 `Word`（兜底词返回 `null`），`WordProvider.reviewWord` 把它发布成 `currentWord`。显示答案后当前词要停留到点「下一个」，卡片/编辑页必须拿到评分后的 `card`，否则「纠错」保存会拿旧排程覆盖掉这次 FSRS 评分。
+- 切换单词后有 350ms 的输入冷却（`_ignoreInput`，长于 Flutter 的 300ms 双击判定），避免「下一个」上的连点落到新单词的评分按钮上；评分按钮在写库期间不可点击（不额外改颜色）。
 - 会话长度 `_totalCount = 10` 是常量（有 TODO 要配置化）。
 - 总结页的 `wordsReviewed` / `wordsToReview` 恒为 0；`wordsLearned` 在“没词可用”提前结束时少算最后一条。
 - `WordProvider` 构造时就装上当前语言的**不在库里**的兜底词；加载随机词失败（该语言没有词）时保留兜底词而不是把 `currentWord` 置 `null`，所以「下一个 / 左右滑动 / 开始学习」在空词库下不会出现空白帧或闪烁；`currentWord` 为空只出现在学习页 `nextReviewWord()` 取不到下一条到期词时。对它评分不会落库，也不会再写孤儿 history 记录（`reviewWord` 以更新行数为 0 判断并跳过）。
