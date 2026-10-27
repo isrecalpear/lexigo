@@ -1141,6 +1141,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No reviews yet'**
   String get noCardHistory;
+
+  /// No description provided for @searchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search words'**
+  String get searchHint;
+
+  /// No description provided for @showAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Show answer'**
+  String get showAnswer;
+
+  /// No description provided for @hideAnswer.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide answer'**
+  String get hideAnswer;
+
+  /// No description provided for @languageEnglishName.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get languageEnglishName;
+
+  /// No description provided for @languageKoreanName.
+  ///
+  /// In en, this message translates to:
+  /// **'Korean'**
+  String get languageKoreanName;
+
+  /// No description provided for @languageRussianName.
+  ///
+  /// In en, this message translates to:
+  /// **'Russian'**
+  String get languageRussianName;
+
+  /// No description provided for @sectionStudy.
+  ///
+  /// In en, this message translates to:
+  /// **'Study'**
+  String get sectionStudy;
+
+  /// No description provided for @sectionAppearance.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get sectionAppearance;
+
+  /// No description provided for @sectionData.
+  ///
+  /// In en, this message translates to:
+  /// **'Data'**
+  String get sectionData;
+
+  /// No description provided for @sectionSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get sectionSettings;
+
+  /// No description provided for @sectionAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get sectionAbout;
+
+  /// No description provided for @sectionWords.
+  ///
+  /// In en, this message translates to:
+  /// **'Words'**
+  String get sectionWords;
+
+  /// No description provided for @sectionImportExport.
+  ///
+  /// In en, this message translates to:
+  /// **'Import & export'**
+  String get sectionImportExport;
+
+  /// No description provided for @ratingPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'How well did you remember?'**
+  String get ratingPrompt;
+
+  /// No description provided for @wordListEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Import a word list or add words manually to start learning.'**
+  String get wordListEmptyHint;
+
+  /// No description provided for @summaryLearned.
+  ///
+  /// In en, this message translates to:
+  /// **'Learned'**
+  String get summaryLearned;
+
+  /// No description provided for @summaryReviewed.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviewed'**
+  String get summaryReviewed;
+
+  /// No description provided for @summaryToReview.
+  ///
+  /// In en, this message translates to:
+  /// **'To review'**
+  String get summaryToReview;
+
+  /// No description provided for @swipeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe left or tap shuffle for another word'**
+  String get swipeHint;
+
+  /// No description provided for @recordsLast7DaysShort.
+  ///
+  /// In en, this message translates to:
+  /// **'7-day reviews'**
+  String get recordsLast7DaysShort;
 }
 
 class _AppLocalizationsDelegate

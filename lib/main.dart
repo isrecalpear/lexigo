@@ -20,6 +20,8 @@ import 'backend/word.dart';
 import 'l10n/l10n.dart';
 import 'pages/my_page.dart';
 import 'package:lexigo/pages/records/records_page.dart';
+import 'package:lexigo/pages/widgets/app_ui.dart';
+import 'package:lexigo/theme/app_theme.dart';
 import 'pages/start_page.dart';
 import 'package:lexigo/backend/word/global_provider.dart';
 import 'utils/app_font.dart';
@@ -89,30 +91,6 @@ void main() async {
         stackTrace: stackTrace,
       );
     },
-  );
-}
-
-/// Builds a theme based on the provided colorScheme and brightness.
-///
-/// Uses Material 3 design. If [seedColor] is provided, generates a color scheme
-/// from that seed. Otherwise, uses [dynamicScheme] or falls back to system defaults.
-/// [fontFamily] is `null` for the platform system font, or the family name of a
-/// runtime-loaded font (MiSans / HarmonyOS Sans).
-ThemeData buildTheme(
-  ColorScheme? dynamicScheme,
-  bool isDarkMode, {
-  Color? seedColor,
-  String? fontFamily,
-}) {
-  final Brightness brightness = isDarkMode ? Brightness.dark : Brightness.light;
-  final ColorScheme colorScheme = seedColor != null
-      ? ColorScheme.fromSeed(seedColor: seedColor, brightness: brightness)
-      : (dynamicScheme ??
-            (isDarkMode ? ColorScheme.dark() : ColorScheme.light()));
-  return ThemeData(
-    colorScheme: colorScheme,
-    useMaterial3: true,
-    fontFamily: fontFamily,
   );
 }
 
@@ -212,12 +190,9 @@ class _MyAppState extends State<MyApp> {
     final LanguageCode learningLanguage = _language ?? LanguageCode.en;
 
     if (!DeviceInfoManager().supportsDynamicColor) {
-      final ColorScheme colorScheme = ColorScheme.fromSeed(
-        seedColor: _colorSeed ?? Colors.pink.shade200,
-      );
       return _buildMaterialApp(
-        lightColorScheme: colorScheme,
-        darkColorScheme: colorScheme,
+        lightColorScheme: null,
+        darkColorScheme: null,
         learningLanguage: learningLanguage,
       );
     }
@@ -251,15 +226,15 @@ class _MyAppState extends State<MyApp> {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      theme: buildTheme(
-        lightColorScheme,
-        false,
+      theme: AppTheme.build(
+        brightness: Brightness.light,
+        dynamicScheme: lightColorScheme,
         seedColor: _colorSeed,
         fontFamily: _font.familyName,
       ),
-      darkTheme: buildTheme(
-        darkColorScheme,
-        true,
+      darkTheme: AppTheme.build(
+        brightness: Brightness.dark,
+        dynamicScheme: darkColorScheme,
         seedColor: _colorSeed,
         fontFamily: _font.familyName,
       ),
@@ -455,98 +430,22 @@ class _MyHomePageState extends State<MyHomePage> {
     ];
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      bottomNavigationBar: useRail
-          ? null
-          : NavigationBar(
-              backgroundColor: Theme.of(context).colorScheme.surface,
-              selectedIndex: _selectedIndex,
-              destinations: [
-                NavigationDestination(
-                  icon: const Icon(Icons.abc_outlined),
-                  selectedIcon: const Icon(Icons.abc),
-                  label: AppLocalizations.of(context)!.tabStudy,
-                ),
-                NavigationDestination(
-                  icon: const Icon(Icons.calendar_month_outlined),
-                  selectedIcon: const Icon(Icons.calendar_month),
-                  label: AppLocalizations.of(context)!.tabRecords,
-                ),
-                NavigationDestination(
-                  icon: const Icon(Icons.person_outline),
-                  selectedIcon: const Icon(Icons.person),
-                  label: AppLocalizations.of(context)!.tabMe,
-                ),
-              ],
-              onDestinationSelected: _onItemTapped,
-            ),
+      bottomNavigationBar: useRail ? null : _buildBottomNavigation(context),
       body: Row(
         children: [
           if (useRail)
             SafeArea(
               child: NavigationRail(
-                labelType: NavigationRailLabelType.all,
                 groupAlignment: _deviceInfoManager.isPadDevice() ? -1.0 : 0.0,
                 selectedIndex: _selectedIndex,
                 onDestinationSelected: _onItemTapped,
-                destinations: [
-                  NavigationRailDestination(
-                    icon: const Icon(Icons.abc_outlined),
-                    selectedIcon: const Icon(Icons.abc),
-                    label: Text(AppLocalizations.of(context)!.tabStudy),
-                  ),
-                  NavigationRailDestination(
-                    icon: const Icon(Icons.calendar_month_outlined),
-                    selectedIcon: const Icon(Icons.calendar_month),
-                    label: Text(AppLocalizations.of(context)!.tabRecords),
-                  ),
-                  NavigationRailDestination(
-                    icon: const Icon(Icons.person_outline),
-                    selectedIcon: const Icon(Icons.person),
-                    label: Text(AppLocalizations.of(context)!.tabMe),
-                  ),
-                ],
+                destinations: _buildRailDestinations(context),
               ),
             ),
           Expanded(
             child: Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: SafeArea(
-                    bottom: false,
-                    minimum: const EdgeInsets.only(top: 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Text(
-                          AppLocalizations.of(context)!.appTitle,
-                          style: Theme.of(context).textTheme.headlineSmall,
-                        ),
-                        const Spacer(),
-                        IconButton(
-                          onPressed: _openLearningLanguagePicker,
-                          icon: const Icon(Icons.language_outlined),
-                        ),
-                        SearchAnchor(
-                          builder:
-                              (
-                                BuildContext context,
-                                SearchController controller,
-                              ) {
-                                return IconButton(
-                                  icon: const Icon(Icons.search),
-                                  onPressed: () {
-                                    controller.openView();
-                                  },
-                                );
-                              },
-                          suggestionsBuilder: _suggestionsBuilder,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                _buildHeader(context),
                 Expanded(
                   child: PageView(
                     controller: _pageController,
@@ -565,45 +464,184 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  /// Top header used by every tab: brand lockup, current section, and the
+  /// global actions (learning language + word search).
+  Widget _buildHeader(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
+    return SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.lg,
+          AppSpacing.xs,
+          AppSpacing.sm,
+          AppSpacing.xs,
+        ),
+        child: Row(
+          children: <Widget>[
+            _buildBrandMark(context),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Text(
+                'LexiGo',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.4,
+                  height: 1.1,
+                ),
+              ),
+            ),
+            AppPill(
+              label: _languageLabel(context, widget.learningLanguage),
+              icon: Icons.translate_rounded,
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
+              onTap: _openLearningLanguagePicker,
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            SearchAnchor(
+              builder: (BuildContext context, SearchController controller) {
+                return IconButton.filledTonal(
+                  tooltip: l10n.searchHint,
+                  icon: const Icon(Icons.search_rounded),
+                  onPressed: () => controller.openView(),
+                );
+              },
+              suggestionsBuilder: _suggestionsBuilder,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Rounded brand mark shown in the header and the navigation rail.
+  Widget _buildBrandMark(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: colors.primaryContainer,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      child: Icon(
+        Icons.auto_stories_rounded,
+        color: colors.onPrimaryContainer,
+        size: 22,
+      ),
+    );
+  }
+
+  /// Bottom navigation bar used in portrait layouts.
+  Widget _buildBottomNavigation(BuildContext context) {
+    return NavigationBar(
+      selectedIndex: _selectedIndex,
+      destinations: _buildDestinations(context),
+      onDestinationSelected: _onItemTapped,
+    );
+  }
+
+  /// Navigation rail destinations used on wide screens.
+  List<NavigationRailDestination> _buildRailDestinations(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
+    return <NavigationRailDestination>[
+      NavigationRailDestination(
+        icon: const Icon(Icons.style_outlined),
+        selectedIcon: const Icon(Icons.style_rounded),
+        label: Text(l10n.tabStudy),
+      ),
+      NavigationRailDestination(
+        icon: const Icon(Icons.insights_outlined),
+        selectedIcon: const Icon(Icons.insights_rounded),
+        label: Text(l10n.tabRecords),
+      ),
+      NavigationRailDestination(
+        icon: const Icon(Icons.person_outline_rounded),
+        selectedIcon: const Icon(Icons.person_rounded),
+        label: Text(l10n.tabMe),
+      ),
+    ];
+  }
+
+  /// Bottom navigation destinations used in portrait layouts.
+  List<NavigationDestination> _buildDestinations(BuildContext context) {
+    final AppLocalizations l10n = AppLocalizations.of(context)!;
+    return <NavigationDestination>[
+      NavigationDestination(
+        icon: const Icon(Icons.style_outlined),
+        selectedIcon: const Icon(Icons.style_rounded),
+        label: l10n.tabStudy,
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.insights_outlined),
+        selectedIcon: const Icon(Icons.insights_rounded),
+        label: l10n.tabRecords,
+      ),
+      NavigationDestination(
+        icon: const Icon(Icons.person_outline_rounded),
+        selectedIcon: const Icon(Icons.person_rounded),
+        label: l10n.tabMe,
+      ),
+    ];
+  }
+
+  /// Localized display name of a learning language.
+  String _languageLabel(BuildContext context, LanguageCode language) {
+    return switch (language) {
+      LanguageCode.en => context.l10n.languageEnglishName,
+      LanguageCode.ko => context.l10n.languageKoreanName,
+      LanguageCode.ru => context.l10n.languageRussianName,
+    };
+  }
+
   void _onItemTapped(int index) {
     AppLogger.debug('Switching to tab: $index');
     setState(() => _selectedIndex = index);
     _pageController.jumpToPage(index);
   }
 
-  /// Opens the learning language selection dialog.
+  /// Opens the learning language picker as a modal bottom sheet.
   Future<void> _openLearningLanguagePicker() async {
-    final List<LanguageCode> languageOptions = List<LanguageCode>.from(
-      LanguageCode.values,
-    );
     final LanguageCode currentLanguage = widget.learningLanguage;
-    languageOptions.sort(
-      (a, b) => a == currentLanguage
-          ? -1
-          : b == currentLanguage
-          ? 1
-          : a.index.compareTo(b.index),
-    );
+    final List<LanguageCode> languageOptions = <LanguageCode>[
+      currentLanguage,
+      ...LanguageCode.values.where((item) => item != currentLanguage),
+    ];
 
-    final LanguageCode? selected = await showDialog<LanguageCode>(
+    final LanguageCode? selected = await showModalBottomSheet<LanguageCode>(
       context: context,
-      builder: (context) {
-        return SimpleDialog(
-          title: Text(AppLocalizations.of(context)!.selectLanguageTitle),
-          children: languageOptions
-              .map(
-                (item) => RadioMenuButton(
-                  value: item,
-                  groupValue: currentLanguage,
-                  onChanged: (value) {
-                    if (value != null) {
-                      Navigator.pop(context, value);
-                    }
-                  },
-                  child: Text(item.name),
+      builder: (BuildContext sheetContext) {
+        final AppLocalizations l10n = sheetContext.l10n;
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+                  child: Text(
+                    l10n.selectLanguageTitle,
+                    style: Theme.of(sheetContext).textTheme.titleLarge,
+                  ),
                 ),
-              )
-              .toList(),
+                for (final LanguageCode language in languageOptions)
+                  AppChoiceTile<LanguageCode>(
+                    value: language,
+                    groupValue: currentLanguage,
+                    title: _languageLabel(sheetContext, language),
+                    icon: Icons.translate_rounded,
+                    onSelected: (LanguageCode value) {
+                      Navigator.pop(sheetContext, value);
+                    },
+                  ),
+              ],
+            ),
+          ),
         );
       },
     );
@@ -637,8 +675,22 @@ class _MyHomePageState extends State<MyHomePage> {
     _lastOptions = results
         .map(
           (word) => ListTile(
+            leading: AppIconBadge(
+              icon: Icons.translate_rounded,
+              size: 36,
+              iconSize: 18,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             title: Text(word.originalWord),
-            subtitle: Text(word.originalTranslation),
+            subtitle: Text(
+              word.originalTranslation,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            trailing: const Icon(Icons.north_east_rounded, size: 18),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+            ),
             onTap: () {
               controller.closeView(word.originalWord);
             },

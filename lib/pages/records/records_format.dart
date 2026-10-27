@@ -30,13 +30,54 @@ Color ratingColor(ColorScheme colors, fsrs.Rating rating) {
   };
 }
 
+/// Tonal container background for a review [rating].
+///
+/// Each rating maps onto a Material 3 container role so the accent colors stay
+/// inside the active [ColorScheme].
+Color ratingContainerColor(ColorScheme colors, fsrs.Rating rating) {
+  return switch (rating) {
+    fsrs.Rating.again => colors.errorContainer,
+    fsrs.Rating.hard => colors.tertiaryContainer,
+    fsrs.Rating.good => colors.primaryContainer,
+    fsrs.Rating.easy => colors.secondaryContainer,
+  };
+}
+
+/// Content color paired with [ratingContainerColor].
+Color ratingOnColor(ColorScheme colors, fsrs.Rating rating) {
+  return switch (rating) {
+    fsrs.Rating.again => colors.onErrorContainer,
+    fsrs.Rating.hard => colors.onTertiaryContainer,
+    fsrs.Rating.good => colors.onPrimaryContainer,
+    fsrs.Rating.easy => colors.onSecondaryContainer,
+  };
+}
+
+/// Tonal container background for a card [state].
+Color stateContainerColor(ColorScheme colors, fsrs.State state) {
+  return switch (state) {
+    fsrs.State.learning => colors.errorContainer,
+    fsrs.State.relearning => colors.tertiaryContainer,
+    fsrs.State.review => colors.primaryContainer,
+  };
+}
+
+/// Content color paired with [stateContainerColor].
+Color stateOnColor(ColorScheme colors, fsrs.State state) {
+  return switch (state) {
+    fsrs.State.learning => colors.onErrorContainer,
+    fsrs.State.relearning => colors.onTertiaryContainer,
+    fsrs.State.review => colors.onPrimaryContainer,
+  };
+}
+
 /// Icon matching a review [rating].
 IconData ratingIcon(fsrs.Rating rating) {
   return switch (rating) {
-    fsrs.Rating.again => Icons.refresh,
-    fsrs.Rating.hard => Icons.trending_down,
-    fsrs.Rating.good => Icons.check,
-    fsrs.Rating.easy => Icons.bolt,
+    fsrs.Rating.again => Icons.refresh_rounded,
+    fsrs.Rating.hard => Icons.trending_down_rounded,
+    fsrs.Rating.good => Icons.check_rounded,
+    fsrs.Rating.easy => Icons.bolt_rounded,
   };
 }
 
@@ -67,15 +108,19 @@ class RatingBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color color = ratingColor(Theme.of(context).colorScheme, rating);
+    final ColorScheme colors = Theme.of(context).colorScheme;
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.14),
+        color: ratingContainerColor(colors, rating),
         shape: BoxShape.circle,
       ),
-      child: Icon(ratingIcon(rating), color: color, size: size * 0.55),
+      child: Icon(
+        ratingIcon(rating),
+        color: ratingOnColor(colors, rating),
+        size: size * 0.55,
+      ),
     );
   }
 }

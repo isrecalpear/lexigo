@@ -10,6 +10,8 @@ import 'package:flutter/services.dart';
 
 // Project imports:
 import 'package:lexigo/l10n/l10n.dart';
+import 'package:lexigo/pages/widgets/app_ui.dart';
+import 'package:lexigo/theme/app_theme.dart';
 import 'package:lexigo/utils/app_font.dart';
 import 'package:lexigo/utils/app_logger.dart';
 import 'package:lexigo/utils/font_manager.dart';
@@ -54,7 +56,7 @@ class _SettingsEditingPageState extends State<SettingsEditingPage> {
     _selectedLanguage = _languageValueFromLocale(widget.locale);
     _selectedThemeMode = widget.themeMode;
     _useAutoColor = widget.colorSeed == null;
-    _customColor = widget.colorSeed ?? Colors.blue;
+    _customColor = widget.colorSeed ?? AppTheme.defaultSeed;
     _font = widget.font;
   }
 
@@ -82,45 +84,49 @@ class _SettingsEditingPageState extends State<SettingsEditingPage> {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
+    final ColorScheme colors = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.settingsEditSettings),
-      ),
+      appBar: AppBar(title: Text(l10n.settingsEditSettings)),
       body: SafeArea(
-        child: ListView(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.language),
-              title: Text(AppLocalizations.of(context)!.settingsLanguage),
-              subtitle: Text(_currentLanguageLabel(context)),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: _openLanguagePicker,
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.brightness_6_outlined),
-              title: Text(AppLocalizations.of(context)!.settingsTheme),
-              subtitle: Text(_currentThemeLabel(context)),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: _openThemePicker,
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.color_lens_outlined),
-              title: Text(AppLocalizations.of(context)!.settingsThemeColor),
-              subtitle: Text(_currentColorLabel(context)),
-              trailing: _buildColorPreview(),
-              onTap: _openColorPicker,
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.font_download_outlined),
-              title: Text(context.l10n.settingsFont),
-              subtitle: Text(_fontLabel(context, _font)),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: _openFontPicker,
-            ),
-          ],
+        child: AppContent(
+          child: ListView(
+            padding: AppInsets.formPage,
+            children: <Widget>[
+              AppSettingsGroup(
+                title: l10n.sectionAppearance,
+                children: <Widget>[
+                  AppSettingsTile(
+                    icon: Icons.language_rounded,
+                    title: l10n.settingsLanguage,
+                    subtitle: _currentLanguageLabel(context),
+                    onTap: _openLanguagePicker,
+                  ),
+                  AppSettingsTile(
+                    icon: Icons.brightness_6_outlined,
+                    iconColor: colors.tertiary,
+                    title: l10n.settingsTheme,
+                    subtitle: _currentThemeLabel(context),
+                    onTap: _openThemePicker,
+                  ),
+                  AppSettingsTile(
+                    icon: Icons.color_lens_outlined,
+                    iconColor: colors.secondary,
+                    title: l10n.settingsThemeColor,
+                    subtitle: _currentColorLabel(context),
+                    trailing: _buildColorPreview(),
+                    onTap: _openColorPicker,
+                  ),
+                  AppSettingsTile(
+                    icon: Icons.font_download_outlined,
+                    title: l10n.settingsFont,
+                    subtitle: _fontLabel(context, _font),
+                    onTap: _openFontPicker,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -166,20 +172,17 @@ class _SettingsEditingPageState extends State<SettingsEditingPage> {
     return '#$hex';
   }
 
+  /// Small trailing swatch that previews the active theme color.
   Widget _buildColorPreview() {
-    final Color color = _useAutoColor
-        ? Theme.of(context).colorScheme.primary
-        : _customColor;
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    final Color color = _useAutoColor ? colors.primary : _customColor;
     return Container(
-      width: 28,
-      height: 28,
+      width: 30,
+      height: 30,
       decoration: BoxDecoration(
         color: color,
         shape: BoxShape.circle,
-        border: Border.all(
-          color: Theme.of(context).colorScheme.outline,
-          width: 1,
-        ),
+        border: Border.all(color: colors.outlineVariant, width: 1.5),
       ),
     );
   }
@@ -239,24 +242,35 @@ class _SettingsEditingPageState extends State<SettingsEditingPage> {
     }
   }
 
+  /// Shows the UI language picker as a rounded modal bottom sheet.
   Future<void> _openLanguagePicker() async {
-    final String? result = await showDialog<String>(
+    final String? result = await showModalBottomSheet<String>(
       context: context,
-      builder: (context) {
-        return SimpleDialog(
-          title: Text(AppLocalizations.of(context)!.language),
-          children: [
-            SimpleDialogOption(
-              onPressed: () => Navigator.pop(context, 'system'),
-              child: Text(AppLocalizations.of(context)!.languageSystem),
+      isScrollControlled: true,
+      builder: (BuildContext sheetContext) {
+        return _PickerSheet(
+          title: sheetContext.l10n.language,
+          children: <Widget>[
+            AppChoiceTile<String>(
+              value: 'system',
+              groupValue: _selectedLanguage,
+              title: sheetContext.l10n.languageSystem,
+              icon: Icons.settings_suggest_outlined,
+              onSelected: (String value) => Navigator.pop(sheetContext, value),
             ),
-            SimpleDialogOption(
-              onPressed: () => Navigator.pop(context, 'en'),
-              child: Text(AppLocalizations.of(context)!.languageEnglish),
+            AppChoiceTile<String>(
+              value: 'en',
+              groupValue: _selectedLanguage,
+              title: sheetContext.l10n.languageEnglish,
+              icon: Icons.language_rounded,
+              onSelected: (String value) => Navigator.pop(sheetContext, value),
             ),
-            SimpleDialogOption(
-              onPressed: () => Navigator.pop(context, 'zh'),
-              child: Text(AppLocalizations.of(context)!.languageChinese),
+            AppChoiceTile<String>(
+              value: 'zh',
+              groupValue: _selectedLanguage,
+              title: sheetContext.l10n.languageChinese,
+              icon: Icons.translate_rounded,
+              onSelected: (String value) => Navigator.pop(sheetContext, value),
             ),
           ],
         );
@@ -265,24 +279,38 @@ class _SettingsEditingPageState extends State<SettingsEditingPage> {
     selectLanguage(result);
   }
 
+  /// Shows the theme mode picker as a rounded modal bottom sheet.
   Future<void> _openThemePicker() async {
-    final ThemeMode? result = await showDialog<ThemeMode>(
+    final ThemeMode? result = await showModalBottomSheet<ThemeMode>(
       context: context,
-      builder: (context) {
-        return SimpleDialog(
-          title: Text(AppLocalizations.of(context)!.settingsTheme),
-          children: [
-            SimpleDialogOption(
-              onPressed: () => Navigator.pop(context, ThemeMode.system),
-              child: Text(AppLocalizations.of(context)!.themeSystem),
+      isScrollControlled: true,
+      builder: (BuildContext sheetContext) {
+        return _PickerSheet(
+          title: sheetContext.l10n.settingsTheme,
+          children: <Widget>[
+            AppChoiceTile<ThemeMode>(
+              value: ThemeMode.system,
+              groupValue: _selectedThemeMode,
+              title: sheetContext.l10n.themeSystem,
+              icon: Icons.brightness_auto_rounded,
+              onSelected: (ThemeMode value) =>
+                  Navigator.pop(sheetContext, value),
             ),
-            SimpleDialogOption(
-              onPressed: () => Navigator.pop(context, ThemeMode.light),
-              child: Text(AppLocalizations.of(context)!.themeLight),
+            AppChoiceTile<ThemeMode>(
+              value: ThemeMode.light,
+              groupValue: _selectedThemeMode,
+              title: sheetContext.l10n.themeLight,
+              icon: Icons.light_mode_rounded,
+              onSelected: (ThemeMode value) =>
+                  Navigator.pop(sheetContext, value),
             ),
-            SimpleDialogOption(
-              onPressed: () => Navigator.pop(context, ThemeMode.dark),
-              child: Text(AppLocalizations.of(context)!.themeDark),
+            AppChoiceTile<ThemeMode>(
+              value: ThemeMode.dark,
+              groupValue: _selectedThemeMode,
+              title: sheetContext.l10n.themeDark,
+              icon: Icons.dark_mode_rounded,
+              onSelected: (ThemeMode value) =>
+                  Navigator.pop(sheetContext, value),
             ),
           ],
         );
@@ -314,21 +342,21 @@ class _SettingsEditingPageState extends State<SettingsEditingPage> {
     }
   }
 
+  /// Shows the font picker as a rounded modal bottom sheet.
   Future<void> _openFontPicker() async {
-    final AppFont? result = await showDialog<AppFont>(
+    final AppFont? result = await showModalBottomSheet<AppFont>(
       context: context,
-      builder: (context) {
-        return SimpleDialog(
-          title: Text(context.l10n.fontPickerTitle),
+      isScrollControlled: true,
+      builder: (BuildContext sheetContext) {
+        return _PickerSheet(
+          title: sheetContext.l10n.fontPickerTitle,
           children: AppFont.values.map((AppFont font) {
-            return SimpleDialogOption(
-              onPressed: () => Navigator.pop(context, font),
-              child: ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(_fontLabel(context, font)),
-                subtitle: Text(_fontDescription(context, font)),
-                trailing: font == _font ? const Icon(Icons.check) : null,
-              ),
+            return AppChoiceTile<AppFont>(
+              value: font,
+              groupValue: _font,
+              title: _fontLabel(sheetContext, font),
+              subtitle: _fontDescription(sheetContext, font),
+              onSelected: (AppFont value) => Navigator.pop(sheetContext, value),
             );
           }).toList(),
         );
@@ -547,124 +575,130 @@ class _SettingsEditingPageState extends State<SettingsEditingPage> {
   Future<_ColorSelection?> _showColorPickerDialog(
     BuildContext context,
     Color initial,
-  ) {
+  ) async {
     HSVColor hsv = HSVColor.fromColor(initial);
     final TextEditingController hexController = TextEditingController(
       text: _colorToHex(hsv.toColor()),
     );
     bool isHexValid = true;
     bool useAuto = _useAutoColor;
-    return showDialog<_ColorSelection>(
+    final _ColorSelection? selection = await showDialog<_ColorSelection>(
       context: context,
-      builder: (context) {
+      builder: (BuildContext dialogContext) {
         return StatefulBuilder(
-          builder: (context, setState) {
-            final Color preview = useAuto
-                ? Theme.of(context).colorScheme.primary
-                : hsv.toColor();
+          builder: (BuildContext context, StateSetter setState) {
+            final ThemeData theme = Theme.of(context);
+            final ColorScheme colors = theme.colorScheme;
+            final AppLocalizations l10n = context.l10n;
+            final Color preview = useAuto ? colors.primary : hsv.toColor();
             return AlertDialog(
-              title: Text(AppLocalizations.of(context)!.themeColorPickerTitle),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SwitchListTile.adaptive(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(AppLocalizations.of(context)!.themeColorAuto),
-                    value: useAuto,
-                    onChanged: (value) => setState(() {
-                      useAuto = value;
-                    }),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: preview,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: Theme.of(context).colorScheme.outline,
+              title: Text(l10n.themeColorPickerTitle),
+              content: SizedBox(
+                width: 340,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      Container(
+                        height: 88,
+                        decoration: BoxDecoration(
+                          color: preview,
+                          borderRadius: BorderRadius.circular(AppRadius.lg),
+                          border: Border.all(color: colors.outlineVariant),
+                        ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: hexController,
-                    decoration: InputDecoration(
-                      labelText: AppLocalizations.of(
-                        context,
-                      )!.themeColorHexLabel,
-                      hintText: AppLocalizations.of(context)!.themeColorHexHint,
-                      errorText: isHexValid
-                          ? null
-                          : AppLocalizations.of(context)!.themeColorHexInvalid,
-                    ),
-                    autocorrect: false,
-                    enableSuggestions: false,
-                    enabled: !useAuto,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(
-                        RegExp(r'[0-9a-fA-F#]'),
+                      const SizedBox(height: AppSpacing.sm),
+                      SwitchListTile.adaptive(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(l10n.themeColorAuto),
+                        value: useAuto,
+                        onChanged: (bool value) => setState(() {
+                          useAuto = value;
+                        }),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      TextField(
+                        controller: hexController,
+                        decoration: InputDecoration(
+                          labelText: l10n.themeColorHexLabel,
+                          hintText: l10n.themeColorHexHint,
+                          errorText: isHexValid
+                              ? null
+                              : l10n.themeColorHexInvalid,
+                        ),
+                        autocorrect: false,
+                        enableSuggestions: false,
+                        enabled: !useAuto,
+                        inputFormatters: <TextInputFormatter>[
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'[0-9a-fA-F#]'),
+                          ),
+                        ],
+                        onChanged: (String value) {
+                          if (useAuto) {
+                            return;
+                          }
+                          final Color? parsed = _parseHexColor(value);
+                          setState(() {
+                            isHexValid = parsed != null;
+                            if (parsed != null) {
+                              hsv = HSVColor.fromColor(parsed);
+                            }
+                          });
+                        },
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      _buildSlider(
+                        l10n.themeColorHue,
+                        hsv.hue,
+                        0,
+                        360,
+                        useAuto
+                            ? null
+                            : (double value) => setState(() {
+                                hsv = hsv.withHue(value);
+                                hexController.text = _colorToHex(hsv.toColor());
+                                isHexValid = true;
+                              }),
+                        colors.primary,
+                      ),
+                      _buildSlider(
+                        l10n.themeColorSaturation,
+                        hsv.saturation,
+                        0,
+                        1,
+                        useAuto
+                            ? null
+                            : (double value) => setState(() {
+                                hsv = hsv.withSaturation(value);
+                                hexController.text = _colorToHex(hsv.toColor());
+                                isHexValid = true;
+                              }),
+                        colors.primary,
+                      ),
+                      _buildSlider(
+                        l10n.themeColorBrightness,
+                        hsv.value,
+                        0,
+                        1,
+                        useAuto
+                            ? null
+                            : (double value) => setState(() {
+                                hsv = hsv.withValue(value);
+                                hexController.text = _colorToHex(hsv.toColor());
+                                isHexValid = true;
+                              }),
+                        colors.primary,
                       ),
                     ],
-                    onChanged: (value) {
-                      if (useAuto) {
-                        return;
-                      }
-                      final Color? parsed = _parseHexColor(value);
-                      setState(() {
-                        isHexValid = parsed != null;
-                        if (parsed != null) {
-                          hsv = HSVColor.fromColor(parsed);
-                        }
-                      });
-                    },
                   ),
-                  const SizedBox(height: 16),
-                  _buildSlider(
-                    AppLocalizations.of(context)!.themeColorHue,
-                    hsv.hue,
-                    0,
-                    360,
-                    useAuto
-                        ? null
-                        : (value) => setState(() {
-                            hsv = hsv.withHue(value);
-                            hexController.text = _colorToHex(hsv.toColor());
-                            isHexValid = true;
-                          }),
-                  ),
-                  _buildSlider(
-                    AppLocalizations.of(context)!.themeColorSaturation,
-                    hsv.saturation,
-                    0,
-                    1,
-                    useAuto
-                        ? null
-                        : (value) => setState(() {
-                            hsv = hsv.withSaturation(value);
-                            hexController.text = _colorToHex(hsv.toColor());
-                            isHexValid = true;
-                          }),
-                  ),
-                  _buildSlider(
-                    AppLocalizations.of(context)!.themeColorBrightness,
-                    hsv.value,
-                    0,
-                    1,
-                    useAuto
-                        ? null
-                        : (value) => setState(() {
-                            hsv = hsv.withValue(value);
-                            hexController.text = _colorToHex(hsv.toColor());
-                            isHexValid = true;
-                          }),
-                  ),
-                ],
+                ),
               ),
-              actions: [
+              actions: <Widget>[
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text(AppLocalizations.of(context)!.cancel),
+                  child: Text(l10n.cancel),
                 ),
                 FilledButton(
                   onPressed: (useAuto || isHexValid)
@@ -675,7 +709,7 @@ class _SettingsEditingPageState extends State<SettingsEditingPage> {
                               : _ColorSelection.custom(preview),
                         )
                       : null,
-                  child: Text(AppLocalizations.of(context)!.confirm),
+                  child: Text(l10n.confirm),
                 ),
               ],
             );
@@ -683,21 +717,51 @@ class _SettingsEditingPageState extends State<SettingsEditingPage> {
         );
       },
     );
+    hexController.dispose();
+    return selection;
   }
 
+  /// Builds a labelled slider tinted with the current picker color.
   Widget _buildSlider(
     String label,
     double value,
     double min,
     double max,
     ValueChanged<double>? onChanged,
+    Color tint,
   ) {
+    final ThemeData theme = Theme.of(context);
+    final String valueLabel = max <= 1
+        ? '${(value * 100).round()}%'
+        : '${value.round()}°';
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          SizedBox(width: 90, child: Text(label)),
-          Expanded(
+      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  label,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              Text(
+                valueLabel,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: tint,
+              inactiveTrackColor: theme.colorScheme.surfaceContainerHighest,
+            ),
             child: Slider(
               value: value,
               min: min,
@@ -737,6 +801,66 @@ class _SettingsEditingPageState extends State<SettingsEditingPage> {
     }
 
     return Color(value);
+  }
+}
+
+/// Rounded bottom sheet listing mutually exclusive choices.
+class _PickerSheet extends StatelessWidget {
+  const _PickerSheet({required this.title, required this.children});
+
+  /// Sheet headline naming the setting being picked.
+  final String title;
+
+  /// Selectable rows rendered inside the sheet.
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    return SafeArea(
+      top: false,
+      child: Center(
+        heightFactor: 1,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: AppTheme.contentMaxWidth),
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.md),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    AppSpacing.xs,
+                    AppSpacing.lg,
+                    AppSpacing.sm,
+                  ),
+                  child: Text(
+                    title,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: children,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

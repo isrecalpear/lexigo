@@ -590,4 +590,65 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noCardHistory => 'No reviews yet';
+
+  @override
+  String get searchHint => 'Search words';
+
+  @override
+  String get showAnswer => 'Show answer';
+
+  @override
+  String get hideAnswer => 'Hide answer';
+
+  @override
+  String get languageEnglishName => 'English';
+
+  @override
+  String get languageKoreanName => 'Korean';
+
+  @override
+  String get languageRussianName => 'Russian';
+
+  @override
+  String get sectionStudy => 'Study';
+
+  @override
+  String get sectionAppearance => 'Appearance';
+
+  @override
+  String get sectionData => 'Data';
+
+  @override
+  String get sectionSettings => 'Settings';
+
+  @override
+  String get sectionAbout => 'About';
+
+  @override
+  String get sectionWords => 'Words';
+
+  @override
+  String get sectionImportExport => 'Import & export';
+
+  @override
+  String get ratingPrompt => 'How well did you remember?';
+
+  @override
+  String get wordListEmptyHint =>
+      'Import a word list or add words manually to start learning.';
+
+  @override
+  String get summaryLearned => 'Learned';
+
+  @override
+  String get summaryReviewed => 'Reviewed';
+
+  @override
+  String get summaryToReview => 'To review';
+
+  @override
+  String get swipeHint => 'Swipe left or tap shuffle for another word';
+
+  @override
+  String get recordsLast7DaysShort => '7-day reviews';
 }

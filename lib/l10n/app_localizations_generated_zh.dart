@@ -581,4 +581,64 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get noCardHistory => '暂无复习记录';
+
+  @override
+  String get searchHint => '搜索单词';
+
+  @override
+  String get showAnswer => '显示答案';
+
+  @override
+  String get hideAnswer => '隐藏答案';
+
+  @override
+  String get languageEnglishName => '英语';
+
+  @override
+  String get languageKoreanName => '韩语';
+
+  @override
+  String get languageRussianName => '俄语';
+
+  @override
+  String get sectionStudy => '学习';
+
+  @override
+  String get sectionAppearance => '外观';
+
+  @override
+  String get sectionData => '数据';
+
+  @override
+  String get sectionSettings => '设置';
+
+  @override
+  String get sectionAbout => '关于';
+
+  @override
+  String get sectionWords => '单词';
+
+  @override
+  String get sectionImportExport => '导入与导出';
+
+  @override
+  String get ratingPrompt => '你记得怎么样？';
+
+  @override
+  String get wordListEmptyHint => '导入单词清单或手动添加单词，开始学习。';
+
+  @override
+  String get summaryLearned => '已学习';
+
+  @override
+  String get summaryReviewed => '已复习';
+
+  @override
+  String get summaryToReview => '待复习';
+
+  @override
+  String get swipeHint => '左滑或点击「下一个」换一个单词';
+
+  @override
+  String get recordsLast7DaysShort => '近 7 天复习';
 }

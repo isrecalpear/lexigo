@@ -13,6 +13,8 @@ import 'package:fsrs/fsrs.dart' as fsrs;
 import 'package:lexigo/backend/word/manager.dart';
 import 'package:lexigo/backend/word.dart';
 import 'package:lexigo/l10n/l10n.dart';
+import 'package:lexigo/pages/widgets/app_ui.dart';
+import 'package:lexigo/theme/app_theme.dart';
 import 'package:lexigo/utils/app_logger.dart';
 import 'package:lexigo/utils/settings.dart';
 
@@ -130,108 +132,150 @@ class _WordAddPageState extends State<WordAddPage> {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.addWordPageTitle),
-      ),
+      appBar: AppBar(title: Text(l10n.addWordPageTitle)),
       body: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              DropdownButtonFormField<LanguageCode>(
-                initialValue: _languageCode,
-                decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.fieldLanguage,
-                  border: const OutlineInputBorder(),
+        child: AppContent(
+          child: Form(
+            key: _formKey,
+            child: ListView(
+              padding: AppInsets.formPage,
+              children: <Widget>[
+                AppSectionHeader(title: l10n.sectionWords),
+                AppSurface(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      DropdownButtonFormField<LanguageCode>(
+                        initialValue: _languageCode,
+                        decoration: InputDecoration(
+                          labelText: l10n.fieldLanguage,
+                          prefixIcon: const Icon(Icons.translate_rounded),
+                        ),
+                        items: LanguageCode.values
+                            .map(
+                              (item) => DropdownMenuItem(
+                                value: item,
+                                child: Text(_languageName(context, item)),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: _isSaving
+                            ? null
+                            : (value) {
+                                if (value == null) return;
+                                setState(() {
+                                  _languageCode = value;
+                                });
+                              },
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      TextFormField(
+                        controller: _originalWordController,
+                        decoration: InputDecoration(
+                          labelText: l10n.fieldOriginal,
+                          prefixIcon: const Icon(Icons.text_fields_rounded),
+                        ),
+                        validator: _requiredValidator,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      TextFormField(
+                        controller: _translationController,
+                        decoration: InputDecoration(
+                          labelText: l10n.fieldTranslation,
+                          prefixIcon: const Icon(Icons.translate_rounded),
+                        ),
+                        validator: _requiredValidator,
+                      ),
+                    ],
+                  ),
                 ),
-                items: LanguageCode.values
-                    .map(
-                      (item) =>
-                          DropdownMenuItem(value: item, child: Text(item.name)),
-                    )
-                    .toList(),
-                onChanged: _isSaving
-                    ? null
-                    : (value) {
-                        if (value == null) return;
-                        setState(() {
-                          _languageCode = value;
-                        });
-                      },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _originalWordController,
-                decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.fieldOriginal,
-                  border: const OutlineInputBorder(),
+                const SizedBox(height: AppSpacing.xl),
+                AppSectionHeader(title: l10n.fieldOriginalExample),
+                AppSurface(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      TextFormField(
+                        controller: _originalExampleController,
+                        decoration: InputDecoration(
+                          labelText: l10n.fieldOriginalExample,
+                          alignLabelWithHint: true,
+                        ),
+                        validator: _requiredValidator,
+                        maxLines: 3,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      TextFormField(
+                        controller: _exampleTranslationController,
+                        decoration: InputDecoration(
+                          labelText: l10n.fieldExampleTranslation,
+                          alignLabelWithHint: true,
+                        ),
+                        validator: _requiredValidator,
+                        maxLines: 3,
+                      ),
+                    ],
+                  ),
                 ),
-                validator: _requiredValidator,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _translationController,
-                decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.fieldTranslation,
-                  border: const OutlineInputBorder(),
+                const SizedBox(height: AppSpacing.xl),
+                // Unit / book IDs are optional grouping metadata, kept in their
+                // own card so the main content stays focused.
+                AppSurface(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: <Widget>[
+                      TextFormField(
+                        controller: _unitIdController,
+                        decoration: InputDecoration(
+                          labelText: l10n.fieldUnitId,
+                          prefixIcon: const Icon(Icons.folder_outlined),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      TextFormField(
+                        controller: _bookIdController,
+                        decoration: InputDecoration(
+                          labelText: l10n.fieldBookId,
+                          prefixIcon: const Icon(Icons.menu_book_outlined),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                validator: _requiredValidator,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _originalExampleController,
-                decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.fieldOriginalExample,
-                  border: const OutlineInputBorder(),
+                const SizedBox(height: AppSpacing.xl),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: _isSaving ? null : _saveWord,
+                    child: _isSaving
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(l10n.save),
+                  ),
                 ),
-                validator: _requiredValidator,
-                maxLines: 3,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _exampleTranslationController,
-                decoration: InputDecoration(
-                  labelText: AppLocalizations.of(
-                    context,
-                  )!.fieldExampleTranslation,
-                  border: const OutlineInputBorder(),
-                ),
-                validator: _requiredValidator,
-                maxLines: 3,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _unitIdController,
-                decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.fieldUnitId,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _bookIdController,
-                decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.fieldBookId,
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: _isSaving ? null : _saveWord,
-                child: _isSaving
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(AppLocalizations.of(context)!.save),
-              ),
-            ],
+                const SizedBox(height: AppSpacing.md),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
+}
+
+/// Localized display name of [code].
+String _languageName(BuildContext context, LanguageCode code) {
+  return switch (code) {
+    LanguageCode.ko => context.l10n.languageKoreanName,
+    LanguageCode.ru => context.l10n.languageRussianName,
+    LanguageCode.en => context.l10n.languageEnglishName,
+  };
 }

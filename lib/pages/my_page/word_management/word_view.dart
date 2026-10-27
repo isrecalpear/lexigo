@@ -14,6 +14,9 @@ import 'package:lexigo/app_router.dart';
 import 'package:lexigo/backend/word.dart';
 import 'package:lexigo/backend/word/manager.dart';
 import 'package:lexigo/l10n/l10n.dart';
+import 'package:lexigo/pages/records/records_format.dart';
+import 'package:lexigo/pages/widgets/app_ui.dart';
+import 'package:lexigo/theme/app_theme.dart';
 import 'package:lexigo/utils/app_logger.dart';
 import 'package:lexigo/utils/settings.dart';
 
@@ -75,6 +78,16 @@ class _WordViewPageState extends State<WordViewPage> {
     }
   }
 
+  Future<void> _openAddPage() async {
+    await Navigator.push(
+      context,
+      AppRoutes.wordAdd(languageCode: _languageCode),
+    );
+    if (mounted) {
+      await _loadWords();
+    }
+  }
+
   Future<void> _editWord(Word word) async {
     final updated = await Navigator.push<Word>(
       context,
@@ -90,7 +103,13 @@ class _WordViewPageState extends State<WordViewPage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) {
+        final ColorScheme colors = Theme.of(context).colorScheme;
         return AlertDialog(
+          icon: Icon(
+            Icons.delete_outline_rounded,
+            size: 28,
+            color: colors.error,
+          ),
           title: Text(context.l10n.deleteWordTitle),
           content: Text(context.l10n.deleteWordConfirm(word.originalWord)),
           actions: [
@@ -147,15 +166,151 @@ class _WordViewPageState extends State<WordViewPage> {
     }
   }
 
-  Color _familiarityColor(fsrs.Card card, BuildContext context) {
-    switch (card.state) {
-      case fsrs.State.learning:
-        return Theme.of(context).colorScheme.error;
-      case fsrs.State.relearning:
-        return Theme.of(context).colorScheme.tertiary;
-      case fsrs.State.review:
-        return Theme.of(context).colorScheme.primary;
-    }
+  /// Language filter shown above the list.
+  Widget _buildLanguageFilter(BuildContext context) {
+    return AppSurface(
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      child: Row(
+        children: <Widget>[
+          AppIconBadge(icon: Icons.translate_rounded, size: 40, iconSize: 20),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xs,
+              children: <Widget>[
+                for (final LanguageCode code in LanguageCode.values)
+                  ChoiceChip(
+                    label: Text(_languageName(context, code)),
+                    selected: _languageCode == code,
+                    onSelected: _isLoading
+                        ? null
+                        : (bool selected) {
+                            if (!selected) return;
+                            setState(() {
+                              _languageCode = code;
+                            });
+                            _loadWords();
+                          },
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Builds one word row.
+  Widget _buildWordRow(BuildContext context, Word word) {
+    final String familiarity = _familiarityLabel(word.card, context);
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    return AppSurface(
+      onTap: () {
+        AppLogger.debug('View word: ${word.originalWord}');
+      },
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.sm,
+        AppSpacing.xxs,
+        AppSpacing.sm,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  word.originalWord,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  word.originalTranslation,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          AppPill(
+            label: familiarity,
+            color: stateOnColor(colors, word.card.state),
+            backgroundColor: stateContainerColor(colors, word.card.state),
+          ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert_rounded, size: 20),
+            onSelected: (value) {
+              switch (value) {
+                case 'edit':
+                  _editWord(word);
+                  break;
+                case 'delete':
+                  _deleteWord(word);
+                  break;
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem<String>(
+                value: 'edit',
+                child: Row(
+                  children: <Widget>[
+                    Icon(
+                      Icons.edit_outlined,
+                      size: 20,
+                      color: colors.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Text(AppLocalizations.of(context)!.edit),
+                  ],
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'delete',
+                child: Row(
+                  children: <Widget>[
+                    Icon(
+                      Icons.delete_outline_rounded,
+                      size: 20,
+                      color: colors.error,
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Text(AppLocalizations.of(context)!.delete),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Scrollable empty state, kept inside a list so pull-to-refresh still works.
+  Widget _buildEmptyState(BuildContext context) {
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: AppInsets.page,
+      children: <Widget>[
+        AppEmptyState(
+          icon: Icons.list_alt_rounded,
+          title: AppLocalizations.of(context)!.wordViewEmpty,
+          message: context.l10n.wordListEmptyHint,
+          action: FilledButton.tonal(
+            onPressed: _openAddPage,
+            child: Text(AppLocalizations.of(context)!.addWordTitle),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -165,126 +320,66 @@ class _WordViewPageState extends State<WordViewPage> {
         title: Text(AppLocalizations.of(context)!.wordViewTitle),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                AppRoutes.wordAdd(languageCode: _languageCode),
-              );
-              if (mounted) {
-                await _loadWords();
-              }
-            },
+            icon: const Icon(Icons.add_rounded),
+            tooltip: context.l10n.addWordTitle,
+            onPressed: _openAddPage,
           ),
         ],
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: DropdownButtonFormField<LanguageCode>(
-                initialValue: _languageCode,
-                decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.fieldLanguage,
-                  border: const OutlineInputBorder(),
+        child: AppContent(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.md,
+                  AppSpacing.lg,
+                  AppSpacing.sm,
                 ),
-                items: LanguageCode.values
-                    .map(
-                      (item) =>
-                          DropdownMenuItem(value: item, child: Text(item.name)),
-                    )
-                    .toList(),
-                onChanged: _isLoading
-                    ? null
-                    : (value) {
-                        if (value == null) return;
-                        setState(() {
-                          _languageCode = value;
-                        });
-                        _loadWords();
-                      },
+                child: _buildLanguageFilter(context),
               ),
-            ),
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: _loadWords,
-                child: _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _words.isEmpty
-                    ? Center(
-                        child: Text(
-                          AppLocalizations.of(context)!.wordViewEmpty,
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: _loadWords,
+                  child: _isLoading
+                      ? ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          children: const <Widget>[
+                            SizedBox(height: 200, child: AppLoading()),
+                          ],
+                        )
+                      : _words.isEmpty
+                      ? _buildEmptyState(context)
+                      : ListView.separated(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.lg,
+                            0,
+                            AppSpacing.lg,
+                            AppSpacing.xxl,
+                          ),
+                          itemCount: _words.length,
+                          separatorBuilder: (_, _) =>
+                              const SizedBox(height: AppSpacing.xs),
+                          itemBuilder: (context, index) =>
+                              _buildWordRow(context, _words[index]),
                         ),
-                      )
-                    : ListView.separated(
-                        itemCount: _words.length,
-                        separatorBuilder: (_, _) => const Divider(height: 1),
-                        itemBuilder: (context, index) {
-                          final word = _words[index];
-                          final familiarity = _familiarityLabel(
-                            word.card,
-                            context,
-                          );
-                          final color = _familiarityColor(word.card, context);
-
-                          return ListTile(
-                            title: Text(word.originalWord),
-                            subtitle: Text(word.originalTranslation),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Chip(
-                                  label: Text(familiarity),
-                                  backgroundColor: color.withValues(
-                                    alpha: 0.15,
-                                  ),
-                                  labelStyle: TextStyle(color: color),
-                                ),
-                                const SizedBox(width: 8),
-                                PopupMenuButton<String>(
-                                  onSelected: (value) {
-                                    switch (value) {
-                                      case 'edit':
-                                        _editWord(word);
-                                        break;
-                                      case 'delete':
-                                        _deleteWord(word);
-                                        break;
-                                    }
-                                  },
-                                  itemBuilder: (context) => [
-                                    PopupMenuItem(
-                                      value: 'edit',
-                                      child: Text(
-                                        AppLocalizations.of(context)!.edit,
-                                      ),
-                                    ),
-                                    PopupMenuItem(
-                                      value: 'delete',
-                                      child: Text(
-                                        AppLocalizations.of(context)!.delete,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            isThreeLine: true,
-                            dense: false,
-                            onTap: () {
-                              AppLogger.debug(
-                                'View word: ${word.originalWord}',
-                              );
-                            },
-                          );
-                        },
-                      ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
+}
+
+/// Localized display name of [code].
+String _languageName(BuildContext context, LanguageCode code) {
+  return switch (code) {
+    LanguageCode.ko => context.l10n.languageKoreanName,
+    LanguageCode.ru => context.l10n.languageRussianName,
+    LanguageCode.en => context.l10n.languageEnglishName,
+  };
 }

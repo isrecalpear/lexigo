@@ -26,6 +26,8 @@ import 'package:lexigo/backend/word.dart';
 import 'package:lexigo/backend/word/import_service.dart';
 import 'package:lexigo/backend/word/manager.dart';
 import 'package:lexigo/l10n/l10n.dart';
+import 'package:lexigo/pages/widgets/app_ui.dart';
+import 'package:lexigo/theme/app_theme.dart';
 import 'package:lexigo/utils/app_logger.dart';
 import 'package:lexigo/utils/permission_manager.dart';
 import 'package:lexigo/utils/settings.dart';
@@ -44,53 +46,69 @@ class _WordManagementState extends State<WordManagement> {
 
   @override
   Widget build(BuildContext context) {
+    final AppLocalizations l10n = context.l10n;
+    final ColorScheme colors = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.wordManagementTitle)),
-      body: ListView(
-        children: [
-          ListTile(
-            leading: const Icon(Icons.list_alt_outlined),
-            title: Text(context.l10n.wordListTitle),
-            subtitle: Text(context.l10n.wordListSubtitle),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              AppLogger.info('Opening word list page');
-              Navigator.push(context, AppRoutes.wordList());
-            },
+      appBar: AppBar(title: Text(l10n.wordManagementTitle)),
+      body: SafeArea(
+        child: AppContent(
+          child: ListView(
+            padding: AppInsets.formPage,
+            children: <Widget>[
+              AppSettingsGroup(
+                title: l10n.sectionImportExport,
+                children: <Widget>[
+                  AppSettingsTile(
+                    icon: Icons.download_rounded,
+                    iconColor: colors.primary,
+                    title: l10n.importWordListTitle,
+                    subtitle: l10n.importWordListSubtitle,
+                    onTap: () {
+                      AppLogger.info('Selecting file to import word list');
+                      _importWords();
+                    },
+                  ),
+                  AppSettingsTile(
+                    icon: Icons.upload_rounded,
+                    iconColor: colors.tertiary,
+                    title: l10n.exportWordListTitle,
+                    subtitle: l10n.exportWordListSubtitle,
+                    onTap: () {
+                      AppLogger.info('Selecting file to export word list');
+                      _exportWords();
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              AppSettingsGroup(
+                title: l10n.sectionWords,
+                children: <Widget>[
+                  AppSettingsTile(
+                    icon: Icons.list_alt_rounded,
+                    iconColor: colors.secondary,
+                    title: l10n.wordListTitle,
+                    subtitle: l10n.wordListSubtitle,
+                    onTap: () {
+                      AppLogger.info('Opening word list page');
+                      Navigator.push(context, AppRoutes.wordList());
+                    },
+                  ),
+                  AppSettingsTile(
+                    icon: Icons.add_circle_outline_rounded,
+                    iconColor: colors.primary,
+                    title: l10n.addWordTitle,
+                    subtitle: l10n.addWordSubtitle,
+                    onTap: () {
+                      AppLogger.info('Opening add word page');
+                      Navigator.push(context, AppRoutes.wordAdd());
+                    },
+                  ),
+                ],
+              ),
+            ],
           ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.download_outlined),
-            title: Text(context.l10n.importWordListTitle),
-            subtitle: Text(context.l10n.importWordListSubtitle),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              AppLogger.info('Selecting file to import word list');
-              _importWords();
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.save_outlined),
-            title: Text(context.l10n.exportWordListTitle),
-            subtitle: Text(context.l10n.exportWordListSubtitle),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              AppLogger.info('Selecting file to export word list');
-              _exportWords();
-            },
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.add_circle_outline),
-            title: Text(context.l10n.addWordTitle),
-            subtitle: Text(context.l10n.addWordSubtitle),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              AppLogger.info('Opening add word page');
-              Navigator.push(context, AppRoutes.wordAdd());
-            },
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -198,37 +216,94 @@ class _WordManagementState extends State<WordManagement> {
   }
 
   /// Shows what is about to be imported and asks for confirmation.
+  ///
+  /// The dialog is a compact statistics card: the detected language on top and
+  /// the three row counts (total / importable / skipped) below it.
   Future<bool?> _confirmImport(ImportPlan plan) {
     return showDialog<bool>(
       context: context,
       builder: (dialogContext) {
+        final AppLocalizations l10n = dialogContext.l10n;
+        final ThemeData theme = Theme.of(dialogContext);
+        final ColorScheme colors = theme.colorScheme;
         return AlertDialog(
-          title: Text(dialogContext.l10n.importPreviewTitle),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '${dialogContext.l10n.fieldLanguage}: ${plan.language.name}',
+          title: Text(l10n.importPreviewTitle),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: AppSurface(
+              color: colors.surfaceContainerHighest,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      AppIconBadge(
+                        icon: Icons.translate_rounded,
+                        size: 40,
+                        iconSize: 20,
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: Text(
+                          l10n.fieldLanguage,
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            color: colors.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                      AppPill(
+                        label: _languageName(dialogContext, plan.language),
+                        backgroundColor: colors.secondaryContainer,
+                        color: colors.onSecondaryContainer,
+                      ),
+                    ],
+                  ),
+                  const Divider(height: AppSpacing.xl),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: <Widget>[
+                      _PreviewStat(
+                        icon: Icons.table_rows_rounded,
+                        value: '${plan.totalRows}',
+                        color: colors.onSurfaceVariant,
+                      ),
+                      _PreviewStat(
+                        icon: Icons.playlist_add_check_rounded,
+                        value: '${plan.importCount}',
+                        color: colors.primary,
+                      ),
+                      _PreviewStat(
+                        icon: Icons.skip_next_rounded,
+                        value: '${plan.skippedCount}',
+                        color: colors.tertiary,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    l10n.importPreviewSummary(
+                      plan.totalRows,
+                      plan.importCount,
+                      plan.skippedCount,
+                    ),
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
-              Text(
-                dialogContext.l10n.importPreviewSummary(
-                  plan.totalRows,
-                  plan.importCount,
-                  plan.skippedCount,
-                ),
-              ),
-            ],
+            ),
           ),
-          actions: [
+          actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text(dialogContext.l10n.cancel),
+              child: Text(l10n.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: Text(dialogContext.l10n.confirm),
+              child: Text(l10n.confirm),
             ),
           ],
         );
@@ -249,13 +324,26 @@ class _WordManagementState extends State<WordManagement> {
             content: ValueListenableBuilder<double>(
               valueListenable: progress,
               builder: (context, value, child) {
+                final int percent = (value * 100).round();
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    LinearProgressIndicator(value: value),
-                    const SizedBox(height: 12),
-                    Text('${(value * 100).round()}%', textAlign: TextAlign.end),
+                  children: <Widget>[
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(AppRadius.full),
+                      child: LinearProgressIndicator(
+                        value: value,
+                        minHeight: 8,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: AppPill(
+                        label: '$percent%',
+                        icon: Icons.downloading_rounded,
+                      ),
+                    ),
                   ],
                 );
               },
@@ -390,27 +478,32 @@ class _WordManagementState extends State<WordManagement> {
           builder: (dialogContext, setState) {
             return AlertDialog(
               title: Text(dialogContext.l10n.selectLanguageTitle),
-              content: DropdownButton<LanguageCode>(
-                value: selected,
-                items: options
-                    .map(
-                      (item) =>
-                          DropdownMenuItem(value: item, child: Text(item.name)),
-                    )
-                    .toList(),
-                onChanged: (value) {
-                  if (value == null) return;
-                  setState(() {
-                    selected = value;
-                  });
-                },
+              content: SizedBox(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    for (final LanguageCode option in options)
+                      AppChoiceTile<LanguageCode>(
+                        value: option,
+                        groupValue: selected,
+                        title: _languageName(dialogContext, option),
+                        icon: Icons.translate_rounded,
+                        onSelected: (LanguageCode value) {
+                          setState(() {
+                            selected = value;
+                          });
+                        },
+                      ),
+                  ],
+                ),
               ),
-              actions: [
+              actions: <Widget>[
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext),
                   child: Text(dialogContext.l10n.cancel),
                 ),
-                TextButton(
+                FilledButton(
                   onPressed: () => Navigator.pop(dialogContext, selected),
                   child: Text(dialogContext.l10n.confirm),
                 ),
@@ -427,5 +520,51 @@ class _WordManagementState extends State<WordManagement> {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
+  }
+}
+
+/// Localized display name of [code].
+String _languageName(BuildContext context, LanguageCode code) {
+  return switch (code) {
+    LanguageCode.ko => context.l10n.languageKoreanName,
+    LanguageCode.ru => context.l10n.languageRussianName,
+    LanguageCode.en => context.l10n.languageEnglishName,
+  };
+}
+
+/// One large figure inside the import preview statistics card.
+class _PreviewStat extends StatelessWidget {
+  const _PreviewStat({
+    required this.icon,
+    required this.value,
+    required this.color,
+  });
+
+  /// Small tonal icon above the figure.
+  final IconData icon;
+
+  /// Highlighted figure.
+  final String value;
+
+  /// Accent color of the icon badge and the figure.
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        AppIconBadge(icon: icon, color: color, size: 40, iconSize: 20),
+        const SizedBox(height: AppSpacing.xxs),
+        Text(
+          value,
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: color,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
   }
 }
