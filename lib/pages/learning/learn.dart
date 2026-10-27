@@ -14,7 +14,7 @@ import 'package:fsrs/fsrs.dart' as fsrs;
 import 'package:lexigo/app_router.dart';
 import 'package:lexigo/backend/word.dart';
 import 'package:lexigo/backend/word/global_provider.dart';
-import 'package:lexigo/l10n/app_localizations.dart';
+import 'package:lexigo/l10n/l10n.dart';
 import 'package:lexigo/pages/widgets/word_card.dart';
 import 'package:lexigo/utils/app_logger.dart';
 import 'package:progress_indicator_m3e/progress_indicator_m3e.dart';
@@ -85,16 +85,21 @@ class _LearningPageState extends State<LearningPage> {
     final word = widget.wordProvider.currentWord!;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        AppRoutes.learningSummary(
-          wordsUnknown: word,
-          wordsLearned: _learnedCount,
-          wordsReviewed: 0,
-          wordsToReview: 0,
-          wordProvider: widget.wordProvider,
-        ),
-      );
+      _pushSummary(word);
     });
+  }
+
+  /// Replaces this page with the summary page, showing [word] as the next one.
+  void _pushSummary(Word word) {
+    Navigator.of(context).pushReplacement(
+      AppRoutes.learningSummary(
+        wordsUnknown: word,
+        wordsLearned: _learnedCount,
+        wordsReviewed: 0,
+        wordsToReview: 0,
+        wordProvider: widget.wordProvider,
+      ),
+    );
   }
 
   @override
@@ -110,15 +115,21 @@ class _LearningPageState extends State<LearningPage> {
 
     return PopScope<Word>(
       canPop: false,
-      onPopInvokedWithResult: (bool didPop, Word? result) {
-        if (didPop) return;
-        if (!mounted) return;
+      onPopInvokedWithResult: (bool didPop, Word? result) async {
+        if (didPop || _isNavigating) return;
+        _isNavigating = true;
 
-        // Pop immediately to avoid issues caused by delayed navigation.
-        Navigator.pop(context, widget.wordProvider.currentWord);
+        await widget.wordProvider.nextReviewWord();
+        if (!mounted) return;
+        if (widget.wordProvider.currentWord == null) {
+          widget.wordProvider.setFallbackWord();
+        }
+        _pushSummary(widget.wordProvider.currentWord!);
       },
       child: Scaffold(
-        appBar: AppBar(title: Text(context.l10n.learningTitle)),
+        appBar: AppBar(
+          title: Text(AppLocalizations.of(context)!.learningTitle),
+        ),
         body: SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -181,19 +192,19 @@ class _LearningPageState extends State<LearningPage> {
                   children: [
                     FilledButton(
                       onPressed: () => _handleChoice(fsrs.Rating.easy),
-                      child: Text(context.l10n.ratingEasy),
+                      child: Text(AppLocalizations.of(context)!.ratingEasy),
                     ),
                     FilledButton(
                       onPressed: () => _handleChoice(fsrs.Rating.good),
-                      child: Text(context.l10n.ratingGood),
+                      child: Text(AppLocalizations.of(context)!.ratingGood),
                     ),
                     FilledButton(
                       onPressed: () => _handleChoice(fsrs.Rating.hard),
-                      child: Text(context.l10n.ratingHard),
+                      child: Text(AppLocalizations.of(context)!.ratingHard),
                     ),
                     FilledButton(
                       onPressed: () => _handleChoice(fsrs.Rating.again),
-                      child: Text(context.l10n.ratingAgain),
+                      child: Text(AppLocalizations.of(context)!.ratingAgain),
                     ),
                   ],
                 ),

@@ -72,7 +72,7 @@ class WordManager {
   Future<void> insertWord(Word word) async {
     AppLogger.info('Inserting word: ${word.originalWord}');
     final now = DateTime.now();
-    final companion = _wordToCompanion(word, updatedAt: now);
+    final companion = wordToCompanion(word, updatedAt: now);
     await _database.into(_database.wordTable).insert(companion);
     AppLogger.info('Inserted word successfully: ${word.originalWord}');
   }
@@ -100,7 +100,7 @@ class WordManager {
         final int end = start + chunkSize < total ? start + chunkSize : total;
         final companions = <WordTableCompanion>[
           for (final word in words.sublist(start, end))
-            _wordToCompanion(word, updatedAt: now),
+            wordToCompanion(word, updatedAt: now),
         ];
         await _database.batch((batch) {
           batch.insertAll(
@@ -122,7 +122,7 @@ class WordManager {
   /// database), which callers use to avoid writing orphan data.
   Future<int> updateWord(Word word) async {
     AppLogger.info('Updating word: ${word.originalWord}');
-    final companion = _wordToCompanion(word, updatedAt: DateTime.now());
+    final companion = wordToCompanion(word, updatedAt: DateTime.now());
     final statement = _database.update(_database.wordTable)
       ..where((t) => t.cardId.equals(companion.cardId.value));
     final rows = await statement.write(companion);
@@ -137,7 +137,7 @@ class WordManager {
     final updatedAt = DateTime.now();
     await _database.transaction(() async {
       for (final word in words) {
-        final companion = _wordToCompanion(word, updatedAt: updatedAt);
+        final companion = wordToCompanion(word, updatedAt: updatedAt);
         final statement = _database.update(_database.wordTable)
           ..where((t) => t.cardId.equals(companion.cardId.value));
         await statement.write(companion);
@@ -166,7 +166,7 @@ class WordManager {
       return null;
     }
     AppLogger.info('Found word: ${result.originalWord}');
-    return _tableDataToWord(result);
+    return tableDataToWord(result);
   }
 
   /// Returns the words for [languageCode].
@@ -196,7 +196,7 @@ class WordManager {
       return words;
     }
     for (final r in results) {
-      words.add(_tableDataToWord(r));
+      words.add(tableDataToWord(r));
     }
     AppLogger.info('Retrieved ${words.length} words for $languageCode');
     return words;
@@ -241,7 +241,7 @@ class WordManager {
       return null;
     }
     AppLogger.info('Random word found: ${result.originalWord}');
-    return _tableDataToWord(result);
+    return tableDataToWord(result);
   }
 
   Future<Word?> getNextReviewWord([LanguageCode? languageCode]) async {
@@ -265,7 +265,30 @@ class WordManager {
       return null;
     }
     AppLogger.info('Next review word: ${result.originalWord}');
-    return _tableDataToWord(result);
+    return tableDataToWord(result);
+  }
+
+  Future<Word?> getNextUnlearnedWord([LanguageCode? languageCode]) async {
+    LanguageCode lang = languageCode ?? _settings.learningLanguage;
+    final result =
+        await (_database.select(_database.wordTable)
+              ..where(
+                (t) => Expression.and([
+                  t.cardLastReviewTime.isNull(),
+                  t.languageCode.equals(lang.name),
+                ]),
+              )
+              ..orderBy([
+                (t) => OrderingTerm(expression: CustomExpression('RANDOM()')),
+              ])
+              ..limit(1))
+            .getSingleOrNull();
+    if (result == null) {
+      AppLogger.info('No pending unlearned word for $lang');
+      return null;
+    }
+    AppLogger.info('Next word: ${result.originalWord}');
+    return tableDataToWord(result);
   }
 
   /// Escape character used to treat user input literally in `LIKE` patterns.
@@ -330,7 +353,7 @@ class WordManager {
       return words;
     }
     for (final r in results) {
-      words.add(_tableDataToWord(r));
+      words.add(tableDataToWord(r));
     }
     AppLogger.info('Found ${words.length} results for "$query"');
     return words;
@@ -363,15 +386,54 @@ class WordManager {
       );
       return;
     }
-
-    final companion = WordLearningHistoryTableCompanion(
-      cardId: Value(reviewLog.cardId),
-      rating: Value(reviewLog.rating),
-      reviewDateTime: Value(reviewLog.reviewDateTime),
-      reviewDuration: Value(reviewLog.reviewDuration),
-    );
-    await _database.into(_database.wordLearningHistoryTable).insert(companion);
+    await insertReviewLog(reviewLog);
     AppLogger.info('Review recorded for: ${word.originalWord} ($rating)');
+  }
+
+  /// Inserts [reviewLog] into the learning history table.
+  Future<void> insertReviewLog(ReviewLog reviewLog) async {
+    AppLogger.info('Start to insert review log ${reviewLog.cardId}');
+    final companion = reviewLogToCompanion(reviewLog);
+    await _database
+        .into(_database.wordLearningHistoryTable)
+        .insert(companion, mode: InsertMode.insertOrReplace);
+    AppLogger.info('Inserted review log successfully: ${reviewLog.cardId}');
+  }
+
+  /// Inserts [reviewLogs] in a single batch.
+  Future<void> insertReviewLogs(Iterable<ReviewLog> reviewLogs) async {
+    AppLogger.info('Start to insert ${reviewLogs.length} review logs');
+    final companions = <WordLearningHistoryTableCompanion>[
+      for (final reviewLog in reviewLogs) reviewLogToCompanion(reviewLog),
+    ];
+    await _database.batch((batch) {
+      batch.insertAll(
+        _database.wordLearningHistoryTable,
+        companions,
+        mode: InsertMode.insertOrReplace,
+      );
+    });
+    AppLogger.info('Inserted ${reviewLogs.length} review logs successfully');
+  }
+
+  /// Returns the stored review logs, limited to [word] when it is provided.
+  Future<List<ReviewLog>> getReviewLogs([Word? word]) async {
+    late List<WordLearningHistoryTableData> learningHistoryRows;
+    if (word != null) {
+      final card = word.card;
+      learningHistoryRows = await (_database.select(
+        _database.wordLearningHistoryTable,
+      )..where((t) => t.cardId.equals(card.cardId))).get();
+    } else {
+      learningHistoryRows = await _database
+          .select(_database.wordLearningHistoryTable)
+          .get();
+    }
+    final reviewLogs = <ReviewLog>[];
+    for (final row in learningHistoryRows) {
+      reviewLogs.add(_tableDataToReviewLog(row));
+    }
+    return reviewLogs;
   }
 
   Future<int> reviewPendingWordsCount([LanguageCode? languageCode]) async {
@@ -395,7 +457,8 @@ class WordManager {
     return count;
   }
 
-  WordTableCompanion _wordToCompanion(
+  /// Builds the insertable row for [word].
+  WordTableCompanion wordToCompanion(
     Word word, {
     DateTime? createdAt,
     required DateTime updatedAt,
@@ -423,7 +486,7 @@ class WordManager {
     );
   }
 
-  Word _tableDataToWord(WordTableData wordTableData) {
+  Word tableDataToWord(WordTableData wordTableData) {
     Card card = Card.fromMap({
       'cardId': wordTableData.cardId,
       'state': wordTableData.cardState,
@@ -446,5 +509,23 @@ class WordManager {
       bookID: wordTableData.bookId,
     );
     return word;
+  }
+
+  WordLearningHistoryTableCompanion reviewLogToCompanion(ReviewLog reviewLog) {
+    return WordLearningHistoryTableCompanion(
+      cardId: Value(reviewLog.cardId),
+      rating: Value(reviewLog.rating),
+      reviewDateTime: Value(reviewLog.reviewDateTime),
+      reviewDuration: Value(reviewLog.reviewDuration),
+    );
+  }
+
+  ReviewLog _tableDataToReviewLog(WordLearningHistoryTableData tableData) {
+    return (ReviewLog(
+      cardId: tableData.cardId,
+      rating: tableData.rating,
+      reviewDateTime: tableData.reviewDateTime,
+      reviewDuration: tableData.reviewDuration,
+    ));
   }
 }

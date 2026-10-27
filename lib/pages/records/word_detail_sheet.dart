@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 
 // Project imports:
 import 'package:lexigo/backend/records/records_service.dart';
-import 'package:lexigo/l10n/app_localizations.dart';
+import 'package:lexigo/l10n/l10n.dart';
 import 'package:lexigo/pages/records/forgetting_curve.dart';
 import 'package:lexigo/pages/records/records_format.dart';
 

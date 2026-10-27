@@ -17,7 +17,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 // Project imports:
 import 'package:lexigo/backend/word/manager.dart';
 import 'backend/word.dart';
-import 'l10n/app_localizations.dart';
+import 'l10n/l10n.dart';
 import 'pages/my_page.dart';
 import 'package:lexigo/pages/records/records_page.dart';
 import 'pages/start_page.dart';
@@ -465,17 +465,17 @@ class _MyHomePageState extends State<MyHomePage> {
                 NavigationDestination(
                   icon: const Icon(Icons.abc_outlined),
                   selectedIcon: const Icon(Icons.abc),
-                  label: context.l10n.tabStudy,
+                  label: AppLocalizations.of(context)!.tabStudy,
                 ),
                 NavigationDestination(
                   icon: const Icon(Icons.calendar_month_outlined),
                   selectedIcon: const Icon(Icons.calendar_month),
-                  label: context.l10n.tabRecords,
+                  label: AppLocalizations.of(context)!.tabRecords,
                 ),
                 NavigationDestination(
                   icon: const Icon(Icons.person_outline),
                   selectedIcon: const Icon(Icons.person),
-                  label: context.l10n.tabMe,
+                  label: AppLocalizations.of(context)!.tabMe,
                 ),
               ],
               onDestinationSelected: _onItemTapped,
@@ -493,17 +493,17 @@ class _MyHomePageState extends State<MyHomePage> {
                   NavigationRailDestination(
                     icon: const Icon(Icons.abc_outlined),
                     selectedIcon: const Icon(Icons.abc),
-                    label: Text(context.l10n.tabStudy),
+                    label: Text(AppLocalizations.of(context)!.tabStudy),
                   ),
                   NavigationRailDestination(
                     icon: const Icon(Icons.calendar_month_outlined),
                     selectedIcon: const Icon(Icons.calendar_month),
-                    label: Text(context.l10n.tabRecords),
+                    label: Text(AppLocalizations.of(context)!.tabRecords),
                   ),
                   NavigationRailDestination(
                     icon: const Icon(Icons.person_outline),
                     selectedIcon: const Icon(Icons.person),
-                    label: Text(context.l10n.tabMe),
+                    label: Text(AppLocalizations.of(context)!.tabMe),
                   ),
                 ],
               ),
@@ -520,7 +520,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         Text(
-                          context.l10n.appTitle,
+                          AppLocalizations.of(context)!.appTitle,
                           style: Theme.of(context).textTheme.headlineSmall,
                         ),
                         const Spacer(),
@@ -589,7 +589,7 @@ class _MyHomePageState extends State<MyHomePage> {
       context: context,
       builder: (context) {
         return SimpleDialog(
-          title: Text(context.l10n.selectLanguageTitle),
+          title: Text(AppLocalizations.of(context)!.selectLanguageTitle),
           children: languageOptions
               .map(
                 (item) => RadioMenuButton(

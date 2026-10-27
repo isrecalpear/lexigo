@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:fsrs/fsrs.dart' as fsrs;
 
 // Project imports:
-import 'package:lexigo/l10n/app_localizations.dart';
+import 'package:lexigo/l10n/l10n.dart';
 
 /// Localized label of a review [rating].
 String ratingLabel(AppLocalizations l10n, fsrs.Rating rating) {

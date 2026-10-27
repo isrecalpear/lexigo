@@ -12,8 +12,9 @@ import 'package:fsrs/fsrs.dart' as fsrs;
 // Project imports:
 import 'package:lexigo/backend/word/manager.dart';
 import 'package:lexigo/backend/word.dart';
-import 'package:lexigo/l10n/app_localizations.dart';
+import 'package:lexigo/l10n/l10n.dart';
 import 'package:lexigo/utils/app_logger.dart';
+import 'package:lexigo/utils/settings.dart';
 
 /// Form widget for adding words.
 class WordAddPage extends StatefulWidget {
@@ -35,7 +36,8 @@ class _WordAddPageState extends State<WordAddPage> {
   final _unitIdController = TextEditingController(text: 'DefaultUnit');
   final _bookIdController = TextEditingController(text: 'DefaultBook');
 
-  late LanguageCode _languageCode = widget.languageCode ?? LanguageCode.en;
+  late LanguageCode _languageCode =
+      widget.languageCode ?? SettingsStore.instance.settings.learningLanguage;
   bool _isSaving = false;
 
   final _wordManager = WordManager();
@@ -92,9 +94,9 @@ class _WordAddPageState extends State<WordAddPage> {
       AppLogger.info('Word saved successfully: ${word.originalWord}');
 
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(context.l10n.addSuccess)));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.addSuccess)),
+        );
         form.reset();
         _originalWordController.clear();
         _translationController.clear();
@@ -104,9 +106,11 @@ class _WordAddPageState extends State<WordAddPage> {
     } catch (e, stackTrace) {
       AppLogger.error('Failed to save word', error: e, stackTrace: stackTrace);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(context.l10n.addFailed('$e'))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.addFailed('$e')),
+          ),
+        );
       }
     } finally {
       if (mounted) {
@@ -119,7 +123,7 @@ class _WordAddPageState extends State<WordAddPage> {
 
   String? _requiredValidator(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return context.l10n.required;
+      return AppLocalizations.of(context)!.required;
     }
     return null;
   }
@@ -127,7 +131,9 @@ class _WordAddPageState extends State<WordAddPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.addWordPageTitle)),
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context)!.addWordPageTitle),
+      ),
       body: SafeArea(
         child: Form(
           key: _formKey,
@@ -137,7 +143,7 @@ class _WordAddPageState extends State<WordAddPage> {
               DropdownButtonFormField<LanguageCode>(
                 initialValue: _languageCode,
                 decoration: InputDecoration(
-                  labelText: context.l10n.fieldLanguage,
+                  labelText: AppLocalizations.of(context)!.fieldLanguage,
                   border: const OutlineInputBorder(),
                 ),
                 items: LanguageCode.values
@@ -159,7 +165,7 @@ class _WordAddPageState extends State<WordAddPage> {
               TextFormField(
                 controller: _originalWordController,
                 decoration: InputDecoration(
-                  labelText: context.l10n.fieldOriginal,
+                  labelText: AppLocalizations.of(context)!.fieldOriginal,
                   border: const OutlineInputBorder(),
                 ),
                 validator: _requiredValidator,
@@ -168,7 +174,7 @@ class _WordAddPageState extends State<WordAddPage> {
               TextFormField(
                 controller: _translationController,
                 decoration: InputDecoration(
-                  labelText: context.l10n.fieldTranslation,
+                  labelText: AppLocalizations.of(context)!.fieldTranslation,
                   border: const OutlineInputBorder(),
                 ),
                 validator: _requiredValidator,
@@ -177,7 +183,7 @@ class _WordAddPageState extends State<WordAddPage> {
               TextFormField(
                 controller: _originalExampleController,
                 decoration: InputDecoration(
-                  labelText: context.l10n.fieldOriginalExample,
+                  labelText: AppLocalizations.of(context)!.fieldOriginalExample,
                   border: const OutlineInputBorder(),
                 ),
                 validator: _requiredValidator,
@@ -187,7 +193,9 @@ class _WordAddPageState extends State<WordAddPage> {
               TextFormField(
                 controller: _exampleTranslationController,
                 decoration: InputDecoration(
-                  labelText: context.l10n.fieldExampleTranslation,
+                  labelText: AppLocalizations.of(
+                    context,
+                  )!.fieldExampleTranslation,
                   border: const OutlineInputBorder(),
                 ),
                 validator: _requiredValidator,
@@ -197,7 +205,7 @@ class _WordAddPageState extends State<WordAddPage> {
               TextFormField(
                 controller: _unitIdController,
                 decoration: InputDecoration(
-                  labelText: context.l10n.fieldUnitId,
+                  labelText: AppLocalizations.of(context)!.fieldUnitId,
                   border: const OutlineInputBorder(),
                 ),
               ),
@@ -205,7 +213,7 @@ class _WordAddPageState extends State<WordAddPage> {
               TextFormField(
                 controller: _bookIdController,
                 decoration: InputDecoration(
-                  labelText: context.l10n.fieldBookId,
+                  labelText: AppLocalizations.of(context)!.fieldBookId,
                   border: const OutlineInputBorder(),
                 ),
               ),
@@ -218,7 +226,7 @@ class _WordAddPageState extends State<WordAddPage> {
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : Text(context.l10n.save),
+                    : Text(AppLocalizations.of(context)!.save),
               ),
             ],
           ),

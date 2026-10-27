@@ -4,20 +4,31 @@
 /// and view the word database.
 library;
 
+// Dart imports:
+import 'dart:io';
+
 // Flutter imports:
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
+import 'package:drift_flutter/drift_flutter.dart';
 import 'package:file_selector/file_selector.dart';
+import 'package:fsrs/fsrs.dart' as fsrs;
+import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 // Project imports:
 import 'package:lexigo/app_router.dart';
+import 'package:lexigo/backend/database/interface.dart';
 import 'package:lexigo/backend/word.dart';
 import 'package:lexigo/backend/word/import_service.dart';
-import 'package:lexigo/l10n/app_localizations.dart';
+import 'package:lexigo/backend/word/manager.dart';
+import 'package:lexigo/l10n/l10n.dart';
 import 'package:lexigo/utils/app_logger.dart';
 import 'package:lexigo/utils/permission_manager.dart';
+import 'package:lexigo/utils/settings.dart';
 
 /// Word management menu page.
 class WordManagement extends StatefulWidget {
@@ -29,6 +40,7 @@ class WordManagement extends StatefulWidget {
 
 class _WordManagementState extends State<WordManagement> {
   final WordImportService _importService = WordImportService();
+  final WordManager _wordManager = WordManager();
 
   @override
   Widget build(BuildContext context) {
@@ -254,24 +266,123 @@ class _WordManagementState extends State<WordManagement> {
     );
   }
 
+  /// Exports the selected language (words + review history) to a new SQLite
+  /// file and hands the file to the platform.
+  ///
+  /// The database is written to a temporary file first, then shared through the
+  /// system share sheet on Apple platforms, copied to `Documents/LexiGo` on
+  /// Android, or copied to the download directory on desktop.
   Future<void> _exportWords() async {
-    final LanguageCode? selected = await _selectLanguage(LanguageCode.values);
-    if (selected == null) return;
-
-    // TODO: Implement word export functionality:
-    // - Export words to a new SQLite database file
-    // - Allow user to choose save location via file_selector
-    // - Include all columns: original_word, translation, original_example,
-    //   example_translation, unit_id, book_id
-    // - Show success/failure snackbar
-    AppLogger.warning(
-      'Word export not yet implemented for language: ${selected.name}',
+    final LanguageCode? languageCode = await _selectLanguage(
+      LanguageCode.values,
     );
+    if (languageCode == null) return;
+
+    final List<Word> words = await _wordManager.getWords(languageCode);
+    final DateTime now = DateTime.now();
+
+    final List<WordTableCompanion> wordCompanions = [
+      for (final Word word in words)
+        _wordManager.wordToCompanion(word, createdAt: now, updatedAt: now),
+    ];
+    final Set<int> exportedCardIds = {
+      for (final Word word in words) word.card.cardId,
+    };
+    final List<WordLearningHistoryTableCompanion> reviewLogCompanions = [
+      for (final fsrs.ReviewLog reviewLog
+          in (await _wordManager.getReviewLogs()).where(
+            (log) => exportedCardIds.contains(log.cardId),
+          ))
+        _wordManager.reviewLogToCompanion(reviewLog),
+    ];
+
+    if (!mounted) return;
+    final Directory directory = await getTemporaryDirectory();
+    final String exportFileName =
+        'lexigo_export_${languageCode.name}_'
+        '${DateFormat('yyyyMMdd_HHmmss').format(now)}.sqlite';
+    final File tempFile = File('${directory.path}/$exportFileName');
+
+    try {
+      final Database externalDatabase = Database.external(
+        driftDatabase(
+          name: 'lexigo_export_temp',
+          native: DriftNativeOptions(
+            databasePath: () => Future<String>.value(tempFile.path),
+          ),
+        ),
+      );
+      try {
+        await externalDatabase.batch((batch) {
+          batch.insertAll(externalDatabase.wordTable, wordCompanions);
+          batch.insertAll(
+            externalDatabase.wordLearningHistoryTable,
+            reviewLogCompanions,
+          );
+        });
+      } finally {
+        await externalDatabase.close();
+      }
+
+      late File targetFile;
+      if (Platform.isIOS || Platform.isMacOS) {
+        final ShareResult result = await SharePlus.instance.share(
+          ShareParams(files: [XFile(tempFile.path)]),
+        );
+        if (result.status == ShareResultStatus.dismissed) {
+          if (!mounted) return;
+          _showMessage(context.l10n.exportFailedUserDismiss);
+          return;
+        }
+        if (result.status == ShareResultStatus.unavailable) {
+          if (!mounted) return;
+          _showMessage(context.l10n.exportFailedUnavailable);
+          return;
+        }
+        targetFile = tempFile;
+      } else if (Platform.isAndroid) {
+        // TODO: Let the user pick the destination directory through SAF.
+        final Directory outputDirectory = Directory(
+          '/storage/emulated/0/Documents/LexiGo',
+        );
+        if (!await outputDirectory.exists()) {
+          await outputDirectory.create(recursive: true);
+        }
+        targetFile = File('${outputDirectory.path}/$exportFileName');
+        await tempFile.copy(targetFile.path);
+      } else {
+        final Directory? downloadsDirectory = await getDownloadsDirectory();
+        if (downloadsDirectory == null) {
+          if (!mounted) return;
+          _showMessage(context.l10n.exportFailedNoFolder);
+          return;
+        }
+        targetFile = File('${downloadsDirectory.path}/$exportFileName');
+        await tempFile.copy(targetFile.path);
+      }
+
+      AppLogger.info('Word export completed: ${targetFile.path}');
+      if (!mounted) return;
+      _showMessage(context.l10n.exportSuccess(targetFile.path));
+    } catch (error, stackTrace) {
+      AppLogger.error(
+        'Word export failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      if (!mounted) return;
+      _showMessage(context.l10n.exportFailed('$error'));
+    }
   }
 
   /// Lets the user pick one of [options].
+  ///
+  /// The currently studied language is preselected when it is one of them.
   Future<LanguageCode?> _selectLanguage(List<LanguageCode> options) {
-    LanguageCode selected = options.first;
+    LanguageCode selected = SettingsStore.instance.settings.learningLanguage;
+    if (!options.contains(selected)) {
+      selected = options.first;
+    }
     return showDialog<LanguageCode>(
       context: context,
       builder: (dialogContext) {

@@ -1,0 +1,7 @@
+arb-dir: lib/l10n
+template-arb-file: app_en.arb
+# The generated class lives in its own file so that lib/l10n/app_localizations.dart
+# can stay hand-maintained: it re-exports the generated class and adds the
+# `context.l10n` shorthand used by the UI.
+output-localization-file: app_localizations_generated.dart
+preferred-supported-locales: ["en"]

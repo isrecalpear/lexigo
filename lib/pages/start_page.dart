@@ -11,7 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:lexigo/app_router.dart';
 import 'package:lexigo/backend/word.dart';
 import 'package:lexigo/backend/word/global_provider.dart';
-import 'package:lexigo/l10n/app_localizations.dart';
+import 'package:lexigo/l10n/l10n.dart';
 import 'package:lexigo/pages/widgets/word_card.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
@@ -70,7 +70,7 @@ class _StartPageState extends State<StartPage> {
               children: [
                 Center(
                   child: Text(
-                    context.l10n.startPrompt,
+                    AppLocalizations.of(context)!.startPrompt,
                     style: Theme.of(context).textTheme.headlineLarge,
                   ),
                 ),
@@ -98,7 +98,7 @@ class _StartPageState extends State<StartPage> {
                       vertical: 14,
                     ),
                   ),
-                  child: Text(context.l10n.next),
+                  child: Text(AppLocalizations.of(context)!.next),
                 ),
               ],
             ),
@@ -106,7 +106,7 @@ class _StartPageState extends State<StartPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        label: Text(context.l10n.startLearning),
+        label: Text(AppLocalizations.of(context)!.startLearning),
         icon: const Icon(Icons.play_arrow),
         onPressed: _startLearning,
       ),

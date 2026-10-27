@@ -24,6 +24,7 @@
 
 ```powershell
 flutter pub get
+flutter gen-l10n                                            # 改了 lib/l10n/*.arb 之后生成 app_localizations_generated*.dart
 dart run build_runner build --delete-conflicting-outputs   # 改了 lib/backend/database/tables.dart 或 interface.dart 之后必须
 dart analyze lib                                            # 基线必须 0 issue
 dart format lib
@@ -33,7 +34,7 @@ flutter run -d <android-device>
 flutter build apk --release
 ```
 
-没有 `l10n.yaml`、没有 `.arb`、没有 CI、没有 `test/`。文案是手写的（见第 6 节）。
+文案由 Flutter gen-l10n 从 `lib/l10n/app_en.arb` / `app_zh.arb` 生成（见第 6 节）。没有 CI、没有 `test/`。
 
 ## 3. 代码地图
 
@@ -67,13 +68,16 @@ lib/
 │  ├─ my_page/
 │  │  ├─ settings_editing.dart    UI 语言、主题模式、主题色（HSV + Hex 选择器）
 │  │  ├─ word_management/
-│  │  │  ├─ word_management.dart  ★导入入口（预览确认 + 进度弹窗）+ 导出（TODO）菜单
+│  │  │  ├─ word_management.dart  ★导入入口（预览确认 + 进度弹窗）+ 导出（分语言导出 sqlite + 分享/保存）
 │  │  │  ├─ word_view.dart        当前语言单词列表（编辑/删除）
 │  │  │  ├─ word_add.dart         手动添加单词表单
 │  │  │  └─ word_edit.dart        编辑单词表单
 │  │  └─ log_management/          日志查看/清除/分享
 │  └─ widgets/word_card.dart      单词卡片组件（含“纠错/标记熟知”菜单）
-├─ l10n/app_localizations.dart    手写中英文文案表 + BuildContext.l10n 扩展
+├─ l10n/
+│  ├─ app_en.arb / app_zh.arb          ★文案源（ARB，模板 app_en.arb，占位符元数据写在模板里）
+│  ├─ l10n.dart                        手写出口：export 生成类 + BuildContext.l10n 扩展
+│  └─ app_localizations_generated*.dart gen-l10n 生成，勿手改（app_localizations_generated.dart/_en/_zh）
 └─ utils/
    ├─ settings.dart               Settings + SettingsStore（单例，YAML 持久化）
    ├─ app_font.dart               AppFont 枚举（system/MiSans/HarmonyOS 及官方下载地址）
@@ -164,7 +168,7 @@ lib/
 - Android 上 `XFile.path` 可能是缓存路径，部分厂商 ROM 上直接 `sqlite3.open(path)` 不可靠。
 - 解析仍使用同步 `sqlite3`，几千行约在百毫秒级；写入已分块并包在事务里，失败会整体回滚。
 
-导出（`_exportWords`）仍是 TODO，只弹语言选择后打日志。
+导出（`_exportWords`）：选择语言（默认当前学习语言）→ 用 `WordManager.getWords` 取该语言全部单词、`getReviewLogs` 取复习记录并按 cardId 过滤 → 通过 `Database.external(driftDatabase(...))` 写入临时 sqlite（表结构与应用库一致，可直接被导入回来）→ iOS/macOS 走系统分享（`share_plus`），Android 复制到 `Documents/LexiGo`，桌面复制到下载目录 → SnackBar 报导出路径。临时文件写在 `getTemporaryDirectory()`。
 
 ### 设置持久化
 `SettingsStore` 单例持有内存 `Settings`，`saveSettings()` 写 `<support>/settings.yaml`（手写 YAML 序列化，不是 `yaml` 库的输出格式），`loadSettings()` 用 `yaml.loadYaml` 读并用 `_parse*` 兜底。`copyWith` 的 `null` 语义靠 `localeSet` / `colorSeedSet` 两个显式开关表达（`null` 表示跟随系统语言 / 自动主题色）；忘记传开关时 `null` 会被忽略。`font` 存 `AppFont.storageId`（`system`/`misans`/`harmonyos`），缺省/未知值回退 `system`。
@@ -192,7 +196,7 @@ lib/
    ```
    组内字母序。新增 import 请遵守，跑 `dart run import_sorter:main` 自动修。
 2. **文件头**：`library;` + `///` 英文文档注释（现有代码风格是英文注释、中文仅出现在文案/少量说明）。公开类/方法写 `///`。
-3. **文案**：一律 `context.l10n.xxx`；`AppLocalizations` 是**手写**的，新增一条要改三处：getter（`lib/l10n/app_localizations.dart` 上半部）、`_localizedValues['en']`、`_localizedValues['zh']`。带参数的用 `String foo(String a) => _t('foo', {'a': a});` + 文案里 `{a}` 占位（**不要**用 Flutter gen-l10n/`.arb`，仓库没配）。
+3. **文案**：一律 `context.l10n.xxx`（`BuildContext` 扩展在 `lib/l10n/l10n.dart`）。文案表由 **Flutter gen-l10n** 生成：新增一条要改 `lib/l10n/app_en.arb`（模板，带 `@key.placeholders` 元数据）和 `app_zh.arb`，然后跑 `flutter gen-l10n` 重新生成 `app_localizations_generated*.dart`（**勿手改生成文件**）。带参数的 key 在调用侧按模板里 placeholders 的声明顺序传参（例如 `importPreviewSummary(total, count, skipped)`）；文案里用 `{name}` 占位。
 4. **状态管理**：没有 provider/riverpod/bloc。页面自己 `StatefulWidget + setState`；跨页面共享只有两个东西：`WordProvider`（构造参数逐层传）和 `SettingsStore.instance`。新增全局状态先考虑这两条路。
 5. **平台差异**：一律走 `DeviceInfoManager`（`isAndroid/isApple/isDesktop/supportsDynamicColor/supportsFileSharing`），不要在业务代码里裸写 `Platform.isX`。
 6. **日志**：`AppLogger`，带 `error:` / `stackTrace:`。
@@ -227,7 +231,7 @@ lib/
 |---|---|---|
 | 1 | FSRS 设置项是死代码（序列化了但 Scheduler 不用），且无设置 UI | `manager.dart` 顶部 vs `settings.dart` |
 | 2 | `WordCard` “标记为熟知”只有 TODO；"纠错"实际是打开编辑页 | `word_card.dart` |
-| 3 | 词表导出未实现 | `word_management.dart` `_exportWords` |
+| 3 | 导出目标位置是硬编码的（Android 固定 `Documents/LexiGo`，未走 SAF 选目录；桌面固定下载目录），临时文件也未清理 | `word_management.dart` `_exportWords` |
 | 4 | 学习会话固定 10 词；总结页 `wordsReviewed`/`wordsToReview` 恒为 0，提前结束时 `wordsLearned` 少算一条 | `learn.dart`、`learning_summarize.dart` |
 | 5 | Android 权限模型过时（`READ_MEDIA_*` + `Permission.storage`）与 SAF 不匹配 | `AndroidManifest.xml`、`permission_manager.dart` |
 | 6 | `getNextReviewWord` 只按 `due < now`，没有新卡/旧卡优先级、没有每日上限 | `manager.dart` |
@@ -235,12 +239,12 @@ lib/
 
 ## 8. 典型改动指南
 
-**新增一条 UI 文案**：`app_localizations.dart` 加 getter → `en` map → `zh` map → 用 `context.l10n.xxx`。
+**新增一条 UI 文案**：在 `lib/l10n/app_en.arb`（模板）和 `app_zh.arb` 各加一条；带参数的要在模板里加 `@key.placeholders`（顺序决定生成方法的参数顺序）→ `flutter gen-l10n` → 用 `context.l10n.xxx`。
 **新增页面**：`lib/pages/...` 单文件一页（`XxxPage` + `_XxxPageState`）；在 `lib/app_router.dart` 的 `AppRoutes` 里加构建器和 `AppRoute` 名称，页面内用 `Navigator.push(context, AppRoutes.xxx(...))`，不要直接构造 `MaterialPageRoute`；文案走 l10n；进出页面打 `AppLogger.info`。
 **新增数据表/字段**：改 `tables.dart` → bump `interface.dart` 的 `schemaVersion` 并实现 `MigrationStrategy`（drift 文档的 `onUpgrade` + `m.addColumn(...)`）→ `dart run build_runner build --delete-conflicting-outputs` → 修 `_wordToCompanion` / `_tableDataToWord` / 各表单页 / 导入列校验。
 **新增学习语言**：`LanguageCode` 加值 → `fallback.dart` 加兜底词 → 外部导入表名映射自动生效 → 检查 `settings_editing` 语言名展示（目前直接显示 enum name）。
 **支持 CSV/JSON 词表（推荐下一步）**：在现有 `lib/backend/word/import_service.dart` 上扩展解析器（`sqlite` 走 `prepare`，CSV/JSON 走新方法），复用 `ImportPlan` / `commit` 的事务 + 分块 + 进度；`word_management.dart` 只负责选文件和展示预览。批量构造 Card 用 `Card(cardId: base + i)`，不要逐词 `Card.create()`（每个 sleep 1ms）。
-**实现导出**：`file_selector.getSaveLocation` 拿路径 → `sqlite3` 建新库 → 建 `ko/ru/en` 表并写入六列（与导入格式对齐，形成往返一致）→ 成功/失败 SnackBar。
+**改导出格式/目标位置**：`_exportWords` 目前用 `Database.external(driftDatabase(...))` 复用应用 schema 写临时 sqlite，再按平台分享/复制；若要改格式（CSV/JSON）或让用户选目录，改这一处即可，表结构写死在临时库的 drift schema 里。
 
 ## 9. 完成定义（Definition of Done）
 

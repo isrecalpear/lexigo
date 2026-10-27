@@ -10,7 +10,7 @@ import 'package:flutter/material.dart';
 // Project imports:
 import 'package:lexigo/app_router.dart';
 import 'package:lexigo/backend/word.dart';
-import 'package:lexigo/l10n/app_localizations.dart';
+import 'package:lexigo/l10n/l10n.dart';
 import 'package:lexigo/utils/app_logger.dart';
 
 /// Displays a single word card with bilingual content.
@@ -80,6 +80,32 @@ class _WordCardState extends State<WordCard> {
                           textAlign: TextAlign.left,
                         ),
                         const Spacer(),
+                        if (widget.word.card.lastReview == null)
+                          IconButton(
+                            onPressed: () =>
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    showCloseIcon: true,
+                                    content: Text(
+                                      widget.word.card.cardId > 0
+                                          ? AppLocalizations.of(
+                                              context,
+                                            )!.newWordHint
+                                          : AppLocalizations.of(
+                                              context,
+                                            )!.newWordHintEasterEgg,
+                                    ),
+                                  ),
+                                ),
+                            icon: Icon(
+                              widget.word.card.cardId > 0
+                                  ? Icons.fiber_new
+                                  : Icons.favorite,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onPrimaryContainer,
+                            ),
+                          ),
                         PopupMenuButton<String>(
                           onSelected: (value) {
                             if (value == WordCard._menuCorrect) {
@@ -91,11 +117,15 @@ class _WordCardState extends State<WordCard> {
                           itemBuilder: (context) => [
                             PopupMenuItem(
                               value: WordCard._menuCorrect,
-                              child: Text(context.l10n.wordCardCorrect),
+                              child: Text(
+                                AppLocalizations.of(context)!.wordCardCorrect,
+                              ),
                             ),
                             PopupMenuItem(
                               value: WordCard._menuKnown,
-                              child: Text(context.l10n.wordCardMarkKnown),
+                              child: Text(
+                                AppLocalizations.of(context)!.wordCardMarkKnown,
+                              ),
                             ),
                           ],
                           icon: Icon(
@@ -156,20 +186,22 @@ class _WordCardState extends State<WordCard> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text(dialogContext.l10n.wordCardMarkKnownTitle),
+          title: Text(
+            AppLocalizations.of(dialogContext)!.wordCardMarkKnownTitle,
+          ),
           content: Text(
-            dialogContext.l10n.wordCardMarkKnownConfirm(
-              widget.word.originalWord,
-            ),
+            AppLocalizations.of(
+              dialogContext,
+            )!.wordCardMarkKnownConfirm(widget.word.originalWord),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text(dialogContext.l10n.cancel),
+              child: Text(AppLocalizations.of(dialogContext)!.cancel),
             ),
             FilledButton(
               onPressed: () => Navigator.pop(dialogContext, true),
-              child: Text(dialogContext.l10n.confirm),
+              child: Text(AppLocalizations.of(dialogContext)!.confirm),
             ),
           ],
         );

@@ -19,8 +19,8 @@ class Database extends _$Database {
   ///
   /// Previously every `WordManager` opened its own connection to the same file,
   /// leaving several sqlite handles open concurrently. All application code now
-  /// uses this singleton; [Database.new] only opens a separate connection when
-  /// an explicit [QueryExecutor] is supplied (tests, tooling).
+  /// uses this singleton; passing an explicit [QueryExecutor] opens a separate
+  /// connection instead (import/export tooling, tests).
   static final Database _instance = Database._(_initConnection());
 
   /// Returns the shared database, or a dedicated one for [executor].
@@ -30,6 +30,12 @@ class Database extends _$Database {
     }
     return Database._(executor);
   }
+
+  /// Opens a dedicated connection for a database file outside the app.
+  ///
+  /// Used by the word import/export tooling, which reads and writes temporary
+  /// SQLite files instead of the application database.
+  Database.external(QueryExecutor executor) : this._(executor);
 
   @override
   int get schemaVersion => 1;

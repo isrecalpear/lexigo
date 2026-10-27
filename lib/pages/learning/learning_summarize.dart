@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lexigo/app_router.dart';
 import 'package:lexigo/backend/word.dart';
 import 'package:lexigo/backend/word/global_provider.dart';
-import 'package:lexigo/l10n/app_localizations.dart';
+import 'package:lexigo/l10n/l10n.dart';
 import 'package:lexigo/pages/widgets/word_card.dart';
 
 /// Summary page displayed after completing a learning session.
@@ -60,14 +60,14 @@ class _LearningSummarizePageState extends State<LearningSummarizePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context).learningSummaryTitle),
+        title: Text(AppLocalizations.of(context)!.learningSummaryTitle),
       ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           children: [
             Text(
-              AppLocalizations.of(context).learningSummaryTitle,
+              AppLocalizations.of(context)!.learningSummaryTitle,
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
@@ -75,7 +75,7 @@ class _LearningSummarizePageState extends State<LearningSummarizePage> {
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Text(
-                  AppLocalizations.of(context).learningSummary(
+                  context.l10n.learningSummary(
                     widget.wordsLearned,
                     widget.wordsReviewed,
                     widget.wordsToReview,
@@ -85,7 +85,7 @@ class _LearningSummarizePageState extends State<LearningSummarizePage> {
             ),
             const SizedBox(height: 16),
             Text(
-              AppLocalizations.of(context).learningSummaryNextLabel,
+              AppLocalizations.of(context)!.learningSummaryNextLabel,
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
@@ -115,7 +115,7 @@ class _LearningSummarizePageState extends State<LearningSummarizePage> {
                       Navigator.of(context).popUntil((route) => route.isFirst);
                     },
                     child: Text(
-                      AppLocalizations.of(context).learningSummaryEnd,
+                      AppLocalizations.of(context)!.learningSummaryEnd,
                     ),
                   ),
                 ),
@@ -133,7 +133,7 @@ class _LearningSummarizePageState extends State<LearningSummarizePage> {
                         );
                       },
                       child: Text(
-                        AppLocalizations.of(context).learningSummaryNextGroup,
+                        AppLocalizations.of(context)!.learningSummaryNextGroup,
                       ),
                     ),
                   ),
