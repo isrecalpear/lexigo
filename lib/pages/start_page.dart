@@ -46,7 +46,6 @@ class _StartPageState extends State<StartPage> {
     super.initState();
     AppLogger.info('Initializing start page');
     widget.wordProvider.addListener(_onWordChanged);
-    _scheduleFallbackWordIfNeeded();
   }
 
   @override
@@ -59,8 +58,9 @@ class _StartPageState extends State<StartPage> {
   Widget build(BuildContext context) {
     final Word? displayWord = widget.wordProvider.currentWord;
     if (displayWord == null) {
-      // The fallback word is installed in a post-frame callback right after
-      // this frame; see [_scheduleFallbackWordIfNeeded].
+      // [WordProvider] starts with the language fallback word and keeps it on
+      // screen when the library is empty, so this is only reached while the
+      // learning page is on top and temporarily reports "no next word".
       return const Scaffold();
     }
     final bool wide = MediaQuery.sizeOf(context).width >= 900;
@@ -244,11 +244,17 @@ class _StartPageState extends State<StartPage> {
   }
 
   /// Starts the interactive learning session with a random word.
+  ///
+  /// The provider keeps showing the fallback word when the current language has
+  /// no words, in which case there is nothing to study: the tap is ignored
+  /// without changing the page (no blank frame, no flicker).
   Future<void> _startLearning() async {
-    await widget.wordProvider.loadRandomWord();
-    final Word? word = widget.wordProvider.currentWord;
-    if (word == null) return;
+    final Word? word = await widget.wordProvider.loadRandomWord();
     if (!mounted) return;
+    if (word == null) {
+      AppLogger.info('Start learning skipped: no words for current language');
+      return;
+    }
     AppLogger.info('Start learning word: ${word.originalWord}');
     Navigator.of(context)
         .push<Word?>(
@@ -272,31 +278,15 @@ class _StartPageState extends State<StartPage> {
   }
 
   /// Loads the next random word via the provider.
+  ///
+  /// When the library is empty the provider keeps the fallback word, so this
+  /// results in no visual change at all.
   void _next() {
     widget.wordProvider.loadRandomWord();
   }
 
-  /// Installs the per-language fallback word when there is nothing to show.
-  ///
-  /// Scheduling happens in a post-frame callback because
-  /// [WordProvider.setFallbackWord] notifies listeners, and mutating shared
-  /// state (or calling `setState`) while `build` is running triggers framework
-  /// assertions.
-  void _scheduleFallbackWordIfNeeded() {
-    if (widget.wordProvider.currentWord != null) {
-      return;
-    }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || widget.wordProvider.currentWord != null) {
-        return;
-      }
-      widget.wordProvider.setFallbackWord();
-    });
-  }
-
   void _onWordChanged() {
     if (!mounted) return;
-    _scheduleFallbackWordIfNeeded();
     setState(() {});
   }
 }
